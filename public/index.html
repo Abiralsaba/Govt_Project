@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="container">
+        <div class="auth-card">
+            <div class="logo-area">
+                <i class="fas fa-university fa-3x" style="color: #34d399; margin-bottom: 15px;"></i>
+                <h1>Govt Portal</h1>
+                <p>Secure Access System</p>
+            </div>
+
+            <!-- Removed old alertBox, using SweetAlert -->
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="citizen@bangladesh.gov.bd"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary">Secure Login</button>
+            </form>
+
+            <div class="auth-links">
+                <span>New Citizen?</span>
+                <a href="register.html">Register here</a>
+            </div>
+
+            <div class="auth-links" style="margin-top: 10px; font-size: 0.8rem;">
+                <a href="forgot-password.html" style="color: #ccc;">Forgot Password?</a>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.7rem; color: #777;">
+                <i class="fas fa-lock"></i> Secured with 256-bit Encryption
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+
+</html>

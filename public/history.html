@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Activity History | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .table-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            margin: 2rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .approved {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
+        .rejected {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .sidebar {
+            background: rgba(15, 23, 42, 0.7);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            height: 100vh;
+            width: 260px;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <aside class="sidebar">
+        <div style="margin-bottom: 3rem; text-align: center;">
+            <div
+                style="width: 60px; height: 60px; background: #60a5fa; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">
+                <i class="fas fa-history"></i>
+            </div>
+            <h3 style="color: white;">History</h3>
+        </div>
+        <nav class="nav-links">
+            <a href="dashboard.html" style="color: #94a3b8; text-decoration: none; padding: 1rem; display: block;"><i
+                    class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div style="padding: 2rem;">
+            <h1>Activity Logs & Service Requests</h1>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTable">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html';
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/dashboard/history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                const tableBody = document.getElementById('historyTable');
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No activity found</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = data.map(item => `
+                    <tr>
+                        <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                        <td>${item.service_type}</td>
+                        <td style="max-width:300px; opacity:0.8;">${item.details || '-'}</td>
+                        <td><span class="status-pill ${item.status}">${item.status}</span></td>
+                        <td><button class="btn-sm" style="background:transparent; border:1px solid #94a3b8; color:#94a3b8;" onclick="viewDetails(${item.id})">View</button></td>
+                    </tr>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function viewDetails(id) {
+            Swal.fire('Details', 'Fetching full details for Request ID: ' + id, 'info');
+        }
+
+        loadHistory();
+    </script>
+</body>
+
+</html>

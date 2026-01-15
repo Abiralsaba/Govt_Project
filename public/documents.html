@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Documents | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .doc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .doc-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .doc-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .doc-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .doc-body p {
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .doc-body strong {
+            color: #fff;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
+        .status-expired {
+            background: rgba(244, 42, 65, 0.2);
+            color: #f42a41;
+        }
+
+        .btn-group {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-view {
+            background: #3b82f6;
+        }
+
+        .btn-renew {
+            background: #eab308;
+            color: black;
+        }
+
+        .btn-download {
+            background: #6366f1;
+        }
+
+        .sidebar {
+            background: rgba(15, 23, 42, 0.7);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            height: 100vh;
+            width: 260px;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <!-- Sidebar (Simplified Copy of Dashboard) -->
+    <aside class="sidebar">
+        <div style="margin-bottom: 3rem; text-align: center;">
+            <div
+                style="width: 60px; height: 60px; background: #34d399; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h3 style="color: white;">Documents</h3>
+        </div>
+        <nav class="nav-links">
+            <a href="dashboard.html" style="color: #94a3b8; text-decoration: none; padding: 1rem; display: block;"><i
+                    class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1 style="margin-bottom: 2rem;">My Official Documents</h1>
+
+        <div class="doc-grid" id="docContainer">
+            <!-- Loading -->
+            <div style="color: white;">Loading documents...</div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html';
+
+        async function loadDocs() {
+            try {
+                const res = await fetch('/api/dashboard/documents', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                const container = document.getElementById('docContainer');
+                container.innerHTML = '';
+
+                // NID Card
+                if (data.nid) {
+                    container.innerHTML += createCard('National ID', 'fa-id-card', data.nid.nid_number, data.nid.expiry_date || 'Lifetime', 'Active');
+                } else {
+                    container.innerHTML += createEmptyCard('National ID', 'fa-id-card', 'Not Found', 'Apply Now');
+                }
+
+                // Passport
+                if (data.passport) {
+                    const status = new Date(data.passport.expiry_date) > new Date() ? 'Active' : 'Expired';
+                    container.innerHTML += createCard('Passport', 'fa-passport', data.passport.passport_number, data.passport.expiry_date, status);
+                } else {
+                    container.innerHTML += createEmptyCard('Passport', 'fa-passport', 'No Record', 'Apply for Passport');
+                }
+
+                // Tax TIN
+                if (data.tax) {
+                    container.innerHTML += createCard('Tax TIN', 'fa-file-invoice-dollar', data.tax.tin_number, null, data.tax.tax_payer_status);
+                } else {
+                    container.innerHTML += createEmptyCard('Tax TIN', 'fa-file-invoice-dollar', 'Not Registered', 'Register for TIN');
+                }
+
+                // Land Records
+                if (data.land && data.land.length > 0) {
+                    data.land.forEach(l => {
+                        container.innerHTML += `
+                        <div class="doc-card">
+                            <div class="doc-header">
+                                <div class="doc-title">Land Record</div>
+                                <i class="fas fa-landmark doc-icon"></i>
+                            </div>
+                            <div class="doc-body">
+                                <p><strong>Khatian No:</strong> ${l.khatian_no}</p>
+                                <p><strong>Area:</strong> ${l.area_acres} Acres</p>
+                                <p><strong>Last Tax Paid:</strong> ${l.last_tax_paid_year}</p>
+                            </div>
+                             <div class="btn-group">
+                                <button class="btn-sm btn-view">View Record</button>
+                                <button class="btn-sm btn-renew">Pay Tax</button>
+                            </div>
+                        </div>`;
+                    });
+                }
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Failed to load documents', 'error');
+            }
+        }
+
+        function createCard(title, icon, number, expiry, status) {
+            const statusClass = status === 'Active' || status === 'Individual' ? 'status-active' : 'status-expired';
+            return `
+            <div class="doc-card">
+                <div class="doc-header">
+                    <div class="doc-title">${title}</div>
+                    <i class="fas ${icon} doc-icon"></i>
+                </div>
+                <div class="doc-body">
+                    <p><strong>Number:</strong> ${number}</p>
+                    ${expiry ? `<p><strong>Expiry:</strong> ${expiry}</p>` : ''}
+                    <span class="status-badge ${statusClass}">${status}</span>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-sm btn-view">View Details</button>
+                    ${title === 'Passport' ? '<button class="btn-sm btn-renew">Renew</button>' : ''}
+                    <button class="btn-sm btn-download"><i class="fas fa-download"></i></button>
+                </div>
+            </div>`;
+        }
+
+        function createEmptyCard(title, icon, message, actionText) {
+            return `
+            <div class="doc-card" style="opacity: 0.7; border-style: dashed;">
+                <div class="doc-header">
+                    <div class="doc-title">${title}</div>
+                    <i class="fas ${icon} doc-icon"></i>
+                </div>
+                <div class="doc-body">
+                    <p>${message}</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-sm btn-view" style="background: var(--primary-color);" onclick="Swal.fire('Redirecting', 'Navigating to application form...', 'info')">${actionText}</button>
+                </div>
+            </div>`;
+        }
+
+        loadDocs();
+    </script>
+</body>
+
+</html>
