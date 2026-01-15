@@ -10,6 +10,7 @@ async function verifyFinalTables() {
         const expected = [
             'citizens',
             'land_records',
+            'login_logs',
             'nid_cards',
             'passport_books',
             'reg_info',
