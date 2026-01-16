@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My To-Do List | Govt of Bangladesh</title>
+    <title>Competitions | Govt of Bangladesh</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         .dashboard-container {
             display: grid;
@@ -83,80 +82,37 @@
             margin-bottom: 2rem;
         }
 
-        /* Kanban Board */
-        .kanban-board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-            height: 400px;
-        }
-
-        .kanban-column {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .kanban-header {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .kanban-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            min-height: 50px;
-        }
-
-        .kanban-item {
+        .comp-card {
             background: var(--glass-bg);
-            padding: 0.8rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            cursor: grab;
             border: 1px solid var(--glass-border);
-            font-size: 0.9rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
         }
 
-        .kanban-item:hover {
-            border-color: var(--primary-color);
+        .comp-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-color);
         }
 
-        .delete-task {
-            color: #ef4444;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .kanban-item:hover .delete-task {
-            opacity: 1;
-        }
-
-        .add-task-btn {
-            background: transparent;
-            border: 1px dashed var(--text-muted);
-            color: var(--text-muted);
-            width: 100%;
-            padding: 0.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        .add-task-btn:hover {
-            border-color: white;
+        .btn-join {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
             color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 1rem;
         }
     </style>
 </head>
@@ -179,10 +135,10 @@
                 <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
                 <a href="documents.html"><i class="fas fa-folder"></i> My Documents</a>
                 <a href="history.html"><i class="fas fa-history"></i> History</a>
-                <a href="#" class="active"><i class="fas fa-tasks"></i> To Do</a>
+                <a href="todo.html"><i class="fas fa-tasks"></i> To Do</a>
                 <a href="community.html"><i class="fas fa-users"></i> Community</a>
                 <a href="shop.html"><i class="fas fa-shopping-cart"></i> Shop</a>
-                <a href="competition.html"><i class="fas fa-trophy"></i> Competition</a>
+                <a href="#" class="active"><i class="fas fa-trophy"></i> Competition</a>
                 <a href="education.html"><i class="fas fa-graduation-cap"></i> Education</a>
                 <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
                 <a href="javascript:void(0)" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -193,28 +149,32 @@
         <main class="main-content">
             <div class="header-bar">
                 <div>
-                    <h1>My To-Do List</h1>
-                    <p style="color: var(--text-muted);">Manage your tasks and priorities</p>
+                    <h1>Competitions & Hackathons</h1>
+                    <p style="color: var(--text-muted);">Innovate for the nation</p>
                 </div>
             </div>
 
-            <!-- Kanban -->
-            <div>
-                <div class="kanban-board">
-                    <div class="kanban-column">
-                        <div class="kanban-header" style="color: #fbbf24">To Do</div>
-                        <div id="todo" class="kanban-list" data-status="todo"></div>
-                        <button class="add-task-btn" onclick="createTask()">+ Add Item</button>
-                    </div>
-                    <div class="kanban-column">
-                        <div class="kanban-header" style="color: #60a5fa">In Progress</div>
-                        <div id="progress" class="kanban-list" data-status="progress"></div>
-                    </div>
-                    <div class="kanban-column">
-                        <div class="kanban-header" style="color: #34d399">Done</div>
-                        <div id="done" class="kanban-list" data-status="done"></div>
-                    </div>
+            <div class="comp-card">
+                <h1><i class="fas fa-code"></i> National Hackathon 2026</h1>
+                <p style="margin: 1rem 0; font-size: 1.1rem; color: #cbd5e1;">Join 5000+ developers to build smart
+                    solutions for traffic management.</p>
+                <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem;">
+                    <div><i class="far fa-calendar-alt"></i> March 15-17, 2026</div>
+                    <div><i class="fas fa-map-marker-alt"></i> ICCB, Dhaka</div>
+                    <div><i class="fas fa-award"></i> Prize Pool: ৳ 50 Lakh</div>
                 </div>
+                <button class="btn-join">Register Now</button>
+            </div>
+
+            <div class="comp-card" style="opacity: 0.8;">
+                <h2><i class="fas fa-paint-brush"></i> Digital Art Contest</h2>
+                <p style="margin: 1rem 0; color: #cbd5e1;">Theme: "Green Bangladesh". Submit your digital artwork and
+                    win exciting prizes.</p>
+                <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem;">
+                    <div><i class="far fa-calendar-alt"></i> Deadline: Feb 28, 2026</div>
+                    <div><i class="fas fa-award"></i> Prize: Graphics Tablet</div>
+                </div>
+                <button class="btn-join" style="background: transparent; border: 1px solid white;">Details</button>
             </div>
 
         </main>

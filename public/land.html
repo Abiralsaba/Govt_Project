@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Ministry | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.9);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .user-profile {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-links a i {
+            width: 25px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 0;
+            overflow-y: auto;
+            position: relative;
+            background: #0f172a;
+            /* Main Dark Background */
+            color: #fff;
+        }
+
+        /* --- Overview Section Styles --- */
+        #overview-section {
+            padding: 2rem;
+        }
+
+        .land-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-land {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-land:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        /* --- Mutation Section Styles (Dark Theme Adapted) --- */
+        #mutation-section {
+            display: none;
+            background: #0f172a;
+            min-height: 100%;
+        }
+
+        .top-header {
+            background: rgba(30, 41, 59, 0.7);
+            /* translucent dark */
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bd-logo {
+            width: 50px;
+            height: 50px;
+            background: #006a4e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f42a41;
+            font-size: 1.5rem;
+        }
+
+        .header-date {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .header-actions button {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-actions button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-actions button.primary {
+            background: #15803d;
+            border: none;
+            color: white;
+        }
+
+        .header-actions button.primary:hover {
+            background: #166534;
+        }
+
+        /* Dark Hero with Green Accents */
+        .hero-section {
+            /* Dark gradient sitting up top */
+            background: radial-gradient(circle at center, rgba(22, 163, 74, 0.15) 0%, rgba(15, 23, 42, 0) 70%);
+            padding: 4rem 2rem 8rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .landscape-art {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            /* Using the green shape but checking opacity against dark bg */
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23064e3b' fill-opacity='1' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,261.3C960,256,1056,224,1152,197.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: bottom;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .tree-icon {
+            position: absolute;
+            bottom: 40px;
+            color: #fbbf24;
+            /* Golden yellow for trees */
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+            /* Yellow Glow */
+            font-size: 3rem;
+            z-index: 2;
+            opacity: 0.9;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            color: #4ade80;
+            /* Bright green text */
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+        }
+
+        .hero-desc {
+            color: #cbd5e1;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .btn-hero {
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-hero.new {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+        }
+
+        .btn-hero.status {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-hero:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Search Bar Floating - Dark Glass */
+        .search-bar-container {
+            max-width: 900px;
+            margin: -40px auto 3rem auto;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-label {
+            font-weight: 600;
+            color: #4ade80;
+            min-width: 200px;
+        }
+
+        .search-input-group {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-select,
+        .form-input {
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 6px;
+            width: 100%;
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            outline: none;
+            border-color: #4ade80;
+        }
+
+        .btn-search {
+            background: #059669;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-search:hover {
+            background: #047857;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-landmark"></i>
+                </div>
+                <h3 style="color: #a78bfa;">Land Ministry</h3>
+                <p style="color: #94a3b8; font-size: 0.8rem;">Ministry of Land</p>
+            </div>
+            <nav class="nav-links">
+                <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                <a href="#" onclick="switchTab(this, 'overview')" class="active"><i class="fas fa-home"></i>
+                    Overview</a>
+                <a href="#" onclick="switchTab(this, 'records')"><i class="fas fa-file-contract"></i> My Records</a>
+                <a href="#" onclick="switchTab(this, 'mutation')"><i class="fas fa-exchange-alt"></i> Mutation</a>
+                <a href="#" onclick="switchTab(this, 'tax')"><i class="fas fa-money-bill-wave"></i> Land Tax</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- SECTION 1: OVERVIEW (Default) -->
+            <div id="overview-section">
+                <div class="header-bar"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h1>Land Ministry Services</h1>
+                        <p style="color: var(--text-muted);">Digital Land Management System</p>
+                    </div>
+                </div>
+
+                <div class="land-grid">
+                    <div class="card">
+                        <h3 style="color: #a78bfa; margin-bottom: 1rem;"><i class="fas fa-search"></i> Search Land
+                            Record (Khatian)</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="khatianInput" class="form-control" placeholder="Enter Khatian No."
+                                style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.5rem; border-radius: 6px; width: 100%;">
+                            <button class="btn-land" style="width: auto; margin-top: 0;"
+                                onclick="searchKhatian()">Search</button>
+                        </div>
+                        <div id="searchResults" class="search-results" style="margin-top: 1rem; display: none;">
+                            <p id="searchContent" style="color: #cbd5e1; font-size: 0.9rem;"></p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="color: #f472b6; margin-bottom: 1rem;"><i class="fas fa-file-signature"></i> Apply for
+                            Mutation</h3>
+                        <p style="color: #cbd5e1; margin-bottom: 1rem;">Go to the Mutation section to apply.</p>
+                        <button class="btn-land" style="background: linear-gradient(135deg, #ec4899, #db2777);"
+                            onclick="triggerMutationTab()">Go to Mutation</button>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="color: #60a5fa; margin-bottom: 1rem;"><i class="fas fa-history"></i> Recent Activity
+                        </h3>
+                        <div id="landApplications" style="margin-top: 1rem;">
+                            <p class="text-muted">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: MUTATION LANDING PAGE (Dark Theme) -->
+            <div id="mutation-section">
+                <!-- Top Header -->
+                <div class="top-header">
+                    <div class="logo-section">
+                        <div class="bd-logo">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                        <div>
+                            <h2 style="color: #f1f5f9; margin: 0; font-size: 1.2rem;">Land Management Automation Project
+                            </h2>
+                            <p style="margin: 0; font-size: 0.9rem; color: #94a3b8;">Ministry of Land</p>
+                        </div>
+                    </div>
+                    <div class="header-date" id="currentDate"></div>
+                    <div class="header-actions">
+                        <button>English</button>
+                        <button class="primary" onclick="location.href='profile.html'"><i class="fas fa-user"></i>
+                            Profile</button>
+                    </div>
+                </div>
+
+                <!-- Hero Section -->
+                <div class="hero-section">
+                    <i class="fas fa-tree tree-icon" style="left: 10%;"></i>
+                    <i class="fas fa-tree tree-icon" style="left: 15%; font-size: 2rem;"></i>
+                    <i class="fas fa-tree tree-icon" style="right: 10%;"></i>
+                    <i class="fas fa-tree tree-icon" style="right: 5%; font-size: 4rem;"></i>
+                    <i class="fas fa-dove" style="position: absolute; top: 20%; left: 20%; color: #22c55e;"></i>
+                    <i class="fas fa-dove" style="position: absolute; top: 15%; right: 30%; color: #22c55e;"></i>
+
+                    <div class="landscape-art"></div>
+
+                    <div class="hero-content">
+                        <h1 class="hero-title">Welcome to Mutation System!</h1>
+                        <p class="hero-desc">The Ministry of Land has implemented the mutation system to simplify and
+                            speed up land ownership changes. You can complete form filling, fee payment, and khatian
+                            collection online through this system.</p>
+
+                        <div class="hero-buttons">
+                            <button class="btn-hero new" onclick="applyMutationPopup()">
+                                <i class="fas fa-file-alt"></i> Click for New Application
+                            </button>
+                            <button class="btn-hero status" onclick="scrollToSearch()">
+                                <i class="fas fa-search"></i> Check Application Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-bar-container" id="statusSearch">
+                    <div class="search-label">Check Latest Application Status</div>
+                    <div class="search-input-group">
+                        <select class="form-select" id="statusDivision">
+                            <option value="">Select Division</option>
+                        </select>
+                        <input type="text" class="form-input" placeholder="Tracking Number (e.g. LMT-2026-XXXX)"
+                            id="statusAppId">
+                        <button class="btn-search" onclick="checkStatus()">Search</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 3: RECORDS (Placeholder) -->
+            <div id="records-section" style="display: none; padding: 2rem;">
+                <h2 style="color: white;">My Records</h2>
+                <div class="card" style="margin-top: 2rem;">
+                    <p class="text-muted">No records found.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Mutation Application Modal -->
+    <div id="mutationModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto;">
+        <div
+            style="background: #1e293b; color: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; border: 1px solid rgba(255,255,255,0.1); margin-top: 5vh;">
+            <h2 style="color: #4ade80; text-align: center; margin-bottom: 2rem;">New Mutation Application</h2>
+
+            <form id="mutationForm" onsubmit="submitMutation(event)">
+                <!-- 1. Location -->
+                <h4 style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem;">1. Land
+                    Location</h4>
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label class="text-sm text-gray-400">Division</label>
+                        <select id="formDivision" class="form-select" onchange="loadDistricts()" required>
+                            <option value="">Select Division</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400">District</label>
+                        <select id="formDistrict" class="form-select" onchange="loadUpazilas()" required disabled>
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-400">Upazila</label>
+                        <select id="formUpazila" class="form-select" required disabled>
+                            <option value="">Select Upazila</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2. Applicant Info -->
+                <h4 style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem;">2. Applicant
+                    / Current Owner Info</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <input type="text" id="appName" class="form-input" placeholder="Applicant Name" required>
+                    <input type="text" id="appNid" class="form-input" placeholder="Applicant NID (Must be registered)"
+                        required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <input type="text" id="appFather" class="form-input" placeholder="Father's Name" required>
+                    <input type="text" id="appMother" class="form-input" placeholder="Mother's Name" required>
+                </div>
+
+                <!-- 3. Land Info -->
+                <h4 style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem;">3. Land
+                    Details</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <input type="text" id="khatian" class="form-input" placeholder="Khatian No" required>
+                    <input type="text" id="dag" class="form-input" placeholder="Dag No" required>
+                    <input type="text" id="deed" class="form-input" placeholder="Dalil (Deed) No" required>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <input type="text" id="amount" class="form-input" placeholder="Land Amount (Dec/Acre)" required>
+                    <input type="number" id="price" class="form-input" placeholder="Estimated Price" required>
+                    <select id="ownType" class="form-select" required>
+                        <option value="Own">My Own Land</option>
+                        <option value="Other">Other / Inherited</option>
+                    </select>
+                </div>
+
+                <!-- 4. Buyer Info -->
+                <h4 style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem;">4. Buyer
+                    Information</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <input type="text" id="buyerName" class="form-input" placeholder="Buyer Name" required>
+                    <input type="text" id="buyerNid" class="form-input" placeholder="Buyer NID (Must be registered)"
+                        required>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn-hero status" onclick="closeMutationModal()">Cancel</button>
+                    <button type="submit" class="btn-hero new">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html';
+
+        // --- Navigation Logic ---
+        function switchTab(el, tabName) {
+            document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+            el.classList.add('active');
+            ['overview', 'mutation', 'records', 'tax'].forEach(sec => {
+                const div = document.getElementById(sec + '-section');
+                if (div) div.style.display = 'none';
+            });
+            const target = document.getElementById(tabName + '-section');
+            if (target) target.style.display = 'block';
+
+            // Auto-load divisions when switching to Mutation tab if not already loaded
+            if (tabName === 'mutation') {
+                loadDivisions(true); // pass true to indicate it's for status search too
+            }
+        }
+
+        function triggerMutationTab() {
+            const overviewLink = document.querySelector('.nav-links a[onclick*="mutation"]');
+            if (overviewLink) overviewLink.click();
+        }
+
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+
+        // --- Overview Logic ---
+        async function loadLandData() {
+            const list = document.getElementById('landApplications');
+            try {
+                const res = await fetch('/api/departments/land/applications', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.length === 0) list.innerHTML = '<p class="text-muted">No recent applications.</p>';
+                else list.innerHTML = data.map(item => `
+                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 0; font-size: 0.9rem;">
+                        <div style="display:flex; justify-content:space-between; color: white;">
+                            <span>Mutation (K: ${item.khatian_no})</span>
+                            <span style="color: ${item.status === 'Approved' ? '#34d399' : '#fbbf24'}">${item.status}</span>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { list.innerHTML = '<p class="text-muted">Failed.</p>'; }
+        }
+        loadLandData();
+
+        async function searchKhatian() {
+            const khatianNo = document.getElementById('khatianInput').value;
+            if (!khatianNo) return;
+            document.getElementById('searchResults').style.display = 'block';
+            document.getElementById('searchContent').innerHTML = 'Searching...';
+            setTimeout(() => {
+                document.getElementById('searchContent').innerHTML = 'No record found.';
+            }, 800);
+        }
+
+        // --- Mutation Logic ---
+        function scrollToSearch() {
+            document.getElementById('statusSearch').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function checkStatus() {
+            const trackNum = document.getElementById('statusAppId').value;
+            if (!trackNum) {
+                return Swal.fire({ icon: 'warning', title: 'Input Required', text: 'Please enter a Tracking Number.', background: '#1e293b', color: '#fff' });
+            }
+
+            Swal.fire({ title: 'Checking...', didOpen: () => Swal.showLoading(), background: '#1e293b', color: '#fff' });
+
+            try {
+                const res = await fetch(`/api/departments/land/mutation/status/${trackNum}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                // Check for JSON response
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server returned non-JSON response. Please RESTART your server (npm start).");
+                }
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    let statusColor = '#fbbf24'; // Pending
+                    let iconType = 'info';
+
+                    if (data.status === 'Approved') {
+                        statusColor = '#34d399';
+                        iconType = 'success';
+                    }
+                    if (data.status === 'Rejected') {
+                        statusColor = '#f87171';
+                        iconType = 'error';
+                    }
+
+                    Swal.fire({
+                        icon: iconType,
+                        title: `Status: ${data.status}`,
+                        html: `
+                            <div style="text-align: left; font-size: 0.95rem;">
+                                <p><strong>Applicant:</strong> ${data.applicant_name}</p>
+                                <p><strong>Land Amount:</strong> ${data.land_amount}</p>
+                                <p><strong>Tracking No:</strong> <span style="color:${statusColor}">${data.tracking_number}</span></p>
+                                <p><strong>Submitted:</strong> ${new Date(data.created_at).toLocaleDateString()}</p>
+                            </div>
+                        `,
+                        background: '#1e293b',
+                        color: '#fff'
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Not Found', text: data.error, background: '#1e293b', color: '#fff' });
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Connection Error', text: error.message, background: '#1e293b', color: '#fff' });
+            }
+        }
+
+        // --- Advanced Form Logic ---
+        function applyMutationPopup() {
+            document.getElementById('mutationModal').style.display = 'flex';
+            loadDivisions();
+        }
+
+        function closeMutationModal() {
+            document.getElementById('mutationModal').style.display = 'none';
+        }
+
+        function handleAuthError() {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Session Expired',
+                text: 'Please log in again.',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonText: 'Go to Login'
+            }).then(() => {
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            });
+        }
+
+        // Modified to populate both dropdowns
+        async function loadDivisions() {
+            try {
+                const res = await fetch('/api/departments/locations/divisions', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.status === 401) return handleAuthError();
+                if (!res.ok) throw new Error(`Server Error: ${res.status}`);
+                const data = await res.json();
+
+                // Form Dropdown
+                const sel = document.getElementById('formDivision');
+                if (sel) sel.innerHTML = '<option value="">Select Division</option>' + data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+                // Status Search Dropdown
+                const statusSel = document.getElementById('statusDivision');
+                if (statusSel) statusSel.innerHTML = '<option value="">Select Division</option>' + data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+            } catch (error) {
+                console.error(error);
+                // Only alert if we're opening the modal, otherwise silent fail for background loading
+                // Swal.fire({ icon: 'error', title: 'Load Failed', text: 'Could not load divisions: ' + error.message });
+            }
+        }
+
+        async function loadDistricts() {
+            try {
+                const divId = document.getElementById('formDivision').value;
+                if (!divId) return;
+                const res = await fetch(`/api/departments/locations/districts/${divId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.status === 401) return handleAuthError();
+                if (!res.ok) throw new Error(`Server Error: ${res.status}`);
+                const data = await res.json();
+                const sel = document.getElementById('formDistrict');
+                sel.innerHTML = '<option value="">Select District</option>' + data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+                sel.disabled = false;
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Load Failed', text: 'Could not load districts: ' + error.message });
+            }
+        }
+
+        async function loadUpazilas() {
+            try {
+                const distId = document.getElementById('formDistrict').value;
+                if (!distId) return;
+                const res = await fetch(`/api/departments/locations/upazilas/${distId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.status === 401) return handleAuthError();
+                if (!res.ok) throw new Error(`Server Error: ${res.status}`);
+                const data = await res.json();
+                const sel = document.getElementById('formUpazila');
+                sel.innerHTML = '<option value="">Select Upazila</option>' + data.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+                sel.disabled = false;
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Load Failed', text: 'Could not load upazilas: ' + error.message });
+            }
+        }
+
+        async function submitMutation(e) {
+            e.preventDefault();
+
+            const payload = {
+                divId: document.getElementById('formDivision').value,
+                distId: document.getElementById('formDistrict').value,
+                upaId: document.getElementById('formUpazila').value,
+                appName: document.getElementById('appName').value,
+                appFather: document.getElementById('appFather').value,
+                appMother: document.getElementById('appMother').value,
+                appNid: document.getElementById('appNid').value,
+                khatian: document.getElementById('khatian').value,
+                dag: document.getElementById('dag').value,
+                amount: document.getElementById('amount').value,
+                price: document.getElementById('price').value,
+                deed: document.getElementById('deed').value,
+                ownType: document.getElementById('ownType').value,
+                buyerName: document.getElementById('buyerName').value,
+                buyerNid: document.getElementById('buyerNid').value
+            };
+
+            Swal.fire({ title: 'Submitting...', didOpen: () => Swal.showLoading(), background: '#1e293b', color: '#fff' });
+
+            try {
+                const res = await fetch('/api/departments/land/mutation_v2', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    closeMutationModal();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Application Submitted!',
+                        html: `Your Tracking No: <b style="color: #4ade80; font-size: 1.2rem;">${data.trackingNumber}</b><br>Please save this for future reference.`,
+                        background: '#1e293b',
+                        color: '#fff'
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.error, background: '#1e293b', color: '#fff' });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Network Error', background: '#1e293b', color: '#fff' });
+            }
+        }
+    </script>
+</body>
+
+</html>
+</body>
+
+</html>

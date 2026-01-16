@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBR | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar (Same as Dashboard) */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.7);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-profile {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-links a i {
+            width: 25px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .tax-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-tax {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-tax:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .tin-card {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border: 1px solid #334155;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h3 style="color: #34d399;">NBR (Tax)</h3>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">National Board of Revenue</p>
+            </div>
+            <nav class="nav-links">
+                <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                <a href="#" class="active"><i class="fas fa-home"></i> Overview</a>
+                <a href="#" onclick="showSection('return')"><i class="fas fa-file-alt"></i> File Return</a>
+                <a href="#" onclick="checkTIN()"><i class="fas fa-id-badge"></i> Check TIN</a>
+                <a href="#" onclick="showSection('vat')"><i class="fas fa-percent"></i> VAT</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-bar">
+                <div>
+                    <h1>Tax & Revenue Services</h1>
+                    <p style="color: var(--text-muted);">Manage your taxes and TIN smoothly</p>
+                </div>
+            </div>
+
+            <div class="tax-grid">
+                <div class="card">
+                    <h3 style="color: #34d399; margin-bottom: 1rem;"><i class="fas fa-file-upload"></i> File Tax Return
+                    </h3>
+                    <p style="color: #cbd5e1; margin-bottom: 1rem;">Submit your annual income tax return.</p>
+                    <button class="btn-tax" onclick="fileReturn()">File Return</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #fcd34d; margin-bottom: 1rem;"><i class="fas fa-search-dollar"></i> TIN Status
+                    </h3>
+                    <p style="color: #cbd5e1; margin-bottom: 1rem;">Check your TIN registration status.</p>
+                    <button class="btn-tax" style="background: linear-gradient(135deg, #f59e0b, #d97706);"
+                        onclick="checkTIN()">Check Status</button>
+                    <div id="tinResult" class="tin-card">
+                        <strong style="color: #34d399;">Active TIN Found</strong>
+                        <p id="tinNumber" style="color: white; margin: 5px 0;">123-456-7890</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #60a5fa; margin-bottom: 1rem;"><i class="fas fa-history"></i> Submission History
+                    </h3>
+                    <div id="taxHistory" style="margin-top: 1rem;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html';
+
+        async function checkTIN() {
+            const el = document.getElementById('tinResult');
+            try {
+                const res = await fetch('/api/departments/opt/tin', { // Using unified endpoint logic usually, but here specific
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                el.style.display = 'block';
+                if (data.tin) {
+                    el.innerHTML = `
+                        <strong style="color: #34d399;">Active TIN Found</strong>
+                        <p style="color: white; margin: 5px 0; font-family: monospace; font-size: 1.2rem;">${data.tin}</p>
+                    `;
+                } else {
+                    el.innerHTML = '<p style="color: #ef4444;">No TIN Registerd. Visit Dashboard > Documents to register.</p>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fileReturn() {
+            const { value: formValues } = await Swal.fire({
+                title: 'File Tax Return (' + new Date().getFullYear() + ')',
+                html:
+                    '<input id="swal-income" class="swal2-input" placeholder="Total Income (BDT)">' +
+                    '<input id="swal-tax" class="swal2-input" placeholder="Tax Payable (calculated)">',
+                focusConfirm: false,
+                background: '#0f172a',
+                color: '#fff',
+                showCancelButton: true,
+                preConfirm: () => {
+                    return {
+                        income: document.getElementById('swal-income').value,
+                        tax: document.getElementById('swal-tax').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                try {
+                    const res = await fetch('/api/departments/tax/return', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ year: new Date().getFullYear(), ...formValues })
+                    });
+                    if (res.ok) {
+                        Swal.fire({ icon: 'success', title: 'Filed!', background: '#0f172a', color: '#fff' });
+                        loadTaxData();
+                    }
+                } catch (e) {
+                    Swal.fire({ icon: 'error', title: 'Failed', background: '#0f172a', color: '#fff' });
+                }
+            }
+        }
+
+        async function loadTaxData() {
+            const list = document.getElementById('taxHistory');
+            try {
+                const res = await fetch('/api/departments/tax/history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    list.innerHTML = '<p class="text-muted">No returns filed.</p>';
+                    return;
+                }
+
+                list.innerHTML = data.map(item => `
+                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 0; font-size: 0.9rem;">
+                        <div style="display:flex; justify-content:space-between; color: white;">
+                            <span>Return ${item.tax_year}</span>
+                            <span style="color: #34d399">Filed</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">Income: ${item.income_amount} | Tax: ${item.tax_paid}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = '<p class="text-muted">Failed to load data.</p>';
+            }
+        }
+
+        loadTaxData();
+    </script>
+</body>
+
+</html>

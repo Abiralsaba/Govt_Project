@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Resources | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar (Same as Dashboard) */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.7);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-profile {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-links a i {
+            width: 25px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .water-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-water {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-water:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-water"></i>
+                </div>
+                <h3 style="color: #7dd3fc;">Water Ministry</h3>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">Ministry of Water Resources</p>
+            </div>
+            <nav class="nav-links">
+                <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                <a href="#" class="active"><i class="fas fa-home"></i> Overview</a>
+                <a href="#" onclick="showSection('supply')"><i class="fas fa-faucet"></i> Supply Issue</a>
+                <a href="#" onclick="showSection('bill')"><i class="fas fa-file-invoice"></i> Pay Bill</a>
+                <a href="#" onclick="showSection('project')"><i class="fas fa-project-diagram"></i> Irrigation</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-bar">
+                <div>
+                    <h1>Water Resources</h1>
+                    <p style="color: var(--text-muted);">Water Supply & Management System</p>
+                </div>
+            </div>
+
+            <div class="water-grid">
+                <div class="card">
+                    <h3 style="color: #7dd3fc; margin-bottom: 1rem;"><i class="fas fa-exclamation-triangle"></i> Report
+                        Supply Issue</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 1rem;">Report leakage, no water, or contamination.</p>
+                    <button class="btn-water" onclick="reportIssue()">Report Now</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #a78bfa; margin-bottom: 1rem;"><i class="fas fa-file-invoice-dollar"></i> Quick
+                        Bill Pay</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 1rem;">Pay your WASA bill instantly.</p>
+                    <button class="btn-water" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);"
+                        onclick="payBill()">Pay Bill</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #f472b6; margin-bottom: 1rem;"><i class="fas fa-history"></i> My Complaints</h3>
+                    <div id="waterHistory" style="margin-top: 1rem;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html';
+
+        async function reportIssue() {
+            const { value: problem } = await Swal.fire({
+                title: 'Report Water Issue',
+                input: 'textarea',
+                inputLabel: 'Describe Problem',
+                inputPlaceholder: 'e.g. Pipeline leakage in Mirpur 10...',
+                background: '#0f172a',
+                color: '#fff',
+                showCancelButton: true
+            });
+
+            if (problem) {
+                try {
+                    const res = await fetch('/api/departments/water/issue', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ issue: problem })
+                    });
+                    if (res.ok) {
+                        Swal.fire({ icon: 'success', title: 'Reported!', background: '#0f172a', color: '#fff' });
+                        loadWaterData();
+                    }
+                } catch (e) {
+                    Swal.fire({ icon: 'error', title: 'Failed', background: '#0f172a', color: '#fff' });
+                }
+            }
+        }
+
+        function payBill() {
+            Swal.fire({ icon: 'info', title: 'Coming Soon', text: 'Online payment will be available soon.', background: '#0f172a', color: '#fff' });
+        }
+
+        async function loadWaterData() {
+            const list = document.getElementById('waterHistory');
+            try {
+                const res = await fetch('/api/departments/water/issues', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    list.innerHTML = '<p class="text-muted">No complaints filed.</p>';
+                    return;
+                }
+
+                list.innerHTML = data.map(item => `
+                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 0; font-size: 0.9rem;">
+                        <div style="display:flex; justify-content:space-between; color: white;">
+                            <span>${item.description.substring(0, 20)}...</span>
+                            <span style="color: #fbbf24">${item.status}</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">${new Date(item.created_at).toLocaleDateString()}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = '<p class="text-muted">Failed to load data.</p>';
+            }
+        }
+
+        loadWaterData();
+    </script>
+</body>
+
+</html>

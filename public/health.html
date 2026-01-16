@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Dept | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar (Same as Dashboard) */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.7);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-profile {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-links a i {
+            width: 25px;
+            margin-right: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-health {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .btn-health:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h3 style="color: #fca5a5;">Health Dept</h3>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">Ministry of Health and Family Welfare</p>
+            </div>
+            <nav class="nav-links">
+                <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                <a href="#" class="active"><i class="fas fa-home"></i> Overview</a>
+                <a href="#" onclick="showSection('vaccine')"><i class="fas fa-syringe"></i> Vaccination</a>
+                <a href="#" onclick="showSection('hospitals')"><i class="fas fa-hospital"></i> Hospitals</a>
+                <a href="#" onclick="showSection('telemedicine')"><i class="fas fa-headset"></i> Telemedicine</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-bar">
+                <div>
+                    <h1>Health Services</h1>
+                    <p style="color: var(--text-muted);">Digital Healthcare Services</p>
+                </div>
+            </div>
+
+            <div class="health-grid">
+                <div class="card">
+                    <h3 style="color: #fca5a5; margin-bottom: 1rem;"><i class="fas fa-syringe"></i> Vaccination Register
+                    </h3>
+                    <p style="color: #cbd5e1; margin-bottom: 1rem;">Register for COVID-19 or other vaccinations.</p>
+                    <button class="btn-health" onclick="registerVaccine()">Register Now</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #60a5fa; margin-bottom: 1rem;"><i class="fas fa-hospital-alt"></i> Find Hospital
+                        Bed</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 1rem;">Check availability of ICU/General beds nearby.</p>
+                    <button class="btn-health" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"
+                        onclick="findBed()">Search Beds</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #34d399; margin-bottom: 1rem;"><i class="fas fa-notes-medical"></i> My Records
+                    </h3>
+                    <div id="healthHistory" style="margin-top: 1rem;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html';
+
+        async function registerVaccine() {
+            const { value: vaccine } = await Swal.fire({
+                title: 'Vaccine Registration',
+                input: 'select',
+                inputOptions: {
+                    'COVID-19': 'COVID-19',
+                    'Hepatitis B': 'Hepatitis B',
+                    'Flu': 'Flu Shot'
+                },
+                inputPlaceholder: 'Select Vaccine',
+                background: '#0f172a',
+                color: '#fff',
+                showCancelButton: true
+            });
+
+            if (vaccine) {
+                try {
+                    const res = await fetch('/api/departments/health/vaccine', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ vaccine })
+                    });
+                    if (res.ok) {
+                        Swal.fire({ icon: 'success', title: 'Registered!', text: 'You will receive SMS soon.', background: '#0f172a', color: '#fff' });
+                        loadHealthData();
+                    }
+                } catch (e) {
+                    Swal.fire({ icon: 'error', title: 'Failed', background: '#0f172a', color: '#fff' });
+                }
+            }
+        }
+
+        async function findBed() {
+            Swal.fire({
+                title: 'Find Hospital Beds',
+                html: '<p>Searching real-time database...</p>',
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+                background: '#0f172a', color: '#fff'
+            }).then(() => {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Available Beds',
+                    html: 'Dhaka Medical: 12<br>Mitford: 5<br>Square: 0',
+                    background: '#0f172a', color: '#fff'
+                });
+            });
+        }
+
+        async function loadHealthData() {
+            const list = document.getElementById('healthHistory');
+            try {
+                const res = await fetch('/api/departments/health/records', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    list.innerHTML = '<p class="text-muted">No records found.</p>';
+                    return;
+                }
+
+                list.innerHTML = data.map(item => `
+                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 0; font-size: 0.9rem;">
+                        <div style="display:flex; justify-content:space-between; color: white;">
+                            <span>${item.vaccine_name}</span>
+                            <span style="color: #34d399">Registered</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">${new Date(item.created_at).toLocaleDateString()}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = '<p class="text-muted">Failed to load data.</p>';
+            }
+        }
+
+        loadHealthData();
+    </script>
+</body>
+
+</html>

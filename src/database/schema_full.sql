@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS reg_info (
     dob DATE NOT NULL,
     address TEXT,
     gender VARCHAR(20),
+    photo_url VARCHAR(255),
     reset_otp VARCHAR(10),
     reset_otp_expires DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -85,4 +86,34 @@ CREATE TABLE IF NOT EXISTS land_records (
     dag_no VARCHAR(50),
     area_acres DECIMAL(10,4),
     last_tax_paid_year INT
+);
+
+-- ==========================================
+-- USER PROFILE & EDIT HISTORY
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS user_info (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL, -- Links to reg_info.id
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL, -- Can check uniqueness if we want, but might be redundant if user_id is unique
+    nid VARCHAR(50) NOT NULL,
+    mobile VARCHAR(20) NOT NULL,
+    dob DATE NOT NULL,
+    address TEXT,
+    gender VARCHAR(20),
+    profile_image VARCHAR(255),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES reg_info(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS edit_req (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    edited_by VARCHAR(255), -- Name or ID of who edited
+    edited_fields TEXT, -- JSON or description of what changed
+    old_values TEXT, -- JSON of old values
+    new_values TEXT, -- JSON of new values
+    edited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES reg_info(id) ON DELETE CASCADE
 );

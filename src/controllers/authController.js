@@ -35,6 +35,12 @@ exports.register = async (req, res) => {
             [username, email, passwordHash, nid, mobile, dob, address, gender]
         );
 
+        // Insert into user_info (Mirroring initial data)
+        await db.query(
+            'INSERT INTO user_info (user_id, name, email, nid, mobile, dob, address, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [result.insertId, username, email, nid, mobile, dob, address, gender]
+        );
+
         // Generate Token immediately
         const token = jwt.sign(
             { id: result.insertId, username: username, nid: nid },

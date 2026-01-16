@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -18,9 +19,10 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "fonts.googleapis.com", "cdnjs.cloudflare.com", "cdn.jsdelivr.net", "'unsafe-inline'"],
             fontSrc: ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "cdn.jsdelivr.net"],
+            imgSrc: ["'self'", "data:", "cdn.jsdelivr.net", "https://ui-avatars.com", "blob:"],
             connectSrc: ["'self'"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: null,
@@ -45,6 +47,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/user', userRoutes);
+const departmentRoutes = require('./routes/departmentRoutes');
+app.use('/api/departments', departmentRoutes);
 
 // Error Handler
 app.use((err, req, res, next) => {
