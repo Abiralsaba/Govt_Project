@@ -32,6 +32,7 @@ app.use(helmet({
 }));
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
 
 // Rate Limiting to prevent brute force
 const limiter = rateLimit({
@@ -50,11 +51,24 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/user', userRoutes);
 const departmentRoutes = require('./routes/departmentRoutes');
 app.use('/api/departments', departmentRoutes);
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api/payment', paymentRoutes);
+const communityRoutes = require('./routes/communityRoutes');
+app.use('/api/community', communityRoutes);
 
+// Error Handler
 // Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Max 5MB allowed.' });
+    }
+    if (err) {
+        // Handle Multer string errors if any remain
+        const msg = (typeof err === 'string') ? err : (err.message || 'Something went wrong!');
+        return res.status(500).json({ error: msg });
+    }
+    next();
 });
 
 const PORT = process.env.PORT || 3000;

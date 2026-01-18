@@ -4,7 +4,7 @@ const db = require('../config/db');
 exports.getSummary = async (req, res) => {
     const userId = req.user.id;
     try {
-        const [user] = await db.query('SELECT name, nid, email, photo_url FROM reg_info WHERE id = ?', [userId]);
+        const [user] = await db.query('SELECT id, name, nid, email, photo_url FROM reg_info WHERE id = ?', [userId]);
 
         // Real Stats
         // Real Stats - Single Source
@@ -52,39 +52,121 @@ exports.updateRequestStatus = async (req, res) => {
 
     try {
         // 1. Get the request details to know the sub-table (service type)
-        const [reqData] = await db.query('SELECT * FROM service_requests WHERE id = ? AND user_id = ?', [requestId, req.user.id]);
+        // FIX: Removed "AND user_id = ?" so Admin can find/approve ANY user's request
+        const [reqData] = await db.query('SELECT * FROM service_requests WHERE id = ?', [requestId]);
 
         if (reqData.length === 0) {
             return res.status(404).json({ error: 'Request not found' });
         }
 
         const request = reqData[0];
-        // Reverse engineer table name: "nid correction" -> "req_nid_correction"
-        // This is a bit fragile but works based on our naming convention
-        const tableName = `req_${request.service_type.replace(/ /g, '_')}`;
+        console.log(`[UpdateStatus] Admin (User ${req.user.id}) approving Request ${requestId} (Owner: ${request.user_id})`);
+        console.log(`[UpdateStatus] Service: ${request.service_type}, Status: ${status}`);
 
-        // 2. Update service_requests table
+        // 2. Update service_requests table (Restored)
         await db.query('UPDATE service_requests SET status = ? WHERE id = ?', [status, requestId]);
 
-        // 3. Update specific table (try catch in case table name inference fails, though it should work)
-        try {
-            // Check if table exists first or just try update?
-            // "unique_number" might be needed to identify row in sub-table? 
-            // `service_requests` doesn't strictly link ID to sub-table ID.
-            // But we can match by user_id and approximate time or we should have stored sub-table ID.
-            // Wait, we stored `details` as "ID: 123 - desc". We can extract ID.
+        const uniqueIdMatch = request.details.match(/ID: ([\w-]+) -/);
+        const uniqueId = uniqueIdMatch ? uniqueIdMatch[1] : null;
 
-            const uniqueIdMatch = request.details.match(/ID: (\w+) -/);
-            const uniqueId = uniqueIdMatch ? uniqueIdMatch[1] : null;
-
+        if (request.service_type === 'Land Mutation') {
             if (uniqueId) {
-                await db.query(`UPDATE ${tableName} SET status = ? WHERE unique_number = ? AND user_id = ?`,
-                    [status, uniqueId, req.user.id]);
+                // Update mutation status in land_mutations_v2
+                await db.query('UPDATE land_mutations_v2 SET status = ? WHERE tracking_number = ?', [status, uniqueId]);
+
+                // If Approved, Remove from Seller's Record
+                if (status === 'Approved' || status === 'approved') {
+                    const [mutations] = await db.query('SELECT * FROM land_mutations_v2 WHERE tracking_number = ?', [uniqueId]);
+
+                    let sellerId = request.user_id; // Default to request creator
+                    let matKhatian = null;
+                    let matDag = null;
+                    let matAmount = 0;
+
+                    if (mutations.length > 0) {
+                        const mut = mutations[0];
+                        sellerId = mut.user_id;
+                        matKhatian = mut.khatian_no;
+                        matDag = mut.dag_no;
+                        matAmount = parseFloat(mut.land_amount);
+
+                        // --- ROBUST TRANSFER LOGIC ---
+                        // 1. Verify Buyer Exists in System
+                        const [buyerUser] = await db.query('SELECT id FROM reg_info WHERE nid = ?', [mut.buyer_nid]);
+
+                        if (buyerUser.length > 0) {
+                            const buyerId = buyerUser[0].id;
+
+                            // 2. Add to Buyer's Record (Idempotent check)
+                            const [existing] = await db.query('SELECT id FROM my_land_record WHERE user_id = ? AND khatian_no = ? AND dag_no = ?', [buyerId, matKhatian, matDag]);
+
+                            if (existing.length === 0) {
+                                await db.query(`INSERT INTO my_land_record 
+                                    (user_id, division, district, upazila, owner_name, father_name, mother_name, nid, khatian_no, dag_no, mouza, land_size, deed_no, land_price, ownership_description, status) 
+                                    VALUES (?, (SELECT name FROM divisions WHERE id=?), (SELECT name FROM districts WHERE id=?), (SELECT name FROM upazilas WHERE id=?), ?, ?, ?, ?, ?, ?, 'Mutation Transfer', ?, ?, ?, ?, 'Approved')`,
+                                    [buyerId, mut.division_id, mut.district_id, mut.upazila_id, mut.buyer_name, mut.buyer_father_name, mut.buyer_mother_name, mut.buyer_nid, matKhatian, matDag, matAmount, mut.deed_no || 'N/A', mut.land_price, `Purchased via Mutation (Tracking: ${uniqueId})`]
+                                );
+                                console.log(`[Transfer] Added Land Record for Buyer ${buyerId} (Size: ${matAmount})`);
+                            } else {
+                                console.warn(`[Transfer] Buyer ${buyerId} already has record for K:${matKhatian}/D:${matDag}. Skipping insert.`);
+                            }
+
+                            // 3. Remove/Reduce from Seller's Record
+                            if (matKhatian && matDag) {
+                                const [sellerRecords] = await db.query(
+                                    'SELECT * FROM my_land_record WHERE user_id = ? AND khatian_no = ? AND dag_no = ?',
+                                    [sellerId, matKhatian, matDag]
+                                );
+
+                                if (sellerRecords.length > 0) {
+                                    const record = sellerRecords[0];
+                                    const currentSize = parseFloat(record.land_size);
+
+                                    if (matAmount > 0) {
+                                        const epsilon = 0.0001;
+                                        if (matAmount >= currentSize - epsilon) {
+                                            // Full Transfer
+                                            await db.query('DELETE FROM my_land_record WHERE id = ?', [record.id]);
+                                            console.log(`[Transfer] Deleted Seller ${sellerId} Record ${record.id} (Full Transfer)`);
+                                        } else {
+                                            // Partial Transfer
+                                            const newSize = currentSize - matAmount;
+                                            await db.query('UPDATE my_land_record SET land_size = ? WHERE id = ?', [newSize, record.id]);
+                                            console.log(`[Transfer] Updated Seller ${sellerId} Record ${record.id} -> New Size: ${newSize}`);
+                                        }
+                                    } else {
+                                        console.error(`[Transfer] Invalid mutation amount (${matAmount}). Seller record NOT modified.`);
+                                    }
+                                } else {
+                                    console.error(`[Transfer] Seller ${sellerId} record not found (K:${matKhatian}, D:${matDag}).`);
+                                }
+                            }
+
+                        } else {
+                            console.error(`[Transfer] Buyer NID ${mut.buyer_nid} not found in reg_info. Transfer aborted (Seller record preserved).`);
+                            // Append error to admin comments so they know why it "failed" silently
+                            await db.query('UPDATE service_requests SET admin_comment = CONCAT(IFNULL(admin_comment, ""), " [System Warning: Buyer NID not registered, ownership not transferred]") WHERE id = ?', [requestId]);
+                        }
+
+                    } else {
+                        console.warn(`[Transfer] Mutation record missing for Tracking ${uniqueId}.`);
+                    }
+                }
             }
-        } catch (subTableError) {
-            console.warn(`Could not update sub-table ${tableName}:`, subTableError.message);
-            // Don't fail the whole request, as the master record is updated
+        } else {
+            // Generic Logic for other services
+            const tableName = `req_${request.service_type.replace(/ /g, '_')}`;
+            // 3. Update specific table
+            try {
+                if (uniqueId) {
+                    await db.query(`UPDATE ${tableName} SET status = ? WHERE unique_number = ? AND user_id = ?`,
+                        [status, uniqueId, req.user.id]);
+                }
+            } catch (subTableError) {
+                console.warn(`Could not update sub-table ${tableName}:`, subTableError.message);
+            }
         }
+
 
         // 4. Insert into completed_tasks
         await db.query(
@@ -94,7 +176,8 @@ exports.updateRequestStatus = async (req, res) => {
 
         // 5. Create Notification
         const message = `Your request for ${request.service_type} has been ${status}. ${comments ? 'Reason: ' + comments : ''}`;
-        await db.query('INSERT INTO notifications (user_id, message) VALUES (?, ?)', [req.user.id, message]);
+        // FIX: Send notification to the REQUESTER (request.user_id), not the admin (req.user.id)
+        await db.query('INSERT INTO notifications (user_id, message) VALUES (?, ?)', [request.user_id, message]);
 
         res.json({ message: 'Request updated successfully' });
 
@@ -181,11 +264,13 @@ exports.getTodos = async (req, res) => {
 };
 
 // Kanban: Create Todo
+// Kanban: Create Todo
 exports.createTodo = async (req, res) => {
-    const { title } = req.body;
+    console.log('createTodo Body:', req.body);
+    const { title, description } = req.body;
     try {
-        const [result] = await db.query('INSERT INTO todos (user_id, title) VALUES (?, ?)', [req.user.id, title]);
-        res.json({ id: result.insertId, title, status: 'todo' });
+        const [result] = await db.query('INSERT INTO todos (user_id, title, description) VALUES (?, ?, ?)', [req.user.id, title, description || null]);
+        res.json({ id: result.insertId, title, description, status: 'todo' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to create task' });
     }
@@ -269,45 +354,174 @@ exports.getDepartments = (req, res) => {
     res.json(departments);
 };
 
+// Official Documents: Upload (to govt_user_documents)
+exports.uploadOfficialDocument = async (req, res) => {
+    try {
+        console.log('[UploadOfficial] Body:', req.body);
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        const { docCategory, identityNumber } = req.body; // 'NID', 'Passport', 'Tax'
+        const filePath = 'uploads/user_docs/' + req.file.filename;
+
+        await db.query(
+            'INSERT INTO govt_user_documents (user_id, doc_category, identity_number, file_path, status) VALUES (?, ?, ?, ?, ?)',
+            [req.user.id, docCategory, identityNumber, filePath, 'Pending']
+        );
+
+        res.json({ message: 'Document uploaded for verification', filePath });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to upload document' });
+    }
+};
+
 // Documents: Fetch all linked documents
 exports.getDocuments = async (req, res) => {
     const userId = req.user.id;
+    console.log(`[getDocuments] Fetching docs for User ID: ${userId}`);
     try {
-        // 1. Get Citizen ID
-        const [citizen] = await db.query('SELECT id, nid_number, tin_number, passport_number FROM citizens WHERE user_id = ?', [userId]);
+        // 1. Get User Info from reg_info
+        const [user] = await db.query('SELECT nid FROM reg_info WHERE id = ?', [userId]);
 
-        // Default empty structure if no citizen record
-        if (citizen.length === 0) {
-            return res.json({
-                nid: null,
-                passport: null,
-                tax: null,
-                land: []
-            });
-        }
-
-        const citizenId = citizen[0].id;
+        const userNid = user.length > 0 ? user[0].nid : null;
 
         // 2. Fetch specific records
-        // We use LEFT JOIN logic or separate queries. Separate is safer for now.
-        const [nid] = await db.query('SELECT * FROM nid_cards WHERE citizen_id = ? OR nid_number = ?', [citizenId, citizen[0].nid_number]);
+        let nidCard = null;
+        if (userNid) {
+            const [nids] = await db.query('SELECT * FROM nid_cards WHERE nid_number = ?', [userNid]);
+            nidCard = nids[0] || null;
+        }
 
-        // Passport_books might not have citizen_id directly, relying on passport_number from citizen record
-        const [passport] = await db.query('SELECT * FROM passport_books WHERE passport_number = ?', [citizen[0].passport_number]);
+        let passport = null;
+        let tax = null;
 
-        const [tax] = await db.query('SELECT * FROM tax_payers WHERE citizen_id = ? OR tin_number = ?', [citizenId, citizen[0].tin_number]);
-        const [land] = await db.query('SELECT * FROM land_records WHERE citizen_id = ?', [citizenId]);
+        // 3. Fetch Pending/Verification Official Docs
+        const [govtDocs] = await db.query('SELECT * FROM govt_user_documents WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+
+        // Helper to find latest doc by category (Pending, Approved, or Rejected)
+        const findGovtDoc = (cat) => govtDocs.find(d => d.doc_category === cat && ['Pending', 'Approved', 'Rejected'].includes(d.status));
+
+        const nidUpload = findGovtDoc('NID');
+        const passportUpload = findGovtDoc('Passport');
+        const taxUpload = findGovtDoc('Tax');
+
+        // Always prioritize the uploaded/tracked document if it exists
+        if (nidUpload) {
+            nidCard = {
+                nid_number: nidUpload.identity_number,
+                status: nidUpload.status,
+                file_path: nidUpload.file_path,
+                expiry_date: nidUpload.status === 'Approved' ? 'Valid' : null,
+                ...nidUpload
+            };
+        }
+
+        if (passportUpload) {
+            passport = {
+                passport_number: passportUpload.identity_number,
+                status: passportUpload.status,
+                file_path: passportUpload.file_path,
+                expiry_date: passportUpload.status === 'Approved' ? 'Valid' : null,
+                ...passportUpload
+            };
+        }
+
+        if (taxUpload) {
+            tax = {
+                tin_number: taxUpload.identity_number,
+                status: taxUpload.status,
+                file_path: taxUpload.file_path,
+                ...taxUpload
+            };
+        }
+
+        // Land
+        const [land] = await db.query('SELECT * FROM my_land_record WHERE user_id = ?', [userId]);
 
         res.json({
-            nid: nid[0] || null,
-            passport: passport[0] || null,
-            tax: tax[0] || null,
+            nid: nidCard,
+            passport: passport,
+            tax: tax,
             land: land || []
         });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch documents' });
+    }
+};
+
+// User Documents: Upload
+exports.uploadUserDocument = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        const { docType, docName } = req.body;
+        const filePath = 'uploads/user_docs/' + req.file.filename;
+
+        await db.query(
+            'INSERT INTO user_documents (user_id, doc_type, doc_name, file_path, status) VALUES (?, ?, ?, ?, ?)',
+            [req.user.id, docType, docName, filePath, 'Pending']
+        );
+
+        res.json({ message: 'Document uploaded successfully', filePath });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to upload document' });
+    }
+};
+
+// User Documents: Get List
+exports.getUserDocuments = async (req, res) => {
+    try {
+        const [docs] = await db.query(
+            'SELECT * FROM user_documents WHERE user_id = ? ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json(docs);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch user documents' });
+    }
+};
+
+// User Documents: Update (Re-upload)
+exports.updateUserDocument = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Ensure user owns the document
+        const [doc] = await db.query('SELECT * FROM user_documents WHERE id = ? AND user_id = ?', [id, req.user.id]);
+        if (doc.length === 0) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+
+        let updateQuery = 'UPDATE user_documents SET status = "Pending", updated_at = NOW()';
+        const params = [];
+
+        if (req.file) {
+            const filePath = 'uploads/user_docs/' + req.file.filename;
+            updateQuery += ', file_path = ?';
+            params.push(filePath);
+        }
+
+        // Also allow updating name if provided
+        if (req.body.docName) {
+            updateQuery += ', doc_name = ?';
+            params.push(req.body.docName);
+        }
+
+        updateQuery += ' WHERE id = ?';
+        params.push(id);
+
+        await db.query(updateQuery, params);
+        res.json({ message: 'Document updated successfully' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update document' });
     }
 };
 

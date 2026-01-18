@@ -7,10 +7,13 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, '../../public/uploads/'));
     },
     filename: function (req, file, cb) {
-        // Unique filename: user-id-timestamp.ext
+        // Unique filename: prefix-user-id-timestamp.ext
+        let prefix = 'profile';
+        if (file.fieldname === 'cover_image') prefix = 'community';
+        else if (file.fieldname === 'post_image') prefix = 'post';
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
-        cb(null, 'profile-' + (req.user ? req.user.id : 'anon') + '-' + uniqueSuffix + ext);
+        cb(null, prefix + '-' + (req.user ? req.user.id : 'anon') + '-' + uniqueSuffix + ext);
     }
 });
 

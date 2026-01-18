@@ -1,27 +1,40 @@
-const db = require('../src/config/db');
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 
-async function initDB() {
+async function run() {
     try {
-        console.log('Initializing Land Tables...');
+        const pool = mysql.createPool({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'central_govt_db',
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+            multipleStatements: true // Important for running schema scripts
+        });
 
-        await db.query(`
-            CREATE TABLE IF NOT EXISTS land_mutations (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                khatian_no VARCHAR(50),
-                deed_no VARCHAR(50),
-                reason TEXT,
-                status VARCHAR(20) DEFAULT 'Pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        console.log('Table land_mutations created/verified.');
+        const schemaPath = path.join(__dirname, '../src/database/land_mutation_schema.sql');
+        const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
-        process.exit(0);
+        console.log('Running schema script...');
+        await pool.query(schemaSql);
+        console.log('Schema script executed successfully.');
+
+        // Verify
+        const [rows] = await pool.query("SHOW TABLES LIKE 'land_mutations_v2'");
+        if (rows.length > 0) {
+            console.log('Table land_mutations_v2 exists.');
+        } else {
+            console.error('Table creation failed!');
+        }
+
+        await pool.end();
     } catch (error) {
-        console.error('DB Init Failed:', error);
-        process.exit(1);
+        console.error('Error:', error);
     }
 }
 
-initDB();
+run();

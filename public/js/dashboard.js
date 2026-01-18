@@ -53,11 +53,15 @@ async function loadDashboard() {
 }
 
 // Kanban Logic
+// Kanban Logic
+let sortablesInitialized = false;
+
 async function loadTodos() {
     const res = await fetch('/api/dashboard/todos', {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     const todos = await res.json();
+    window.todos = todos; // Store globally
 
     ['todo', 'progress', 'done'].forEach(status => {
         const container = document.getElementById(status);
@@ -67,16 +71,29 @@ async function loadTodos() {
                 const el = document.createElement('div');
                 el.className = 'kanban-item';
                 el.setAttribute('data-id', t.id);
-                el.innerHTML = `<span>${t.title}</span> <i class="fas fa-trash delete-task" onclick="deleteTask(${t.id}, event)"></i>`;
+                el.innerHTML = `
+                    <div style="width: 100%; cursor: pointer;" onclick="viewTask(${t.id})">
+                        <div style="font-weight: 600; font-size: 0.95rem;">${t.title}</div>
+                    </div>
+                     <div style="display: flex; gap: 8px;">
+                        <i class="fas fa-eye" onclick="viewTask(${t.id})" style="cursor: pointer; color: #60a5fa;"></i>
+                        <i class="fas fa-trash delete-task" onclick="deleteTask(${t.id}, event)"></i>
+                    </div>
+                `;
                 container.appendChild(el);
             });
         }
     });
 
-    // Initialize Sortable
+    // Initialize Sortable only once
+    if (!sortablesInitialized) {
+        initSortable();
+        sortablesInitialized = true;
+    }
+}
+
+function initSortable() {
     ['todo', 'progress', 'done'].forEach(id => {
-        // Check if cached instance exists to avoid duplicates or memory leaks if called repeatedly? 
-        // Actually Sortable.create is robust. But let's check if element exists first.
         const el = document.getElementById(id);
         if (el) {
             new Sortable(el, {
@@ -84,7 +101,7 @@ async function loadTodos() {
                 animation: 150,
                 onEnd: function (evt) {
                     const itemEl = evt.item;
-                    const newStatus = evt.to.id;
+                    const newStatus = evt.to.id; // 'todo', 'progress', 'done'
                     const id = itemEl.getAttribute('data-id');
                     updateTaskStatus(id, newStatus);
                 }
@@ -94,27 +111,50 @@ async function loadTodos() {
 }
 
 async function createTask() {
-    const { value: title } = await Swal.fire({
+    const { value: formValues } = await Swal.fire({
         title: 'New Task',
-        input: 'text',
-        inputPlaceholder: 'Enter task title...',
+        html: `
+            <input id="swal-input1" class="swal2-input" placeholder="Task Title">
+            <textarea id="swal-input2" class="swal2-textarea" placeholder="Description (Optional)"></textarea>
+        `,
+        focusConfirm: false,
         background: '#0f172a',
         color: '#fff',
-        showCancelButton: true
+        showCancelButton: true,
+        preConfirm: () => {
+            return {
+                title: document.getElementById('swal-input1').value,
+                description: document.getElementById('swal-input2').value
+            }
+        }
     });
 
-    if (title) {
+    if (formValues && formValues.title) {
         await fetch('/api/dashboard/todos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ title })
+            body: JSON.stringify(formValues)
         });
         loadTodos();
     }
 }
+
+function viewTask(id) {
+    const task = window.todos.find(t => t.id === id);
+    if (!task) return;
+
+    Swal.fire({
+        title: task.title,
+        text: task.description || 'No description provided.',
+        background: '#0f172a',
+        color: '#fff',
+        confirmButtonColor: '#3b82f6'
+    });
+}
+window.viewTask = viewTask;
 
 async function updateTaskStatus(id, status) {
     await fetch(`/api/dashboard/todos/${id}/move`, {

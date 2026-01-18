@@ -7,110 +7,9 @@
     <title>Activity History | Govt of Bangladesh</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/history.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 260px;
-            background: rgba(15, 23, 42, 0.9);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-        }
-
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-        }
-
-        .history-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 0;
-            overflow: hidden;
-            /* For table rounded corners */
-            backdrop-filter: blur(10px);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            color: white;
-        }
-
-        th,
-        td {
-            text-align: left;
-            padding: 1.25rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        th {
-            background: rgba(255, 255, 255, 0.02);
-            font-weight: 600;
-            color: #94a3b8;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .status-pill {
-            padding: 0.25rem 0.75rem;
-            border-radius: 99px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: capitalize;
-        }
-
-        .status-pending {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
-        }
-
-        .status-approved {
-            background: rgba(52, 211, 153, 0.2);
-            color: #34d399;
-        }
-
-        .status-rejected {
-            background: rgba(248, 113, 113, 0.2);
-            color: #f87171;
-        }
-
-        .empty-state {
-            padding: 4rem;
-            text-align: center;
-            color: #94a3b8;
-        }
-    </style>
 </head>
 
 <body>
@@ -148,25 +47,6 @@
                 <button onclick="filterHistory('rejected')" class="filter-btn" data-filter="rejected">Rejected</button>
             </div>
 
-            <style>
-                .filter-btn {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    color: #94a3b8;
-                    padding: 0.5rem 1rem;
-                    border-radius: 20px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-
-                .filter-btn:hover,
-                .filter-btn.active {
-                    background: var(--primary-color);
-                    color: white;
-                    border-color: var(--primary-color);
-                }
-            </style>
-
             <div class="history-card">
                 <table id="historyTable">
                     <thead>
@@ -188,88 +68,7 @@
         </main>
     </div>
 
-    <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = 'index.html';
-
-        let allHistoryData = [];
-
-        async function loadHistory() {
-            const tableBody = document.getElementById('historyBody');
-
-            try {
-                const res = await fetch('/api/dashboard/history', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!res.ok) throw new Error('Failed to fetch history');
-
-                const data = await res.json();
-                allHistoryData = Array.isArray(data) ? data : [];
-                renderTable(allHistoryData);
-
-            } catch (err) {
-                console.error(err);
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align: center; color: #f87171; padding: 2rem;">
-                            Failed to load history data.
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        function filterHistory(status) {
-            // Update buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`button[data-filter="${status}"]`).classList.add('active');
-
-            if (status === 'all') {
-                renderTable(allHistoryData);
-            } else {
-                const filtered = allHistoryData.filter(item => (item.status || 'pending').toLowerCase() === status);
-                renderTable(filtered);
-            }
-        }
-
-        function renderTable(data) {
-            const tableBody = document.getElementById('historyBody');
-            tableBody.innerHTML = '';
-
-            if (data.length > 0) {
-                data.forEach(item => {
-                    const date = new Date(item.created_at).toLocaleDateString(undefined, {
-                        year: 'numeric', month: 'short', day: 'numeric'
-                    });
-
-                    // Status class handling
-                    const status = (item.status || 'pending').toLowerCase();
-                    const statusClass = `status-${status}`;
-
-                    tableBody.innerHTML += `
-                        <tr>
-                            <td style="color: #cbd5e1;">${date}</td>
-                            <td style="font-weight: 500;">${item.service_type}</td>
-                            <td style="color: #94a3b8; max-width: 300px;">${item.details || '-'}</td>
-                            <td><span class="status-pill ${statusClass}">${item.status || 'Pending'}</span></td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="empty-state">
-                            <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
-                            No items found.
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', loadHistory);
-    </script>
+    <script src="js/history.js"></script>
 </body>
 
 </html>
