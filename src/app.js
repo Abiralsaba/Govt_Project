@@ -55,6 +55,14 @@ const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payment', paymentRoutes);
 const communityRoutes = require('./routes/communityRoutes');
 app.use('/api/community', communityRoutes);
+const reportsRoutes = require('./routes/reportsRoutes');
+app.use('/api/reports', reportsRoutes);
+
+// Admin Routes
+const adminAuthRoutes = require('./routes/adminAuthRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminAuthRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error Handler
 // Error Handler

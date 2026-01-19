@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics | Govt of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 style="color: #60a5fa;">Reports</h3>
+                <p style="color: #94a3b8; font-size: 0.8rem;">Analytics & Insights</p>
+            </div>
+            <nav class="nav-links">
+                <a href="dashboard.html"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+                <a href="#" class="active" onclick="showTab('overview')"><i class="fas fa-chart-pie"></i> Overview</a>
+                <a href="#" onclick="showTab('users')"><i class="fas fa-users"></i> User Analytics</a>
+                <a href="#" onclick="showTab('services')"><i class="fas fa-tasks"></i> Service Reports</a>
+                <a href="#" onclick="showTab('land')"><i class="fas fa-map"></i> Land Reports</a>
+                <a href="#" onclick="showTab('community')"><i class="fas fa-comments"></i> Community</a>
+                <a href="#" onclick="showTab('audit')"><i class="fas fa-history"></i> Audit Log</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Tab -->
+            <div id="overview-section">
+                <h1 style="color: white; margin-bottom: 0.5rem;">System Overview</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Real-time analytics and insights</p>
+
+                <div class="report-grid" id="summaryStats">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+
+                <!-- Service Pivot Table -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-table"></i> Monthly Service Breakdown</h3>
+                    <div id="servicePivotTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+
+                <!-- Division Performance -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-chart-bar"></i> Regional Performance Overview</h3>
+                    <div id="divisionPerformance">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">User Analytics</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">User engagement scores and activity analysis</p>
+
+                <!-- User Engagement Scores -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-trophy"></i> Top Engaged Users</h3>
+                    <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">
+                        Leaderboard based on login frequency, posts, comments, and group activity.
+                    </p>
+                    <div id="userEngagementTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+
+                <!-- User Tier Distribution -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-layer-group"></i> User Tier Distribution</h3>
+                    <div id="userTierDistribution">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Tab -->
+            <div id="services-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Service Reports</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Service request analytics with running totals</p>
+
+                <!-- Running Totals -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-chart-line"></i> Service Request Trends</h3>
+                    <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">
+                        Cumulative count of service requests over time.
+                    </p>
+                    <div id="runningTotalsTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+
+                <!-- Service Dashboard from View -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-tachometer-alt"></i> Service Metrics Dashboard</h3>
+                    <div id="serviceDashboardTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Land Tab -->
+            <div id="land-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Land Reports</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Land mutation analytics by location</p>
+
+                <!-- Land Rollup -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-layer-group"></i> Land Mutation Statistics</h3>
+                    <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">
+                        Breakdown of mutations by Division, District, and Upazila
+                    </p>
+                    <div id="landRollupTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+
+                <!-- Land by Location View -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-map-marked-alt"></i> Detailed Location Report</h3>
+                    <div id="landByLocationTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Tab -->
+            <div id="community-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Community Analytics</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Group engagement and top performers</p>
+
+                <!-- Community Analytics View -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-users"></i> Community Group Insights</h3>
+                    <div id="communityAnalyticsTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+
+                <!-- Top Performers -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-medal"></i> Top Contributors</h3>
+                    <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">
+                        Active members with high engagement across groups
+                    </p>
+                    <div id="topPerformersTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Tab -->
+            <div id="audit-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Audit Log</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Track all database changes (Trigger-generated)</p>
+
+                <div class="report-table-container">
+                    <h3><i class="fas fa-clipboard-list"></i> Recent Audit Entries</h3>
+                    <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">
+                        Log of recent system activities and changes.
+                    </p>
+                    <div id="auditLogTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Admin Modals -->
+    <!-- Users Modal -->
+    <div class="admin-modal" id="usersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> All Users <span class="item-count" id="usersCount">0</span></h2>
+                <button class="modal-close" onclick="closeModal('usersModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="usersModalBody">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Requests Modal -->
+    <div class="admin-modal" id="serviceRequestsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-tasks"></i> Service Requests <span class="item-count"
+                        id="serviceRequestsCount">0</span></h2>
+                <button class="modal-close" onclick="closeModal('serviceRequestsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-filter-bar">
+                    <button class="filter-btn active" onclick="filterServiceRequests('all')">All</button>
+                    <button class="filter-btn" onclick="filterServiceRequests('pending')">Pending</button>
+                    <button class="filter-btn" onclick="filterServiceRequests('approved')">Approved</button>
+                    <button class="filter-btn" onclick="filterServiceRequests('rejected')">Rejected</button>
+                </div>
+                <div id="serviceRequestsModalBody">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Land Mutations Modal -->
+    <div class="admin-modal" id="landMutationsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-map"></i> Land Mutations <span class="item-count" id="landMutationsCount">0</span>
+                </h2>
+                <button class="modal-close" onclick="closeModal('landMutationsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-filter-bar">
+                    <button class="filter-btn active" onclick="filterLandMutations('all')">All</button>
+                    <button class="filter-btn" onclick="filterLandMutations('Pending')">Pending</button>
+                    <button class="filter-btn" onclick="filterLandMutations('Approved')">Approved</button>
+                    <button class="filter-btn" onclick="filterLandMutations('Rejected')">Rejected</button>
+                </div>
+                <div id="landMutationsModalBody">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Groups Modal -->
+    <div class="admin-modal" id="communityGroupsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users-cog"></i> Community Groups <span class="item-count"
+                        id="communityGroupsCount">0</span></h2>
+                <button class="modal-close" onclick="closeModal('communityGroupsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-filter-bar">
+                    <button class="filter-btn active" onclick="filterCommunityGroups('all')">All</button>
+                    <button class="filter-btn" onclick="filterCommunityGroups('pending')">Pending</button>
+                    <button class="filter-btn" onclick="filterCommunityGroups('approved')">Approved</button>
+                    <button class="filter-btn" onclick="filterCommunityGroups('rejected')">Rejected</button>
+                </div>
+                <div id="communityGroupsModalBody">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Posts Modal -->
+    <div class="admin-modal" id="communityPostsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-comment"></i> Community Posts <span class="item-count"
+                        id="communityPostsCount">0</span></h2>
+                <button class="modal-close" onclick="closeModal('communityPostsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-filter-bar">
+                    <button class="filter-btn active" onclick="filterCommunityPosts('all')">All</button>
+                    <button class="filter-btn" onclick="filterCommunityPosts('pending')">Pending</button>
+                    <button class="filter-btn" onclick="filterCommunityPosts('approved')">Approved</button>
+                    <button class="filter-btn" onclick="filterCommunityPosts('rejected')">Rejected</button>
+                </div>
+                <div id="communityPostsModalBody">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Users Modal -->
+    <div class="admin-modal" id="newUsersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> New Users (Last 7 Days) <span class="item-count"
+                        id="newUsersCount">0</span></h2>
+                <button class="modal-close" onclick="closeModal('newUsersModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="newUsersModalBody">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/reports.js"></script>
+</body>
+
+</html>
