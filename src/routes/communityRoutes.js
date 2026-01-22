@@ -505,6 +505,80 @@ router.post('/posts/:id/comments', async (req, res) => {
     }
 });
 
+/**
+ * PUT /comments/:id - Edit a comment (author only)
+ */
+router.put('/comments/:id', async (req, res) => {
+    const { content } = req.body;
+
+    if (!content || content.trim().length < 1) {
+        return res.status(400).json({ error: 'Comment content required' });
+    }
+
+    try {
+        // Check if comment exists and user is the author
+        const [comments] = await db.query(
+            'SELECT id, user_id FROM post_comments WHERE id = ?',
+            [req.params.id]
+        );
+
+        if (comments.length === 0) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        if (comments[0].user_id !== req.user.id) {
+            return res.status(403).json({ error: 'You can only edit your own comments' });
+        }
+
+        await db.query(
+            'UPDATE post_comments SET content = ? WHERE id = ?',
+            [content.trim(), req.params.id]
+        );
+
+        res.json({ success: true, message: 'Comment updated' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+/**
+ * DELETE /comments/:id - Delete a comment (author only)
+ */
+router.delete('/comments/:id', async (req, res) => {
+    try {
+        // Check if comment exists and user is the author
+        const [comments] = await db.query(
+            'SELECT id, user_id, post_id FROM post_comments WHERE id = ?',
+            [req.params.id]
+        );
+
+        if (comments.length === 0) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        if (comments[0].user_id !== req.user.id) {
+            return res.status(403).json({ error: 'You can only delete your own comments' });
+        }
+
+        const postId = comments[0].post_id;
+
+        // Delete the comment
+        await db.query('DELETE FROM post_comments WHERE id = ?', [req.params.id]);
+
+        // Update comment count on the post
+        await db.query(
+            'UPDATE community_posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = ?',
+            [postId]
+        );
+
+        res.json({ success: true, message: 'Comment deleted' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // ==========================================
 // ADMIN ENDPOINTS
 // ==========================================

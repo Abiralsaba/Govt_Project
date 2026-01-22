@@ -218,28 +218,29 @@ router.get('/user-engagement-scores', async (req, res) => {
             scored_users AS (
                 SELECT 
                     *,
-                    (login_count * 1 + post_count * 10 + comment_count * 3 + 
-                     like_count * 1 + group_count * 5) AS engagement_score
-                FROM user_metrics
-            )
-            SELECT 
-                user_id, name, email, join_date,
-                login_count, post_count, comment_count, group_count,
-                engagement_score,
-                NTILE(4) OVER (ORDER BY engagement_score DESC) AS quartile,
-                ROUND(PERCENT_RANK() OVER (ORDER BY engagement_score) * 100, 2) AS percentile,
-                CASE 
-                    WHEN engagement_score >= 200 THEN 'Champion'
-                    WHEN engagement_score >= 100 THEN 'Power User'
-                    WHEN engagement_score >= 50 THEN 'Active'
-                    WHEN engagement_score >= 20 THEN 'Regular'
-                    WHEN engagement_score >= 5 THEN 'Beginner'
-                    ELSE 'Inactive'
-                END AS user_tier,
-                ROW_NUMBER() OVER (ORDER BY engagement_score DESC) AS rank_position
-            FROM scored_users
-            ORDER BY engagement_score DESC
-            LIMIT 50
+                (login_count * 1 + post_count * 10 + comment_count * 3 + 
+                 like_count * 1 + group_count * 5) AS engagement_score
+            FROM user_metrics
+        )
+        SELECT 
+            user_id, name, email, join_date,
+            login_count, post_count, comment_count, group_count,
+            engagement_score,
+            NTILE(4) OVER (ORDER BY engagement_score DESC) AS quartile,
+            ROUND(PERCENT_RANK() OVER (ORDER BY engagement_score) * 100, 2) AS percentile,
+            CASE 
+                WHEN engagement_score >= 200 THEN 'Champion'
+                WHEN engagement_score >= 100 THEN 'Power User'
+                WHEN engagement_score >= 50 THEN 'Active'
+                WHEN engagement_score >= 20 THEN 'Regular'
+                WHEN engagement_score >= 5 THEN 'Beginner'
+                ELSE 'Inactive'
+            END AS user_tier,
+            ROW_NUMBER() OVER (ORDER BY engagement_score DESC) AS rank_position
+        FROM scored_users
+        WHERE engagement_score > 0
+        ORDER BY engagement_score DESC
+        LIMIT 50
         `);
 
         res.json(data);
@@ -277,6 +278,23 @@ router.get('/land-rollup', async (req, res) => {
     } catch (error) {
         console.error('Error fetching land rollup:', error);
         res.status(500).json({ error: 'Failed to fetch land rollup data' });
+    }
+});
+
+/**
+ * GET /api/reports/user-land-details
+ * Get land ownership summary for each user using v_user_land_details view
+ */
+router.get('/user-land-details', async (req, res) => {
+    try {
+        const [data] = await db.query(`
+            SELECT * FROM v_user_land_details
+            ORDER BY total_land_area DESC
+        `);
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching user land details:', error);
+        res.status(500).json({ error: 'Failed to fetch user land data' });
     }
 });
 
@@ -325,26 +343,42 @@ router.get('/running-totals', async (req, res) => {
         const days = parseInt(req.query.days) || 30;
 
         const [data] = await db.query(`
+            WITH daily_stats AS (
+                SELECT 
+                    DATE(created_at) as request_date,
+                    service_type,
+                    COUNT(*) as daily_count
+                FROM service_requests
+                GROUP BY DATE(created_at), service_type
+            ),
+            running_stats AS (
+                SELECT
+                    request_date,
+                    service_type,
+                    daily_count,
+                    SUM(daily_count) OVER (
+                        PARTITION BY service_type 
+                        ORDER BY request_date
+                        ROWS UNBOUNDED PRECEDING
+                    ) as running_total
+                FROM daily_stats
+            ),
+            ranked_stats AS (
+                SELECT 
+                    *,
+                    RANK() OVER (PARTITION BY request_date ORDER BY daily_count DESC) as daily_rank,
+                    SUM(daily_count) OVER (PARTITION BY request_date) as days_total
+                FROM running_stats
+            )
             SELECT 
-                DATE(created_at) AS request_date,
+                request_date,
                 service_type,
-                COUNT(*) AS daily_count,
-                SUM(COUNT(*)) OVER (
-                    PARTITION BY service_type 
-                    ORDER BY DATE(created_at)
-                    ROWS UNBOUNDED PRECEDING
-                ) AS running_total,
-                RANK() OVER (
-                    PARTITION BY DATE(created_at) 
-                    ORDER BY COUNT(*) DESC
-                ) AS daily_rank,
-                ROUND(
-                    COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY DATE(created_at)),
-                    2
-                ) AS pct_of_daily
-            FROM service_requests
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-            GROUP BY DATE(created_at), service_type
+                daily_count,
+                running_total,
+                daily_rank,
+                ROUND(daily_count * 100.0 / days_total, 2) as pct_of_daily
+            FROM ranked_stats
+            WHERE request_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
             ORDER BY request_date DESC, daily_rank
         `, [days]);
 
@@ -448,6 +482,11 @@ router.get('/top-group-performers', async (req, res) => {
                     JOIN community_posts p ON pl.post_id = p.id
                     GROUP BY pl.user_id, p.group_id
                 ) like_cnt ON m.user_id = like_cnt.user_id AND m.group_id = like_cnt.group_id
+                WHERE (
+                    COALESCE(post_cnt.cnt, 0) * 5 + 
+                    COALESCE(comment_cnt.cnt, 0) * 2 + 
+                    COALESCE(like_cnt.cnt, 0)
+                ) > 0
             ) member_activity
             JOIN community_groups g ON member_activity.group_id = g.id
             JOIN reg_info u ON member_activity.user_id = u.id
@@ -474,8 +513,9 @@ router.get('/audit-log', async (req, res) => {
         let query = `
             SELECT 
                 a.*,
-                u.name AS user_name
+                COALESCE(admin.name, u.name) AS user_name
             FROM audit_log a
+            LEFT JOIN admins admin ON a.user_id = admin.id
             LEFT JOIN reg_info u ON a.user_id = u.id
         `;
         let params = [];

@@ -182,9 +182,106 @@ async function loadComments(postId) {
     try {
         const res = await fetch(`/api/community/posts/${postId}/comments`, { headers: { 'Authorization': `Bearer ${token}` } });
         const comments = await res.json();
-        if (comments.length === 0) list.innerHTML = '<p style="color: #64748b;">No comments yet</p>';
-        else list.innerHTML = comments.map(c => `<div class="comment-item"><div class="comment-avatar">${(c.author_name || 'U').charAt(0)}</div><div class="comment-body"><div class="comment-author">${escapeHtml(c.author_name)}</div><div class="comment-text">${escapeHtml(c.content)}</div></div></div>`).join('');
+        if (comments.length === 0) {
+            list.innerHTML = '<p style="color: #64748b;">No comments yet</p>';
+        } else {
+            list.innerHTML = comments.map(c => {
+                const isOwner = c.user_id == currentUserId;
+                return `
+                    <div class="comment-item" id="comment-${c.id}" data-content="${encodeURIComponent(c.content)}">
+                        <div class="comment-avatar">${(c.author_name || 'U').charAt(0)}</div>
+                        <div class="comment-body" style="flex: 1;">
+                            <div class="comment-author">${escapeHtml(c.author_name)}</div>
+                            <div class="comment-text">${escapeHtml(c.content)}</div>
+                        </div>
+                        ${isOwner ? `
+                            <div class="comment-actions" style="display: flex; gap: 0.5rem;">
+                                <button type="button" onclick="event.stopPropagation(); editComment(${c.id}, ${postId})" style="background: none; border: none; color: #94a3b8; cursor: pointer;" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button type="button" onclick="event.stopPropagation(); deleteComment(${c.id}, ${postId})" style="background: none; border: none; color: #ef4444; cursor: pointer;" title="Delete"><i class="fas fa-trash"></i></button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
     } catch (e) { list.innerHTML = '<p style="color: #ef4444;">Failed</p>'; }
+}
+
+async function editComment(commentId, postId) {
+    const commentEl = document.getElementById(`comment-${commentId}`);
+    const currentContent = decodeURIComponent(commentEl.dataset.content || '');
+
+    const { value: newContent, isConfirmed } = await Swal.fire({
+        title: 'Edit Comment',
+        input: 'textarea',
+        inputValue: currentContent,
+        inputPlaceholder: 'Edit your comment...',
+        showCancelButton: true,
+        background: '#1e293b',
+        color: '#fff',
+        confirmButtonText: 'Save',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Comment cannot be empty';
+            }
+        }
+    });
+
+    if (isConfirmed && newContent) {
+        try {
+            const res = await fetch(`/api/community/comments/${commentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: newContent.trim() })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false, background: '#1e293b', color: '#fff' });
+                loadComments(postId);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e) {
+            Swal.fire({ icon: 'error', text: e.message, background: '#1e293b', color: '#fff' });
+        }
+    }
+}
+
+async function deleteComment(commentId, postId) {
+    const confirmResult = await Swal.fire({
+        title: 'Delete Comment?',
+        text: 'This cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Delete',
+        background: '#1e293b',
+        color: '#fff'
+    });
+
+    if (confirmResult.isConfirmed) {
+        try {
+            const res = await fetch(`/api/community/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false, background: '#1e293b', color: '#fff' });
+                loadComments(postId);
+                // Update comment count in UI
+                const btn = document.querySelector(`#post-${postId} .post-action-btn:nth-child(2) span`);
+                if (btn) btn.textContent = Math.max(0, parseInt(btn.textContent) - 1);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e) {
+            Swal.fire({ icon: 'error', text: e.message, background: '#1e293b', color: '#fff' });
+        }
+    }
 }
 
 async function handleCommentKeypress(e, postId) {

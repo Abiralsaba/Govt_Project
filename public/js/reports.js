@@ -58,6 +58,14 @@ async function fetchReportsAPI(endpoint) {
         const res = await fetch(`/api/reports/${endpoint}`, {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
+
+        if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminName');
+            window.location.href = 'admin-login.html';
+            return null;
+        }
+
         if (!res.ok) throw new Error('API Error');
         return await res.json();
     } catch (err) {
@@ -531,11 +539,47 @@ async function approveLandMutation(id) {
     });
 
     if (confirm.isConfirmed) {
-        const result = await fetchAdminAPI(`land-mutations/${id}/approve`, 'PUT');
-        if (result?.success) {
-            Swal.fire({ icon: 'success', title: 'Approved!', text: 'Land ownership transferred.', timer: 2000, showConfirmButton: false });
-            showLandMutationsModal();
-            loadOverview();
+        // Show loading state
+        Swal.fire({
+            title: 'Processing...',
+            text: 'Please wait while we update the records.',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        console.log('Sending approval request for ID:', id);
+
+        try {
+            const result = await fetchAdminAPI(`land-mutations/${id}/approve`, 'PUT');
+            console.log('Approval Result:', result);
+
+            if (result?.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Approved!',
+                    text: 'Land ownership transferred successfully.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                showLandMutationsModal();
+                loadOverview(); // Refresh stats
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Approval Failed',
+                    text: result?.error || 'Server returned an error. Check console for details.'
+                });
+            }
+        } catch (err) {
+            console.error('Frontend Approval Error:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'A network or client-side error occurred.'
+            });
         }
     }
 }
@@ -829,7 +873,6 @@ async function loadServices() {
                     <th>Service Type</th>
                     <th>Daily Count</th>
                     <th>Running Total</th>
-                    <th>Daily Rank</th>
                     <th>% of Daily</th>
                 </tr>
             </thead>
@@ -841,7 +884,6 @@ async function loadServices() {
                 <td>${row.service_type}</td>
                 <td>${row.daily_count}</td>
                 <td><strong>${row.running_total}</strong></td>
-                <td>${getRankBadge(row.daily_rank)}</td>
                 <td>${row.pct_of_daily}%</td>
             </tr>`;
         });
@@ -927,7 +969,7 @@ async function loadLand() {
                     <th>Division</th>
                     <th>District</th>
                     <th>Upazila</th>
-                    <th>Mutations</th>
+                    <th>Parcels</th>
                     <th>Approved</th>
                     <th>Total Value</th>
                 </tr>
@@ -935,20 +977,74 @@ async function loadLand() {
             <tbody>`;
 
         landLoc.slice(0, 30).forEach(row => {
-            if (row.total_mutations > 0) {
+            if (row.total_parcels > 0) {
                 html += `<tr>
                     <td>${row.division || '-'}</td>
                     <td>${row.district || '-'}</td>
                     <td>${row.upazila || '-'}</td>
-                    <td>${row.total_mutations}</td>
-                    <td>${row.approved_mutations}</td>
-                    <td>${formatCurrency(row.total_transaction_value)}</td>
+                    <td>${row.total_parcels}</td>
+                    <td>${row.approved_parcels}</td>
+                    <td>${formatCurrency(row.total_valuation)}</td>
                 </tr>`;
             }
         });
 
         html += '</tbody></table>';
         document.getElementById('landByLocationTable').innerHTML = html;
+    }
+
+    // Load User Land Details Summary
+    const userLand = await fetchReportsAPI('user-land-details');
+    console.log('User Land Data:', userLand);
+
+    if (userLand === null) {
+        document.getElementById('userLandDetailsTable').innerHTML = '<p style="color: #ef4444;">Error loading data. Please restart the backend server to apply recent changes.</p>';
+        return;
+    }
+
+    if (userLand && userLand.length) {
+        let html = `<table class="report-table">
+            <thead>
+                <tr>
+                    <th>Owner Name</th>
+                    <th>NID</th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th>Total Parcels</th>
+                    <th>Total Area</th>
+                    <th>Total Value</th>
+                    <th>Approved</th>
+                    <th>Pending</th>
+                    <th>Divisions</th>
+                    <th>Districts</th>
+                    <th>Khatian No(s)</th>
+                    <th>Dag No(s)</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        userLand.forEach(row => {
+            html += `<tr>
+                <td><strong>${row.owner_name}</strong></td>
+                <td>${row.owner_nid || '-'}</td>
+                <td>${row.owner_mobile || '-'}</td>
+                <td>${row.owner_email || '-'}</td>
+                <td>${row.total_land_parcels}</td>
+                <td>${formatNumber(row.total_land_area)} decimal</td>
+                <td>${formatCurrency(row.total_land_value)}</td>
+                <td style="color: #10b981;">${row.approved_parcels}</td>
+                <td style="color: #f59e0b;">${row.pending_parcels}</td>
+                <td>${row.divisions_owned || '-'}</td>
+                <td>${row.districts_owned || '-'}</td>
+                <td>${row.khatian_numbers || '-'}</td>
+                <td>${row.dag_numbers || '-'}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('userLandDetailsTable').innerHTML = html;
+    } else {
+        document.getElementById('userLandDetailsTable').innerHTML = '<p style="color: #64748b;">No land ownership data found.</p>';
     }
 }
 

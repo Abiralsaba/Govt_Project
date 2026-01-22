@@ -2,11 +2,10 @@
  * Admin Login/Register JavaScript
  */
 
-// Check if already logged in as admin
-const adminToken = localStorage.getItem('adminToken');
-if (adminToken) {
-    window.location.href = 'reports.html';
-}
+// Force logout on login page load (Strict Security)
+localStorage.removeItem('adminToken');
+localStorage.removeItem('adminName');
+
 
 // DOM Elements
 const loginForm = document.getElementById('loginForm');

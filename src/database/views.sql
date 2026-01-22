@@ -55,7 +55,7 @@ LEFT JOIN govt_user_documents tax_doc ON u.id = tax_doc.user_id AND tax_doc.doc_
 
 -- ==========================================
 -- VIEW 2: Land Ownership Report by Location
--- Aggregates land data by geographic hierarchy
+-- Aggregates land inventory data by geographic hierarchy
 -- ==========================================
 CREATE OR REPLACE VIEW v_land_by_location AS
 SELECT 
@@ -66,26 +66,27 @@ SELECT
     up.id AS upazila_id,
     up.name AS upazila,
     
-    -- Mutation Statistics
-    COUNT(DISTINCT m.id) AS total_mutations,
-    COUNT(DISTINCT CASE WHEN m.status = 'Approved' THEN m.id END) AS approved_mutations,
-    COUNT(DISTINCT CASE WHEN m.status = 'Pending' THEN m.id END) AS pending_mutations,
-    COUNT(DISTINCT CASE WHEN m.status = 'Rejected' THEN m.id END) AS rejected_mutations,
+    -- Parcel Statistics
+    COUNT(l.id) AS total_parcels,
+    SUM(CASE WHEN l.status = 'Approved' THEN 1 ELSE 0 END) AS approved_parcels,
+    SUM(CASE WHEN l.status = 'Pending' THEN 1 ELSE 0 END) AS pending_parcels,
+    SUM(CASE WHEN l.status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_parcels,
     
     -- Value Statistics
-    COALESCE(SUM(CASE WHEN m.status = 'Approved' THEN CAST(m.land_amount AS DECIMAL(10,2)) ELSE 0 END), 0) AS total_land_traded_decimal,
-    COALESCE(SUM(CASE WHEN m.status = 'Approved' THEN m.land_price ELSE 0 END), 0) AS total_transaction_value,
-    COALESCE(AVG(CASE WHEN m.status = 'Approved' THEN m.land_price END), 0) AS avg_transaction_value,
+    COALESCE(SUM(l.land_size), 0) AS total_land_area,
+    COALESCE(SUM(l.land_price), 0) AS total_valuation,
+    COALESCE(AVG(l.land_price), 0) AS avg_parcel_value,
     
     -- Time-based stats
-    MIN(m.created_at) AS first_mutation_date,
-    MAX(m.created_at) AS last_mutation_date
+    MIN(l.recorded_at) AS first_record_date,
+    MAX(l.recorded_at) AS last_record_date
 
 FROM divisions d
 LEFT JOIN districts dist ON d.id = dist.division_id
 LEFT JOIN upazilas up ON dist.id = up.district_id
-LEFT JOIN land_mutations_v2 m ON up.id = m.upazila_id
+LEFT JOIN my_land_record l ON up.id = l.upazila_id
 GROUP BY d.id, d.name, dist.id, dist.name, up.id, up.name
+HAVING total_parcels > 0
 ORDER BY d.name, dist.name, up.name;
 
 
@@ -107,43 +108,63 @@ SELECT
     creator.name AS created_by_name,
     creator.email AS creator_email,
     
-    -- Membership Stats
-    COUNT(DISTINCT m.user_id) AS member_count,
-    COUNT(DISTINCT CASE WHEN m.role = 'admin' THEN m.user_id END) AS admin_count,
+    -- Membership Stats (Aggr)
+    COALESCE(mem.member_count, 0) AS member_count,
+    COALESCE(mem.admin_count, 0) AS admin_count,
     
-    -- Post Statistics
-    COUNT(DISTINCT p.id) AS total_posts,
-    COUNT(DISTINCT CASE WHEN p.status = 'approved' THEN p.id END) AS approved_posts,
-    COUNT(DISTINCT CASE WHEN p.status = 'pending' THEN p.id END) AS pending_posts,
+    -- Post Statistics (Aggr)
+    COALESCE(posts.total_posts, 0) AS total_posts,
+    COALESCE(posts.approved_posts, 0) AS approved_posts,
+    COALESCE(posts.pending_posts, 0) AS pending_posts,
     
     -- Engagement Metrics
-    COALESCE(SUM(p.like_count), 0) AS total_likes,
-    COALESCE(SUM(p.comment_count), 0) AS total_comments,
-    COALESCE(AVG(p.like_count), 0) AS avg_likes_per_post,
-    COALESCE(AVG(p.comment_count), 0) AS avg_comments_per_post,
+    COALESCE(posts.total_likes, 0) AS total_likes,
+    COALESCE(posts.total_comments, 0) AS total_comments,
+    COALESCE(posts.avg_likes_per_post, 0) AS avg_likes_per_post,
+    COALESCE(posts.avg_comments_per_post, 0) AS avg_comments_per_post,
     
     -- Activity Timeline
     DATEDIFF(CURDATE(), g.created_at) AS days_since_creation,
-    (SELECT MAX(cp.created_at) FROM community_posts cp WHERE cp.group_id = g.id) AS last_post_date,
+    posts.last_post_date,
     
     -- Group Classification
     CASE 
-        WHEN COUNT(DISTINCT m.user_id) > 100 THEN 'Very Large'
-        WHEN COUNT(DISTINCT m.user_id) > 50 THEN 'Large'
-        WHEN COUNT(DISTINCT m.user_id) > 20 THEN 'Medium'
-        WHEN COUNT(DISTINCT m.user_id) > 5 THEN 'Small'
+        WHEN COALESCE(mem.member_count, 0) > 100 THEN 'Very Large'
+        WHEN COALESCE(mem.member_count, 0) > 50 THEN 'Large'
+        WHEN COALESCE(mem.member_count, 0) > 20 THEN 'Medium'
+        WHEN COALESCE(mem.member_count, 0) > 5 THEN 'Small'
         ELSE 'New'
     END AS group_size_category,
     
     -- Engagement Score
-    (COUNT(DISTINCT m.user_id) * 2 + COALESCE(SUM(p.like_count), 0) + COALESCE(SUM(p.comment_count), 0) * 2) AS engagement_score
+    (COALESCE(mem.member_count, 0) * 2 + COALESCE(posts.total_likes, 0) + COALESCE(posts.total_comments, 0) * 2) AS engagement_score
 
 FROM community_groups g
 LEFT JOIN reg_info creator ON g.created_by = creator.id
-LEFT JOIN community_members m ON g.id = m.group_id
-LEFT JOIN community_posts p ON g.id = p.group_id
-GROUP BY g.id, g.name, g.description, g.status, g.cover_image, g.created_at,
-         creator.id, creator.name, creator.email;
+-- Aggregate Members
+LEFT JOIN (
+    SELECT 
+        group_id, 
+        COUNT(DISTINCT user_id) AS member_count,
+        COUNT(DISTINCT CASE WHEN role = 'admin' THEN user_id END) AS admin_count
+    FROM community_members
+    GROUP BY group_id
+) mem ON g.id = mem.group_id
+-- Aggregate Posts
+LEFT JOIN (
+    SELECT 
+        group_id,
+        COUNT(id) AS total_posts,
+        COUNT(CASE WHEN status = 'approved' THEN id END) AS approved_posts,
+        COUNT(CASE WHEN status = 'pending' THEN id END) AS pending_posts,
+        SUM(like_count) AS total_likes,
+        SUM(comment_count) AS total_comments,
+        AVG(like_count) AS avg_likes_per_post,
+        AVG(comment_count) AS avg_comments_per_post,
+        MAX(created_at) AS last_post_date
+    FROM community_posts
+    GROUP BY group_id
+) posts ON g.id = posts.group_id;
 
 
 -- ==========================================
@@ -278,3 +299,48 @@ LEFT JOIN (
     SELECT user_id, COUNT(*) AS document_count
     FROM user_documents GROUP BY user_id
 ) doc_stats ON u.id = doc_stats.user_id;
+
+
+-- ==========================================
+-- VIEW 6: User Land Summary
+-- Shows aggregated land holdings for each user (one row per user)
+-- ==========================================
+CREATE OR REPLACE VIEW v_user_land_details AS
+SELECT 
+    -- User Information
+    u.id AS user_id,
+    u.name AS owner_name,
+    u.nid AS owner_nid,
+    u.email AS owner_email,
+    u.mobile AS owner_mobile,
+    
+    -- Aggregated Land Statistics
+    COUNT(l.id) AS total_land_parcels,
+    COALESCE(SUM(l.land_size), 0) AS total_land_area,
+    COALESCE(SUM(l.land_price), 0) AS total_land_value,
+    
+    -- Land Status Breakdown
+    SUM(CASE WHEN l.status = 'Approved' THEN 1 ELSE 0 END) AS approved_parcels,
+    SUM(CASE WHEN l.status = 'Pending' THEN 1 ELSE 0 END) AS pending_parcels,
+    
+    -- Location Summary (comma-separated list of unique divisions)
+    GROUP_CONCAT(DISTINCT COALESCE(d.name, l.division) SEPARATOR ', ') AS divisions_owned,
+    GROUP_CONCAT(DISTINCT COALESCE(dist.name, l.district) SEPARATOR ', ') AS districts_owned,
+    
+    -- Khatian/Dag Summary
+    GROUP_CONCAT(DISTINCT l.khatian_no SEPARATOR ', ') AS khatian_numbers,
+    GROUP_CONCAT(DISTINCT l.dag_no SEPARATOR ', ') AS dag_numbers,
+    
+    -- Timeline
+    MIN(l.recorded_at) AS first_record_date,
+    MAX(l.recorded_at) AS last_record_date
+    
+FROM reg_info u
+LEFT JOIN my_land_record l ON u.id = l.user_id
+LEFT JOIN divisions d ON l.division_id = d.id
+LEFT JOIN districts dist ON l.district_id = dist.id
+LEFT JOIN upazilas up ON l.upazila_id = up.id
+GROUP BY u.id, u.name, u.nid, u.email, u.mobile
+HAVING COUNT(l.id) > 0
+ORDER BY total_land_area DESC;
+

@@ -106,6 +106,13 @@ const login = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Log login
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        await db.query(
+            'INSERT INTO admin_login_logs (admin_id, ip_address, status) VALUES (?, ?, ?)',
+            [admin.id, ip, 'success']
+        );
+
         res.json({
             success: true,
             message: 'Login successful',

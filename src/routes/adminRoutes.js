@@ -117,10 +117,29 @@ router.put('/service-requests/:id/approve', async (req, res) => {
         }
 
         // Log admin action
+        console.log('Attempting to log admin action: APPROVE service_requests', id);
+        try {
+            const [logResult] = await db.query(
+                `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status) 
+                 VALUES (?, 'APPROVE', 'service_requests', ?, 'pending', 'approved')`,
+                [req.admin.id, id]
+            );
+            console.log('Admin action logged successfully:', logResult);
+        } catch (logError) {
+            console.error('Failed to log admin action:', logError);
+        }
+
+        // Manual Audit Log Insertion
         await db.query(
-            `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status) 
-             VALUES (?, 'APPROVE', 'service_requests', ?, 'pending', 'approved')`,
-            [req.admin.id, id]
+            `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
+             VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
+            [
+                'service_requests',
+                id,
+                JSON.stringify({ status: 'pending' }),
+                JSON.stringify({ status: 'approved' }),
+                req.admin.id
+            ]
         );
 
         res.json({ success: true, message: 'Service request approved' });
@@ -165,6 +184,19 @@ router.put('/service-requests/:id/reject', async (req, res) => {
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status, notes) 
              VALUES (?, 'REJECT', 'service_requests', ?, 'pending', 'rejected', ?)`,
             [req.admin.id, id, reason || null]
+        );
+
+        // Manual Audit Log Insertion
+        await db.query(
+            `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
+             VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
+            [
+                'service_requests',
+                id,
+                JSON.stringify({ status: 'pending' }),
+                JSON.stringify({ status: 'rejected', reason: reason }),
+                req.admin.id
+            ]
         );
 
         res.json({ success: true, message: 'Service request rejected' });
@@ -220,6 +252,7 @@ router.get('/land-mutations', async (req, res) => {
  */
 router.put('/land-mutations/:id/approve', async (req, res) => {
     const connection = await db.getConnection();
+    console.log(`[Admin] Starting approval for mutation ID: ${req.params.id}`);
 
     try {
         await connection.beginTransaction();
@@ -233,24 +266,28 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
         );
 
         if (mutations.length === 0) {
+            console.log(`[Admin] Mutation ${id} not found`);
             await connection.rollback();
             return res.status(404).json({ error: 'Mutation not found' });
         }
 
         const mutation = mutations[0];
+        console.log('[Admin] Mutation details:', mutation);
 
         // Update mutation status
         await connection.query(
             `UPDATE land_mutations_v2 SET status = 'Approved' WHERE id = ?`,
             [id]
         );
+        console.log('[Admin] Status updated to Approved');
 
         // Delete land from seller's my_land_record
-        await connection.query(
+        const [deleteResult] = await connection.query(
             `DELETE FROM my_land_record 
              WHERE user_id = ? AND khatian_no = ? AND dag_no = ?`,
             [mutation.user_id, mutation.khatian_no, mutation.dag_no]
         );
+        console.log('[Admin] Deleted from seller record:', deleteResult.affectedRows);
 
         // Add land to buyer's my_land_record
         const [buyerUser] = await connection.query(
@@ -263,8 +300,8 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
                 `INSERT INTO my_land_record 
                  (user_id, division_id, district_id, upazila_id, division, district, upazila,
                   owner_name, nid, father_name, mother_name, khatian_no, dag_no, mouza, 
-                  land_size, deed_no, land_price, description)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  land_size, deed_no, land_price, ownership_description, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Approved')`,
                 [
                     buyerUser[0].id,
                     mutation.division_id, mutation.district_id, mutation.upazila_id,
@@ -272,10 +309,13 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
                     mutation.buyer_name, mutation.buyer_nid,
                     mutation.buyer_father_name || '', mutation.buyer_mother_name || '',
                     mutation.khatian_no, mutation.dag_no, 'Transferred via Mutation',
-                    mutation.land_amount, mutation.deed_no, mutation.land_price,
+                    parseFloat(mutation.land_amount) || 0, mutation.deed_no, mutation.land_price,
                     `Transferred from ${mutation.applicant_name}`
                 ]
             );
+            console.log('[Admin] Added to buyer record');
+        } else {
+            console.warn(`[Admin] Buyer with NID ${mutation.buyer_nid} not found in reg_info. Land record not added to buyer.`);
         }
 
         // Send notification to original user
@@ -285,11 +325,23 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
             [mutation.user_id]
         );
 
+        // Manual Audit Log Insertion (Replaces Trigger)
+        await connection.query(
+            `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
+             VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
+            [
+                'land_mutations_v2',
+                id,
+                JSON.stringify({ status: mutation.status }),
+                JSON.stringify({ status: 'Approved' }),
+                req.admin.id
+            ]
+        );
+
         // Update service request if linked
         await connection.query(
-            `UPDATE service_requests SET status = 'approved' 
-             WHERE user_id = ? AND service_type = 'Land Mutation' AND status = 'pending'
-             ORDER BY created_at DESC LIMIT 1`,
+            `UPDATE service_requests SET status = 'approved'
+             WHERE user_id = ? AND service_type = 'Land Mutation' AND status = 'pending'`,
             [mutation.user_id]
         );
 
@@ -299,13 +351,19 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
              VALUES (?, 'APPROVE', 'land_mutations_v2', ?, 'Pending', 'Approved')`,
             [req.admin.id, id]
         );
+        console.log('[Admin] Action logged');
 
         await connection.commit();
+        console.log('[Admin] Transaction committed successfully');
         res.json({ success: true, message: 'Land mutation approved and ownership transferred' });
     } catch (error) {
         await connection.rollback();
         console.error('Error approving land mutation:', error);
-        res.status(500).json({ error: 'Failed to approve mutation' });
+        // Return the exact SQL error message to the frontend for debugging
+        res.status(500).json({
+            error: error.sqlMessage || error.message || 'Failed to approve mutation',
+            details: error.code // e.g., ER_BAD_FIELD_ERROR
+        });
     } finally {
         connection.release();
     }
@@ -341,11 +399,25 @@ router.put('/land-mutations/:id/reject', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // Log admin action (Legacy/Backup)
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status, notes) 
              VALUES (?, 'REJECT', 'land_mutations_v2', ?, 'Pending', 'Rejected', ?)`,
             [req.admin.id, id, reason || null]
+        );
+
+        // Manual Audit Log Insertion (For Dashboard)
+        await db.query(
+            `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
+             VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
+            [
+                'land_mutations_v2',
+                id,
+                JSON.stringify({ status: 'Pending' }),
+                JSON.stringify({ status: 'Rejected', reason: reason }),
+                'status',
+                req.admin.id
+            ]
         );
 
         res.json({ success: true, message: 'Land mutation rejected' });
