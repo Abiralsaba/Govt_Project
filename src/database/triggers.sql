@@ -236,4 +236,84 @@ BEGIN
 END //
 
 
+-- ==========================================
+-- TRIGGER 12: Notify user on order placement
+-- Creates notification when a new order is placed
+-- ==========================================
+DROP TRIGGER IF EXISTS tr_order_placed_notify //
+CREATE TRIGGER tr_order_placed_notify
+AFTER INSERT ON Ordered_item
+FOR EACH ROW
+BEGIN
+    DECLARE v_user_id INT;
+    
+    -- Get user_id from reg_info using ID (fixed from NID)
+    SELECT id INTO v_user_id FROM reg_info WHERE id = NEW.user_id LIMIT 1;
+    
+    IF v_user_id IS NOT NULL THEN
+        INSERT INTO notifications (user_id, message, type)
+        VALUES (
+            v_user_id,
+            CONCAT('Order Placed Successfully! Order #', NEW.id, ' - Total: ৳', NEW.total_amount, ' (', NEW.payment_method, ')'),
+            'success'
+        );
+    END IF;
+END //
+
+
+-- ==========================================
+-- TRIGGER 14: Clear cart items after order placement
+-- Removes items from cart immediately when order is placed
+-- ==========================================
+DROP TRIGGER IF EXISTS tr_clear_cart_on_order //
+CREATE TRIGGER tr_clear_cart_on_order
+AFTER INSERT ON Ordered_item
+FOR EACH ROW
+BEGIN
+    DELETE FROM addto_cart WHERE user_nid = NEW.user_nid;
+END //
+
+
+-- ==========================================
+-- TRIGGER 15: Audit log for shop orders (INSERT)
+-- Tracks new order creations
+-- ==========================================
+DROP TRIGGER IF EXISTS tr_shop_order_audit_insert //
+CREATE TRIGGER tr_shop_order_audit_insert
+AFTER INSERT ON Ordered_item
+FOR EACH ROW
+BEGIN
+    DECLARE v_user_id INT;
+    
+    SELECT id INTO v_user_id FROM reg_info WHERE id = NEW.user_id LIMIT 1;
+    
+    INSERT INTO audit_log (
+        table_name, 
+        record_id, 
+        action, 
+        new_values,
+        user_id
+    )
+    VALUES (
+        'ordered_item',
+        NEW.id,
+        'INSERT',
+        JSON_OBJECT(
+            'order_id', NEW.id,
+            'user_id', NEW.user_id,
+            'total_amount', NEW.total_amount,
+            'payment_method', NEW.payment_method,
+            'delivery_address', NEW.delivery_address
+        ),
+        v_user_id
+    );
+END //
+
+
+-- Drop obsolete triggers
+DROP TRIGGER IF EXISTS tr_order_status_change_notify //
+DROP TRIGGER IF EXISTS tr_shop_order_audit_update //
+DROP TRIGGER IF EXISTS tr_clear_cart_on_payment //
+
+
 DELIMITER ;

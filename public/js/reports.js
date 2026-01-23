@@ -158,7 +158,7 @@ function showTab(tab) {
     currentTab = tab;
 
     // Hide all sections
-    ['overview', 'users', 'services', 'land', 'community', 'audit'].forEach(t => {
+    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends'].forEach(t => {
         const el = document.getElementById(t + '-section');
         if (el) el.style.display = 'none';
     });
@@ -182,7 +182,11 @@ async function loadTabData(tab) {
         case 'services': loadServices(); break;
         case 'land': loadLand(); break;
         case 'community': loadCommunity(); break;
+        case 'shop': loadShop(); break;
+        case 'education': loadEducation(); break;
+        case 'admissions': loadAdmissions(); break;
         case 'audit': loadAudit(); break;
+        case 'stipends': loadStipends(); break;
     }
 }
 
@@ -1166,6 +1170,1483 @@ async function loadAudit() {
                 <p>No audit entries yet. Changes to tables with triggers will appear here.</p>
             </div>
         `;
+    }
+}
+
+// =====================
+// SHOP MANAGEMENT
+// =====================
+
+let allShopItems = [];
+
+async function loadShop() {
+    // Load shop items
+    const items = await fetchAdminAPI('shop-items');
+    if (items) {
+        allShopItems = items;
+        renderShopItems(items);
+    }
+
+    // Load orders
+    const orders = await fetchAdminAPI('orders');
+    if (orders) {
+        renderOrders(orders);
+    }
+
+    // Setup form handler
+    const form = document.getElementById('addProductForm');
+    if (form && !form.hasAttribute('data-listener')) {
+        form.setAttribute('data-listener', 'true');
+        form.addEventListener('submit', addShopItem);
+    }
+
+    const editForm = document.getElementById('editProductForm');
+    if (editForm && !editForm.hasAttribute('data-listener')) {
+        editForm.setAttribute('data-listener', 'true');
+        editForm.addEventListener('submit', editShopItem);
+    }
+}
+
+function renderShopItems(items) {
+    let html = `<table class="report-table">
+        <thead>
+            <tr>
+                <th style="width: 50px;">ID</th>
+                <th style="width: 80px;">Image</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th style="width: 180px; text-align: center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    items.forEach(item => {
+        const isIcon = item.image_url && item.image_url.includes('<i');
+        const imgHtml = isIcon
+            ? item.image_url
+            : `<img src="${item.image_url}" alt="${item.name}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;">`;
+
+        html += `<tr>
+            <td>${item.id}</td>
+            <td>${imgHtml}</td>
+            <td><strong>${item.name}</strong></td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.description || '-'}</td>
+            <td>${formatCurrency(item.price)}</td>
+            <td>${item.stock_quantity || 0}</td>
+            <td class="action-cell" style="white-space: nowrap; text-align: center;">
+                <button class="action-btn edit" onclick="openEditProductModal(${item.id})" style="background:#3b82f6;color:white;margin-right:5px; padding: 5px 10px;">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="action-btn reject" onclick="deleteShopItem(${item.id})" style="padding: 5px 10px;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('shopItemsTable').innerHTML = html || '<p style="color:#64748b;">No products yet.</p>';
+}
+
+function renderOrders(orders) {
+    if (!orders || orders.length === 0) {
+        document.getElementById('ordersTable').innerHTML = '<p style="color:#64748b;">No orders yet.</p>';
+        return;
+    }
+
+    let html = `<table class="report-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Address</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    orders.forEach(order => {
+        // Status Logic: COD = COD, Online = PAID
+        let displayStatus = 'PAID';
+        let statusColor = '#10b981'; // Green (Success)
+
+        if (order.payment_method === 'COD') {
+            displayStatus = 'COD';
+            statusColor = '#f59e0b'; // Orange (Pending/COD)
+        }
+
+        html += `<tr>
+            <td>#${order.id}</td>
+            <td><strong>${order.customer_name || 'N/A'}</strong></td>
+            <td>${formatCurrency(order.total_amount)}</td>
+            <td>${order.payment_method}</td>
+            <td>
+                <span style="background:${statusColor};color:white;padding:2px 8px;border-radius:12px;font-size:0.8rem;">
+                    ${displayStatus}
+                </span>
+            </td>
+            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${order.delivery_address || '-'}</td>
+            <td>${formatDate(order.created_at)}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('ordersTable').innerHTML = html;
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+    if (!newStatus) return;
+
+    try {
+        const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Status Updated',
+                text: `Order #${orderId} marked as ${newStatus}`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            loadShop(); // Reload orders to update the badge
+        } else {
+            Swal.fire('Error', result.error || 'Failed to update status', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        Swal.fire('Error', 'Failed to update status', 'error');
+    }
+}
+
+async function addShopItem(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('productName').value;
+    const description = document.getElementById('productDescription').value;
+    const price = document.getElementById('productPrice').value;
+    const imageFile = document.getElementById('productImage').files[0];
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('price', price);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    }
+
+    try {
+        const res = await fetch('/api/admin/shop-items', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: formData
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            Swal.fire({ icon: 'success', title: 'Product Added!', timer: 1500, showConfirmButton: false });
+            document.getElementById('addProductForm').reset();
+            loadShop();
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: result.error });
+        }
+    } catch (err) {
+        console.error('Add product error:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to add product' });
+    }
+}
+
+function openEditProductModal(id) {
+    const item = allShopItems.find(i => i.id === id);
+    if (!item) return;
+
+    document.getElementById('editProductId').value = item.id;
+    document.getElementById('editProductName').value = item.name;
+    document.getElementById('editProductPrice').value = item.price;
+    document.getElementById('editProductStock').value = item.stock_quantity || '';
+    document.getElementById('editProductDescription').value = item.description || '';
+    document.getElementById('editProductImage').value = ''; // Reset file input
+
+    openModal('editProductModal');
+}
+
+async function editShopItem(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('editProductId').value;
+    const name = document.getElementById('editProductName').value;
+    const description = document.getElementById('editProductDescription').value;
+    const price = document.getElementById('editProductPrice').value;
+    const stock = document.getElementById('editProductStock').value;
+    const imageFile = document.getElementById('editProductImage').files[0];
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('price', price);
+    formData.append('stock_quantity', stock);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    }
+
+    try {
+        const res = await fetch(`/api/admin/shop-items/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: formData
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            Swal.fire({ icon: 'success', title: 'Product Updated!', timer: 1500, showConfirmButton: false });
+            closeModal('editProductModal');
+            loadShop(); // Reload list
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'Failed to update product' });
+        }
+    } catch (error) {
+        console.error('Error updating product:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update product' });
+    }
+}
+
+async function deleteShopItem(id) {
+    const confirm = await Swal.fire({
+        title: 'Delete Product?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        confirmButtonColor: '#ef4444'
+    });
+
+    if (confirm.isConfirmed) {
+        const result = await fetchAdminAPI(`shop-items/${id}`, 'DELETE');
+        if (result?.success) {
+            Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
+            loadShop();
+        }
+    }
+}
+
+// =====================
+// EDUCATION MANAGEMENT
+// =====================
+
+let currentExamType = 'jsc';
+let educationBoards = [];
+let allEducationResults = [];
+
+// Subject definitions for each exam type
+const examSubjects = {
+    jsc: [
+        { key: 'bangla', label: 'বাংলা (Bangla)' },
+        { key: 'english', label: 'ইংরেজি (English)' },
+        { key: 'mathematics', label: 'গণিত (Mathematics)' },
+        { key: 'general_science', label: 'সাধারণ বিজ্ঞান (General Science)' },
+        { key: 'bangladesh_global_studies', label: 'বাংলাদেশ ও বিশ্বপরিচয় (BGS)' },
+        { key: 'religion', label: 'ধর্ম (Religion)' },
+        { key: 'ict', label: 'তথ্য ও যোগাযোগ প্রযুক্তি (ICT)' }
+    ],
+    ssc: [
+        { key: 'bangla_1st', label: 'বাংলা ১ম পত্র' },
+        { key: 'bangla_2nd', label: 'বাংলা ২য় পত্র' },
+        { key: 'english_1st', label: 'ইংরেজি ১ম পত্র' },
+        { key: 'english_2nd', label: 'ইংরেজি ২য় পত্র' },
+        { key: 'mathematics', label: 'গণিত (Mathematics)' },
+        { key: 'physics', label: 'পদার্থবিজ্ঞান (Physics)' },
+        { key: 'chemistry', label: 'রসায়ন (Chemistry)' },
+        { key: 'biology', label: 'জীববিজ্ঞান (Biology)' },
+        { key: 'higher_math', label: 'উচ্চতর গণিত (Higher Math)' },
+        { key: 'bangladesh_global_studies', label: 'বাংলাদেশ ও বিশ্ব (BGS)' },
+        { key: 'religion', label: 'ধর্ম (Religion)' },
+        { key: 'ict', label: 'ICT' }
+    ],
+    hsc: [
+        { key: 'bangla_1st', label: 'বাংলা ১ম পত্র' },
+        { key: 'bangla_2nd', label: 'বাংলা ২য় পত্র' },
+        { key: 'english_1st', label: 'ইংরেজি ১ম পত্র' },
+        { key: 'english_2nd', label: 'ইংরেজি ২য় পত্র' },
+        { key: 'physics_1st', label: 'পদার্থ ১ম পত্র' },
+        { key: 'physics_2nd', label: 'পদার্থ ২য় পত্র' },
+        { key: 'chemistry_1st', label: 'রসায়ন ১ম পত্র' },
+        { key: 'chemistry_2nd', label: 'রসায়ন ২য় পত্র' },
+        { key: 'biology_1st', label: 'জীববিজ্ঞান ১ম পত্র' },
+        { key: 'biology_2nd', label: 'জীববিজ্ঞান ২য় পত্র' },
+        { key: 'higher_math_1st', label: 'উচ্চতর গণিত ১ম পত্র' },
+        { key: 'higher_math_2nd', label: 'উচ্চতর গণিত ২য় পত্র' },
+        { key: 'ict', label: 'ICT' }
+    ]
+};
+
+const gradeOptions = ['A+', 'A', 'A-', 'B', 'C', 'D', 'F'];
+
+let institutionsCache = {}; // Cache institutions by board_id
+
+async function loadEducation() {
+    // Load boards
+    if (educationBoards.length === 0) {
+        const boards = await fetchAdminAPI('education/boards');
+        if (boards) {
+            educationBoards = boards;
+            const boardSelect = document.getElementById('resultBoard');
+            boardSelect.innerHTML = '<option value="">Select Board</option>' +
+                boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+            // Add board change listener to load institutions
+            boardSelect.addEventListener('change', async function () {
+                await loadInstitutionsForBoard(this.value);
+            });
+        }
+    }
+
+    // Load stats
+    const stats = await fetchAdminAPI('education/stats');
+    if (stats) {
+        document.getElementById('jscCount').textContent = stats.jsc || 0;
+        document.getElementById('sscCount').textContent = stats.ssc || 0;
+        document.getElementById('hscCount').textContent = stats.hsc || 0;
+    }
+
+    // Render subject fields and load results
+    renderSubjectFields();
+    loadEducationResults();
+
+    // Setup form submit
+    document.getElementById('addResultForm').onsubmit = submitEducationResult;
+
+    // Setup search
+    document.getElementById('educationSearch').oninput = debounce(function () {
+        loadEducationResults(this.value);
+    }, 300);
+}
+
+/**
+ * Load institutions for a specific board and populate the dropdown
+ */
+async function loadInstitutionsForBoard(boardId) {
+    const institutionSelect = document.getElementById('resultInstitution');
+
+    if (!boardId) {
+        institutionSelect.innerHTML = '<option value="">Select Board First</option>';
+        return;
+    }
+
+    // Check cache first
+    if (institutionsCache[boardId]) {
+        populateInstitutionDropdown(institutionsCache[boardId]);
+        return;
+    }
+
+    // Show loading
+    institutionSelect.innerHTML = '<option value="">Loading...</option>';
+
+    const institutions = await fetchAdminAPI(`education/institutions/${boardId}`);
+    if (institutions && institutions.length > 0) {
+        institutionsCache[boardId] = institutions;
+        populateInstitutionDropdown(institutions);
+    } else {
+        institutionSelect.innerHTML = '<option value="">No institutions found</option>';
+    }
+}
+
+function populateInstitutionDropdown(institutions) {
+    const institutionSelect = document.getElementById('resultInstitution');
+    institutionSelect.innerHTML = '<option value="">Select Institution</option>' +
+        institutions.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+}
+
+function selectExamType(type) {
+    currentExamType = type;
+
+    // Update button states
+    document.querySelectorAll('#education-section .filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(type));
+    });
+
+    // Update label
+    document.getElementById('currentExamTypeLabel').textContent = `(${type.toUpperCase()})`;
+
+    // Re-render subject fields
+    renderSubjectFields();
+
+    // Reload results
+    loadEducationResults();
+}
+
+function renderSubjectFields() {
+    const container = document.getElementById('subjectGradesContainer');
+    const subjects = examSubjects[currentExamType] || [];
+
+    container.innerHTML = subjects.map(s => `
+        <div class="form-group">
+            <label>${s.label}</label>
+            <select id="grade_${s.key}" class="form-control">
+                <option value="">-</option>
+                ${gradeOptions.map(g => `<option value="${g}">${g}</option>`).join('')}
+            </select>
+        </div>
+    `).join('');
+}
+
+async function loadEducationResults(search = '') {
+    const results = await fetchAdminAPI(`education/results/${currentExamType}?search=${search}`);
+    allEducationResults = results || [];
+    renderEducationResults();
+}
+
+function renderEducationResults() {
+    const container = document.getElementById('educationResultsTable');
+
+    if (allEducationResults.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 2rem;">No results found</p>';
+        return;
+    }
+
+    let html = `<div class="table-responsive"><table class="modal-table">
+        <thead>
+            <tr>
+                <th>Roll</th>
+                <th>Name</th>
+                <th>Year</th>
+                <th>Board</th>
+                <th>Institution</th>
+                <th>GPA</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    allEducationResults.forEach(r => {
+        const statusClass = r.result_status === 'Passed' ? 'approved' : (r.result_status === 'Failed' ? 'rejected' : 'pending');
+        html += `<tr>
+            <td><code>${r.roll_number}</code></td>
+            <td><strong>${r.student_name}</strong></td>
+            <td>${r.exam_year}</td>
+            <td>${r.board_name || '-'}</td>
+            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${r.institution_name || '-'}</td>
+            <td><span style="color: #fde047; font-weight: 600;">${r.gpa}</span></td>
+            <td><span class="status-badge ${statusClass}">${r.result_status}</span></td>
+            <td class="action-cell">
+                <button class="action-btn approve" onclick="editEducationResult(${r.id})" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn reject" onclick="deleteEducationResult(${r.id})" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+async function submitEducationResult(event) {
+    event.preventDefault();
+
+    const data = {
+        roll_number: document.getElementById('resultRoll').value,
+        registration_number: document.getElementById('resultReg').value,
+        exam_year: document.getElementById('resultYear').value,
+        board_id: document.getElementById('resultBoard').value,
+        student_name: document.getElementById('resultName').value,
+        father_name: document.getElementById('resultFather').value,
+        mother_name: document.getElementById('resultMother').value,
+        institution_name: document.getElementById('resultInstitution').value,
+        gpa: parseFloat(document.getElementById('resultGPA').value),
+        result_status: document.getElementById('resultStatus').value
+    };
+
+    // Add subject grades
+    const subjects = examSubjects[currentExamType] || [];
+    subjects.forEach(s => {
+        const el = document.getElementById(`grade_${s.key}`);
+        if (el && el.value) {
+            data[s.key] = el.value;
+        }
+    });
+
+    // For SSC/HSC add group
+    if (currentExamType !== 'jsc') {
+        data.exam_group = 'Science';
+    }
+
+    const result = await fetchAdminAPI(`education/results/${currentExamType}`, 'POST', data);
+
+    if (result?.success) {
+        Swal.fire({ icon: 'success', title: 'Result Added!', timer: 1500, showConfirmButton: false });
+        document.getElementById('addResultForm').reset();
+        renderSubjectFields();
+        loadEducation();
+    } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: result?.error || 'Failed to add result' });
+    }
+}
+
+async function editEducationResult(id) {
+    const result = allEducationResults.find(r => r.id === id);
+    if (!result) return;
+
+    // Build subject grades HTML
+    const subjects = examSubjects[currentExamType] || [];
+    let subjectsHtml = subjects.map(s => {
+        const currentGrade = result[s.key] || '';
+        return `<div style="margin-bottom: 0.5rem;">
+            <label style="display: inline-block; width: 200px;">${s.label}</label>
+            <select id="edit_grade_${s.key}" class="swal2-select" style="width: 80px;">
+                <option value="">-</option>
+                ${gradeOptions.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g}</option>`).join('')}
+            </select>
+        </div>`;
+    }).join('');
+
+    const { value: formData } = await Swal.fire({
+        title: 'Edit Result',
+        html: `
+            <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+                <div style="margin-bottom: 1rem;">
+                    <label>Student Name</label>
+                    <input id="edit_name" class="swal2-input" value="${result.student_name}">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label>GPA</label>
+                    <input id="edit_gpa" type="number" step="0.01" min="0" max="5" class="swal2-input" value="${result.gpa}">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label>Status</label>
+                    <select id="edit_status" class="swal2-select">
+                        <option value="Passed" ${result.result_status === 'Passed' ? 'selected' : ''}>Passed</option>
+                        <option value="Failed" ${result.result_status === 'Failed' ? 'selected' : ''}>Failed</option>
+                        <option value="Withheld" ${result.result_status === 'Withheld' ? 'selected' : ''}>Withheld</option>
+                    </select>
+                </div>
+                <h4 style="margin: 1rem 0 0.5rem;">Subject Grades</h4>
+                ${subjectsHtml}
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        width: '600px',
+        preConfirm: () => {
+            const data = {
+                student_name: document.getElementById('edit_name').value,
+                gpa: parseFloat(document.getElementById('edit_gpa').value),
+                result_status: document.getElementById('edit_status').value
+            };
+            subjects.forEach(s => {
+                const el = document.getElementById(`edit_grade_${s.key}`);
+                if (el) data[s.key] = el.value || null;
+            });
+            return data;
+        }
+    });
+
+    if (formData) {
+        const updateResult = await fetchAdminAPI(`education/results/${currentExamType}/${id}`, 'PUT', formData);
+        if (updateResult?.success) {
+            Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+            loadEducation();
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update result' });
+        }
+    }
+}
+
+async function deleteEducationResult(id) {
+    const confirm = await Swal.fire({
+        title: 'Delete Result?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        confirmButtonColor: '#ef4444'
+    });
+
+    if (confirm.isConfirmed) {
+        const result = await fetchAdminAPI(`education/results/${currentExamType}/${id}`, 'DELETE');
+        if (result?.success) {
+            Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
+            loadEducation();
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete result' });
+        }
+    }
+}
+
+// Debounce utility
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func.apply(this, args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// =====================
+// ADMISSIONS MANAGEMENT
+// =====================
+
+let allUniversities = [];
+let allAdmissionPosts = [];
+let allApplications = [];
+let currentAdmissionsTab = 'universities';
+
+async function loadAdmissions() {
+    try {
+        // Load stats
+        const statsRes = await fetchAdminAPI('admission-stats');
+        if (statsRes.success) {
+            document.getElementById('universitiesCount').textContent = statsRes.data.totalUniversities || 0;
+            document.getElementById('admissionPostsCount').textContent = statsRes.data.totalPosts || 0;
+            document.getElementById('applicationsCount').textContent = statsRes.data.totalApplications || 0;
+            document.getElementById('pendingApplicationsCount').textContent = statsRes.data.pendingApplications || 0;
+        }
+
+        // Load all data
+        await Promise.all([
+            loadUniversities(),
+            loadAdmissionPosts(),
+            loadApplicationsList()
+        ]);
+
+        // Set up form handlers
+        const uniForm = document.getElementById('addUniversityForm');
+        if (uniForm) {
+            uniForm.onsubmit = addUniversity;
+        }
+
+        const postForm = document.getElementById('addAdmissionPostForm');
+        if (postForm) {
+            postForm.onsubmit = addAdmissionPost;
+        }
+
+    } catch (error) {
+        console.error('Error loading admissions:', error);
+    }
+}
+
+function selectAdmissionsTab(tab) {
+    currentAdmissionsTab = tab;
+
+    // Update buttons
+    document.querySelectorAll('#admissions-section .modal-filter-bar .filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Hide all tabs
+    document.querySelectorAll('.admissions-tab-content').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    // Show selected tab
+    const tabEl = document.getElementById(tab + '-tab');
+    if (tabEl) tabEl.style.display = 'block';
+}
+
+// =====================
+// UNIVERSITIES
+// =====================
+
+async function loadUniversities() {
+    try {
+        const res = await fetchAdminAPI('universities');
+        if (res.success) {
+            allUniversities = res.data;
+            renderUniversities();
+            populateUniversityDropdowns();
+        }
+    } catch (error) {
+        console.error('Error loading universities:', error);
+    }
+}
+
+function renderUniversities() {
+    const container = document.getElementById('universitiesTable');
+    if (!container) return;
+
+    if (allUniversities.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; text-align: center;">No universities found</p>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Logo</th>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Website</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${allUniversities.map(u => `
+                        <tr>
+                            <td>
+                                ${u.logo_url ? `<img src="${u.logo_url}" alt="${u.name}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px;">` : '<i class="fas fa-university" style="font-size: 24px; color: #60a5fa;"></i>'}
+                            </td>
+                            <td>${u.name}</td>
+                            <td><strong>${u.short_code}</strong></td>
+                            <td><span class="status-badge ${u.university_type === 'Public' ? 'approved' : 'pending'}">${u.university_type}</span></td>
+                            <td>${u.location || '-'}</td>
+                            <td>${u.website ? `<a href="${u.website}" target="_blank" style="color: #60a5fa;"><i class="fas fa-external-link-alt"></i></a>` : '-'}</td>
+                            <td>
+                                <button class="action-btn edit" onclick="editUniversity(${u.id})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function populateUniversityDropdowns() {
+    const postUniSelect = document.getElementById('postUniversity');
+    const filterUniSelect = document.getElementById('filterAppUniversity');
+
+    const options = allUniversities.map(u => `<option value="${u.id}">${u.name} (${u.short_code})</option>`).join('');
+
+    if (postUniSelect) {
+        postUniSelect.innerHTML = '<option value="">Select University</option>' + options;
+    }
+
+    if (filterUniSelect) {
+        filterUniSelect.innerHTML = '<option value="">All Universities</option>' + options;
+    }
+}
+
+async function addUniversity(e) {
+    e.preventDefault();
+
+    const data = {
+        name: document.getElementById('universityName').value.trim(),
+        name_bn: document.getElementById('universityNameBn').value.trim() || null,
+        short_code: document.getElementById('universityCode').value.trim(),
+        university_type: document.getElementById('universityType').value,
+        location: document.getElementById('universityLocation').value.trim(),
+        website: document.getElementById('universityWebsite').value.trim() || null,
+        logo_url: document.getElementById('universityLogo').value.trim() || null,
+        description: document.getElementById('universityDescription').value.trim() || null
+    };
+
+    try {
+        const res = await fetchAdminAPI('universities', 'POST', data);
+        if (res.success) {
+            Swal.fire('Success!', 'University added successfully', 'success');
+            document.getElementById('addUniversityForm').reset();
+            loadUniversities();
+            // Update stats
+            const count = parseInt(document.getElementById('universitiesCount').textContent) + 1;
+            document.getElementById('universitiesCount').textContent = count;
+        } else {
+            console.error('Add University Error:', res);
+            // Show the specific error message from the backend if available
+            Swal.fire('Error', res.error || res.message || 'Failed to add university', 'error');
+        }
+    } catch (error) {
+        console.error('Network/Client Error:', error);
+        Swal.fire('Error', error.message || 'Failed to add university', 'error');
+    }
+}
+
+async function editUniversity(id) {
+    const university = allUniversities.find(u => u.id === id);
+    if (!university) return;
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Edit University',
+        html: `
+            <div style="text-align: left;">
+                <label style="color: #94a3b8;">Name</label>
+                <input id="swal-name" class="swal2-input" value="${university.name}">
+                <label style="color: #94a3b8;">Short Code</label>
+                <input id="swal-code" class="swal2-input" value="${university.short_code}">
+                <label style="color: #94a3b8;">Type</label>
+                <select id="swal-type" class="swal2-input">
+                    ${['Public', 'Private', 'National', 'Medical', 'Engineering'].map(t =>
+            `<option value="${t}" ${university.university_type === t ? 'selected' : ''}>${t}</option>`
+        ).join('')}
+                </select>
+                <label style="color: #94a3b8;">Location</label>
+                <input id="swal-location" class="swal2-input" value="${university.location || ''}">
+                <label style="color: #94a3b8;">Website</label>
+                <input id="swal-website" class="swal2-input" value="${university.website || ''}">
+                <label style="color: #94a3b8;">Logo URL</label>
+                <input id="swal-logo" class="swal2-input" value="${university.logo_url || ''}">
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        preConfirm: () => ({
+            name: document.getElementById('swal-name').value,
+            short_code: document.getElementById('swal-code').value,
+            university_type: document.getElementById('swal-type').value,
+            location: document.getElementById('swal-location').value,
+            website: document.getElementById('swal-website').value || null,
+            logo_url: document.getElementById('swal-logo').value || null
+        })
+    });
+
+    if (formValues) {
+        try {
+            const res = await fetchAdminAPI(`universities/${id}`, 'PUT', formValues);
+            if (res.success) {
+                Swal.fire('Success!', 'University updated', 'success');
+                loadUniversities();
+            } else {
+                Swal.fire('Error', res.message || 'Failed to update', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to update university', 'error');
+        }
+    }
+}
+
+// =====================
+// ADMISSION POSTS
+// =====================
+
+async function loadAdmissionPosts() {
+    try {
+        const res = await fetchAdminAPI('admission-posts');
+        if (res.success) {
+            allAdmissionPosts = res.data;
+            renderAdmissionPosts();
+        }
+    } catch (error) {
+        console.error('Error loading admission posts:', error);
+    }
+}
+
+function filterAdmissionPosts() {
+    const status = document.getElementById('filterPostStatus')?.value || '';
+    const filtered = status ? allAdmissionPosts.filter(p => p.status === status) : allAdmissionPosts;
+    renderAdmissionPosts(filtered);
+}
+
+function renderAdmissionPosts(posts = allAdmissionPosts) {
+    const container = document.getElementById('admissionPostsTable');
+    if (!container) return;
+
+    if (posts.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; text-align: center;">No admission posts found</p>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>University</th>
+                        <th>Session</th>
+                        <th>Unit</th>
+                        <th>Group</th>
+                        <th>Min GPA</th>
+                        <th>Fee</th>
+                        <th>Dates</th>
+                        <th>Status</th>
+                        <th>Apps</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${posts.map(p => `
+                        <tr>
+                            <td><strong>${p.university_name || p.university_id}</strong></td>
+                            <td>${p.session}</td>
+                            <td><span style="background: rgba(96, 165, 250, 0.2); padding: 2px 8px; border-radius: 4px; color: #60a5fa;">${p.unit}</span></td>
+                            <td>${p.required_group || 'Any'}</td>
+                            <td>${p.min_gpa}</td>
+                            <td>৳${formatNumber(p.application_fee)}</td>
+                            <td style="font-size: 0.8rem;">${formatDate(p.application_start)} - ${formatDate(p.application_end)}</td>
+                            <td><span class="status-badge ${p.status === 'Active' ? 'approved' : p.status === 'Upcoming' ? 'pending' : 'rejected'}">${p.status}</span></td>
+                            <td>${p.application_count || 0}</td>
+                            <td>
+                                <button class="action-btn edit" onclick="editAdmissionPost(${p.id})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn reject" onclick="deleteAdmissionPost(${p.id})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function addAdmissionPost(e) {
+    e.preventDefault();
+
+    const data = {
+        university_id: document.getElementById('postUniversity').value,
+        session: document.getElementById('postSession').value,
+        unit: document.getElementById('postUnit').value,
+        required_group: document.getElementById('postRequiredGroup').value || null,
+        min_gpa: parseFloat(document.getElementById('postMinGPA').value),
+        application_fee: parseInt(document.getElementById('postFee').value),
+        application_start: document.getElementById('postStartDate').value,
+        application_end: document.getElementById('postEndDate').value,
+        exam_date: document.getElementById('postExamDate').value || null,
+        total_seats: document.getElementById('postSeats').value || null,
+        status: document.getElementById('postStatus').value,
+        requirements: document.getElementById('postRequirements').value || null
+    };
+
+    try {
+        const res = await fetchAdminAPI('admission-posts', 'POST', data);
+        if (res.success) {
+            Swal.fire('Success!', 'Admission post created successfully', 'success');
+            document.getElementById('addAdmissionPostForm').reset();
+            loadAdmissionPosts();
+            // Update stats
+            const count = parseInt(document.getElementById('admissionPostsCount').textContent) + 1;
+            document.getElementById('admissionPostsCount').textContent = count;
+        } else {
+            Swal.fire('Error', res.message || 'Failed to create admission post', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Failed to create admission post', 'error');
+    }
+}
+
+async function editAdmissionPost(id) {
+    const post = allAdmissionPosts.find(p => p.id === id);
+    if (!post) return;
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Edit Admission Post',
+        width: 600,
+        html: `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; text-align: left;">
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Session</label>
+                    <input id="swal-session" class="swal2-input" value="${post.session}" style="margin: 0.25rem 0;">
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Unit</label>
+                    <select id="swal-unit" class="swal2-input" style="margin: 0.25rem 0;">
+                        ${['A', 'B', 'C', 'D', 'ENG', 'MED'].map(u =>
+            `<option value="${u}" ${post.unit === u ? 'selected' : ''}>${u}</option>`
+        ).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Min GPA</label>
+                    <input id="swal-gpa" type="number" step="0.01" class="swal2-input" value="${post.min_gpa}" style="margin: 0.25rem 0;">
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Fee (৳)</label>
+                    <input id="swal-fee" type="number" class="swal2-input" value="${post.application_fee}" style="margin: 0.25rem 0;">
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Start Date</label>
+                    <input id="swal-start" type="date" class="swal2-input" value="${post.application_start?.split('T')[0] || ''}" style="margin: 0.25rem 0;">
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">End Date</label>
+                    <input id="swal-end" type="date" class="swal2-input" value="${post.application_end?.split('T')[0] || ''}" style="margin: 0.25rem 0;">
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Total Seats</label>
+                    <input id="swal-seats" type="number" class="swal2-input" value="${post.total_seats || ''}" style="margin: 0.25rem 0;">
+                </div>
+                <div>
+                    <label style="color: #94a3b8; font-size: 0.8rem;">Status</label>
+                    <select id="swal-status" class="swal2-input" style="margin: 0.25rem 0;">
+                        ${['Active', 'Upcoming', 'Closed'].map(s =>
+            `<option value="${s}" ${post.status === s ? 'selected' : ''}>${s}</option>`
+        ).join('')}
+                    </select>
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        preConfirm: () => ({
+            session: document.getElementById('swal-session').value,
+            unit: document.getElementById('swal-unit').value,
+            min_gpa: parseFloat(document.getElementById('swal-gpa').value),
+            application_fee: parseInt(document.getElementById('swal-fee').value),
+            application_start: document.getElementById('swal-start').value,
+            application_end: document.getElementById('swal-end').value,
+            total_seats: document.getElementById('swal-seats').value || null,
+            status: document.getElementById('swal-status').value
+        })
+    });
+
+    if (formValues) {
+        try {
+            const res = await fetchAdminAPI(`admission-posts/${id}`, 'PUT', formValues);
+            if (res.success) {
+                Swal.fire('Success!', 'Admission post updated', 'success');
+                loadAdmissionPosts();
+            } else {
+                Swal.fire('Error', res.message || 'Failed to update', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to update admission post', 'error');
+        }
+    }
+}
+
+async function deleteAdmissionPost(id) {
+    const result = await Swal.fire({
+        title: 'Delete Admission Post?',
+        text: 'This action cannot be undone. All applications for this post will also be deleted.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Yes, delete it'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const res = await fetchAdminAPI(`admission-posts/${id}`, 'DELETE');
+            if (res.success) {
+                Swal.fire('Deleted!', 'Admission post has been deleted.', 'success');
+                loadAdmissionPosts();
+                loadAdmissions(); // Refresh stats
+            } else {
+                Swal.fire('Error', res.message || 'Failed to delete', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to delete admission post', 'error');
+        }
+    }
+}
+
+// =====================
+// APPLICATIONS
+// =====================
+
+async function loadApplicationsList() {
+    try {
+        const res = await fetchAdminAPI('university-applications');
+        if (res.success) {
+            allApplications = res.data;
+            renderApplications();
+        }
+    } catch (error) {
+        console.error('Error loading applications:', error);
+    }
+}
+
+function filterApplications() {
+    const status = document.getElementById('filterAppStatus')?.value || '';
+    const university = document.getElementById('filterAppUniversity')?.value || '';
+    const search = document.getElementById('searchApplications')?.value?.toLowerCase() || '';
+
+    let filtered = allApplications;
+
+    if (status) {
+        filtered = filtered.filter(a => a.application_status === status);
+    }
+
+    if (university) {
+        filtered = filtered.filter(a => a.university_id == university);
+    }
+
+    if (search) {
+        filtered = filtered.filter(a =>
+            a.hsc_roll?.toString().includes(search) ||
+            a.student_name?.toLowerCase().includes(search) ||
+            a.application_id?.toLowerCase().includes(search)
+        );
+    }
+
+    renderApplications(filtered);
+}
+
+function renderApplications(apps = allApplications) {
+    const container = document.getElementById('applicationsTable');
+    if (!container) return;
+
+    if (apps.length === 0) {
+        container.innerHTML = '<p style="color: #94a3b8; text-align: center;">No applications found</p>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Application ID</th>
+                        <th>Student</th>
+                        <th>HSC Info</th>
+                        <th>University</th>
+                        <th>Unit</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Applied On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${apps.map(a => `
+                        <tr>
+                            <td><code style="color: #fde047;">${a.application_id}</code></td>
+                            <td>
+                                <strong>${a.student_name}</strong><br>
+                                <small style="color: #94a3b8;">${a.mobile || ''}</small>
+                            </td>
+                            <td>
+                                Roll: ${a.hsc_roll}<br>
+                                <small style="color: #94a3b8;">Year: ${a.hsc_year} | GPA: ${a.hsc_gpa}</small>
+                            </td>
+                            <td>${a.university_name || a.university_id}</td>
+                            <td><span style="background: rgba(96, 165, 250, 0.2); padding: 2px 8px; border-radius: 4px; color: #60a5fa;">${a.unit || '-'}</span></td>
+                            <td><span class="status-badge ${a.payment_status === 'Paid' ? 'approved' : 'pending'}">${a.payment_status}</span></td>
+                            <td><span class="status-badge ${a.application_status === 'Verified' ? 'approved' : a.application_status === 'Rejected' ? 'rejected' : 'pending'}">${a.application_status}</span></td>
+                            <td style="font-size: 0.8rem;">${formatDate(a.created_at)}</td>
+                            <td>
+                                ${a.application_status === 'Submitted' ? `
+                                    <button class="action-btn approve" onclick="verifyApplication(${a.id})" title="Verify">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="action-btn reject" onclick="rejectApplication(${a.id})" title="Reject">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                ` : `
+                                    <button class="action-btn info" onclick="viewApplicationDetails(${a.id})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                `}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function verifyApplication(id) {
+    const result = await Swal.fire({
+        title: 'Verify Application?',
+        text: 'This will mark the application as verified.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        confirmButtonText: 'Yes, verify'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const res = await fetchAdminAPI(`university-applications/${id}/verify`, 'PUT', {
+                status: 'Verified'
+            });
+            if (res.success) {
+                Swal.fire('Verified!', 'Application has been verified.', 'success');
+                loadApplicationsList();
+                loadAdmissions(); // Refresh stats
+            } else {
+                Swal.fire('Error', res.message || 'Failed to verify', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to verify application', 'error');
+        }
+    }
+}
+
+async function rejectApplication(id) {
+    const { value: reason } = await Swal.fire({
+        title: 'Reject Application',
+        input: 'textarea',
+        inputLabel: 'Reason for rejection',
+        inputPlaceholder: 'Enter rejection reason...',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        confirmButtonText: 'Reject',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Please provide a reason';
+            }
+        }
+    });
+
+    if (reason) {
+        try {
+            const res = await fetchAdminAPI(`/admin/university-applications/${id}/verify`, 'PUT', {
+                status: 'Rejected',
+                rejection_reason: reason
+            });
+            if (res.success) {
+                Swal.fire('Rejected!', 'Application has been rejected.', 'success');
+                loadApplicationsList();
+                loadAdmissions(); // Refresh stats
+            } else {
+                Swal.fire('Error', res.message || 'Failed to reject', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to reject application', 'error');
+        }
+    }
+}
+
+async function viewApplicationDetails(id) {
+    const app = allApplications.find(a => a.id === id);
+    if (!app) return;
+
+    Swal.fire({
+        title: `Application: ${app.application_id}`,
+        html: `
+            <div style="text-align: left; font-size: 0.9rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <div><strong>Student:</strong> ${app.student_name}</div>
+                    <div><strong>Mobile:</strong> ${app.mobile || 'N/A'}</div>
+                    <div><strong>Email:</strong> ${app.email || 'N/A'}</div>
+                    <div><strong>HSC Roll:</strong> ${app.hsc_roll}</div>
+                    <div><strong>HSC Year:</strong> ${app.hsc_year}</div>
+                    <div><strong>HSC GPA:</strong> ${app.hsc_gpa}</div>
+                    <div><strong>Board:</strong> ${app.hsc_board || 'N/A'}</div>
+                    <div><strong>Group:</strong> ${app.hsc_group || 'N/A'}</div>
+                    <div style="grid-column: 1 / -1; border-top: 1px solid #334155; margin: 0.5rem 0; padding-top: 0.5rem;"></div>
+                    <div><strong>University:</strong> ${app.university_name}</div>
+                    <div><strong>Unit:</strong> ${app.unit || 'N/A'}</div>
+                    <div><strong>Payment:</strong> <span class="status-badge ${app.payment_status === 'Paid' ? 'approved' : 'pending'}">${app.payment_status}</span></div>
+                    <div><strong>Status:</strong> <span class="status-badge ${app.application_status === 'Verified' ? 'approved' : app.application_status === 'Rejected' ? 'rejected' : 'pending'}">${app.application_status}</span></div>
+                    ${app.transaction_id ? `<div><strong>Transaction:</strong> ${app.transaction_id}</div>` : ''}
+                    <div><strong>Applied:</strong> ${formatDate(app.created_at)}</div>
+                </div>
+                ${app.rejection_reason ? `
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 1rem; color: #ef4444;">
+                        <strong>Rejection Reason:</strong> ${app.rejection_reason}
+                    </div>
+                ` : ''}
+            </div>
+        `,
+        width: 600,
+        confirmButtonText: 'Close'
+    });
+}
+
+// =====================
+// STIPEND MANAGEMENT
+// =====================
+
+let currentStipendTab = 'grants';
+let allStipendGrants = [];
+let allStipendApplications = [];
+
+async function loadStipends() {
+    selectStipendTab(currentStipendTab);
+
+    // Bind form submit if not already bound(checked via attribute or just rebind carefully)
+    const form = document.getElementById('addStipendForm');
+    if (form) {
+        form.onsubmit = handleAddStipend;
+    }
+}
+
+function selectStipendTab(tab) {
+    currentStipendTab = tab;
+
+    // Update buttons
+    document.querySelectorAll('#stipends-section .filter-btn').forEach(btn => {
+        const btnTab = btn.innerText.includes('Grants') ? 'grants' : 'applications';
+        btn.classList.toggle('active', btnTab === tab);
+    });
+
+    // Toggle content
+    document.getElementById('stipend-grants-tab').style.display = tab === 'grants' ? 'block' : 'none';
+    document.getElementById('stipend-applications-tab').style.display = tab === 'applications' ? 'block' : 'none';
+
+    if (tab === 'grants') loadStipendGrants();
+    else loadStipendApplications();
+}
+
+async function loadStipendGrants() {
+    const tableDiv = document.getElementById('stipendGrantsTable');
+    tableDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+
+    allStipendGrants = await fetchAdminAPI('stipends') || [];
+
+    if (allStipendGrants.length === 0) {
+        tableDiv.innerHTML = '<p class="text-muted">No active grants found.</p>';
+        return;
+    }
+
+    let html = `<table class="report-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Min GPA</th>
+                <th>Deadline</th>
+                <th>Active</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    allStipendGrants.forEach(grant => {
+        html += `<tr>
+            <td><strong>${grant.title}</strong></td>
+            <td>${getTierBadge(grant.type)}</td>
+            <td>${formatCurrency(grant.amount)}</td>
+            <td>${grant.min_gpa || '-'}</td>
+            <td>${formatDate(grant.deadline)}</td>
+            <td>${grant.is_active ? '<span class="status-badge approved">Active</span>' : '<span class="status-badge rejected">Inactive</span>'}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    tableDiv.innerHTML = html;
+}
+
+async function handleAddStipend(e) {
+    e.preventDefault();
+    const payload = {
+        title: document.getElementById('grantTitle').value,
+        amount: document.getElementById('grantAmount').value,
+        type: document.getElementById('grantType').value,
+        min_gpa: document.getElementById('grantGPA').value,
+        max_income: document.getElementById('grantIncome').value,
+        deadline: document.getElementById('grantDeadline').value,
+        description: document.getElementById('grantDescription').value,
+        is_active: true
+    };
+
+    try {
+        const res = await fetchAdminAPI('stipends', 'POST', payload);
+        if (res && res.success) {
+            Swal.fire('Success', 'Grant created successfully!', 'success');
+            document.getElementById('addStipendForm').reset();
+            loadStipendGrants();
+        } else {
+            Swal.fire('Error', res.error || 'Failed to create grant', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating grant:', error);
+        Swal.fire('Error', 'Failed to create grant', 'error');
+    }
+}
+
+async function loadStipendApplications() {
+    const tableDiv = document.getElementById('stipendApplicationsTable');
+    tableDiv.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+
+    allStipendApplications = await fetchAdminAPI('stipend-applications') || [];
+
+    if (allStipendApplications.length === 0) {
+        tableDiv.innerHTML = '<p class="text-muted">No applications received yet.</p>';
+        return;
+    }
+
+    let html = `<table class="report-table">
+        <thead>
+            <tr>
+                <th>App No</th>
+                <th>Student</th>
+                <th>Grant</th>
+                <th>GPA</th>
+                <th>Income</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    allStipendApplications.forEach(app => {
+        const student = JSON.parse(app.student_details || '{}');
+        const financial = JSON.parse(app.financial_info || '{}');
+        const isPending = app.status === 'Pending' || app.status === 'Submitted' || app.status === 'Under Review';
+
+        html += `<tr>
+            <td>${app.application_no}</td>
+            <td>
+                <strong>${app.student_name}</strong>
+                <div style="font-size:0.8rem; color:#64748b;">${student.institution || ''}</div>
+            </td>
+            <td>${app.stipend_title}</td>
+            <td>${student.gpa || '-'}</td>
+            <td>${formatCurrency(financial.monthlyIncome)}</td>
+            <td>${getStatusBadge(app.status)}</td>
+            <td class="action-cell">
+                ${isPending ? `
+                    <button class="action-btn approve" onclick="approveStipendApp(${app.id})"><i class="fas fa-check"></i></button>
+                    <button class="action-btn reject" onclick="rejectStipendApp(${app.id})"><i class="fas fa-times"></i></button>
+                ` : '-'}
+            </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    tableDiv.innerHTML = html;
+}
+
+async function approveStipendApp(id) {
+    const confirm = await Swal.fire({
+        title: 'Approve Application?',
+        text: 'This will mark the application as Approved.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Approve',
+        confirmButtonColor: '#10b981'
+    });
+
+    if (confirm.isConfirmed) {
+        const res = await fetchAdminAPI(`stipend-applications/${id}/status`, 'PUT', { status: 'Approved' });
+        if (res && res.success) {
+            Swal.fire('Approved!', 'Application approved.', 'success');
+            loadStipendApplications();
+        }
+    }
+}
+
+async function rejectStipendApp(id) {
+    const confirm = await Swal.fire({
+        title: 'Reject Application?',
+        text: 'This will mark the application as Rejected.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Reject',
+        confirmButtonColor: '#ef4444'
+    });
+
+    if (confirm.isConfirmed) {
+        const res = await fetchAdminAPI(`stipend-applications/${id}/status`, 'PUT', { status: 'Rejected' });
+        if (res && res.success) {
+            Swal.fire('Rejected', 'Application rejected.', 'success');
+            loadStipendApplications();
+        }
     }
 }
 

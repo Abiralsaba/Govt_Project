@@ -57,6 +57,16 @@ const communityRoutes = require('./routes/communityRoutes');
 app.use('/api/community', communityRoutes);
 const reportsRoutes = require('./routes/reportsRoutes');
 app.use('/api/reports', reportsRoutes);
+const shopRoutes = require('./routes/shopRoutes');
+app.use('/api/shop', shopRoutes);
+const educationRoutes = require('./routes/educationRoutes');
+app.use('/api/education', educationRoutes);
+const universityRoutes = require('./routes/universityRoutes');
+app.use('/api/university', universityRoutes);
+const stipendRoutes = require('./routes/stipendRoutes');
+app.use('/api/stipends', stipendRoutes);
+const contactRoutes = require('./routes/contactRoutes');
+app.use('/api/contact', contactRoutes);
 
 // Admin Routes
 const adminAuthRoutes = require('./routes/adminAuthRoutes');

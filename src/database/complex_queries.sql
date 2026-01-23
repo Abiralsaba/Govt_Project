@@ -446,3 +446,274 @@ SELECT
     
 FROM division_metrics
 ORDER BY total_land_value DESC;
+
+
+-- ========================================
+-- QUERY 9: Shop Sales Analytics with CTE and Window Functions
+-- Comprehensive sales analysis by product, time period, and customer
+-- ========================================
+WITH daily_sales AS (
+    SELECT 
+        DATE(o.created_at) AS sale_date,
+        oi.item_id,
+        s.name AS product_name,
+        s.price AS current_price,
+        COUNT(DISTINCT o.id) AS order_count,
+        SUM(oi.quantity) AS quantity_sold,
+        SUM(oi.price_at_time * oi.quantity) AS revenue
+    FROM ordered_item o
+    JOIN order_items oi ON o.id = oi.order_id
+    JOIN shop_items s ON oi.item_id = s.id
+    WHERE o.payment_status = 'PAID'
+    GROUP BY DATE(o.created_at), oi.item_id, s.name, s.price
+),
+product_rankings AS (
+    SELECT 
+        sale_date,
+        item_id,
+        product_name,
+        current_price,
+        order_count,
+        quantity_sold,
+        revenue,
+        
+        -- Running totals per product
+        SUM(revenue) OVER (
+            PARTITION BY item_id 
+            ORDER BY sale_date
+            ROWS UNBOUNDED PRECEDING
+        ) AS cumulative_revenue,
+        
+        -- Daily rank by revenue
+        RANK() OVER (
+            PARTITION BY sale_date 
+            ORDER BY revenue DESC
+        ) AS daily_revenue_rank,
+        
+        -- 7-day moving average
+        ROUND(
+            AVG(revenue) OVER (
+                PARTITION BY item_id 
+                ORDER BY sale_date
+                ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+            ), 2
+        ) AS moving_avg_7d,
+        
+        -- Percentage of daily revenue
+        ROUND(
+            revenue * 100.0 / SUM(revenue) OVER (PARTITION BY sale_date),
+            2
+        ) AS pct_of_daily_revenue,
+        
+        -- Day-over-day growth
+        revenue - LAG(revenue, 1, 0) OVER (
+            PARTITION BY item_id 
+            ORDER BY sale_date
+        ) AS revenue_change
+        
+    FROM daily_sales
+)
+SELECT 
+    sale_date,
+    product_name,
+    current_price,
+    order_count,
+    quantity_sold,
+    revenue,
+    cumulative_revenue,
+    daily_revenue_rank,
+    moving_avg_7d,
+    pct_of_daily_revenue,
+    revenue_change,
+    CASE 
+        WHEN revenue_change > 0 THEN 'Growth'
+        WHEN revenue_change < 0 THEN 'Decline'
+        ELSE 'Stable'
+    END AS trend
+FROM product_rankings
+ORDER BY sale_date DESC, daily_revenue_rank;
+
+
+-- ========================================
+-- QUERY 10: Product Performance Summary with ROLLUP
+-- Multi-dimensional product analysis with subtotals
+-- ========================================
+SELECT 
+    COALESCE(s.name, '=== ALL PRODUCTS ===') AS product_name,
+    COALESCE(o.payment_status, 'ALL STATUSES') AS payment_status,
+    COALESCE(o.payment_method, 'ALL METHODS') AS payment_method,
+    
+    -- Order Metrics
+    COUNT(DISTINCT o.id) AS total_orders,
+    SUM(oi.quantity) AS total_quantity,
+    ROUND(SUM(oi.price_at_time * oi.quantity), 2) AS total_revenue,
+    ROUND(AVG(oi.price_at_time * oi.quantity), 2) AS avg_order_value,
+    
+    -- Customer Metrics
+    COUNT(DISTINCT o.user_nid) AS unique_customers,
+    
+    -- Price Analysis
+    MIN(oi.price_at_time) AS min_sale_price,
+    MAX(oi.price_at_time) AS max_sale_price,
+    ROUND(AVG(oi.price_at_time), 2) AS avg_sale_price
+
+FROM shop_items s
+LEFT JOIN order_items oi ON s.id = oi.item_id
+LEFT JOIN ordered_item o ON oi.order_id = o.id
+GROUP BY s.name, o.payment_status, o.payment_method WITH ROLLUP
+HAVING total_orders > 0 OR s.name IS NULL
+ORDER BY 
+    CASE WHEN s.name IS NULL THEN 1 ELSE 0 END,
+    s.name,
+    CASE WHEN o.payment_status IS NULL THEN 1 ELSE 0 END,
+    o.payment_status;
+
+
+-- ========================================
+-- QUERY 11: Customer Purchase Pattern Analysis
+-- Identifies shopping behaviors using correlated subqueries and window functions
+-- ========================================
+WITH customer_orders AS (
+    SELECT 
+        o.user_nid,
+        o.id AS order_id,
+        o.total_amount,
+        o.created_at,
+        o.payment_method,
+        
+        -- Order sequence number
+        ROW_NUMBER() OVER (
+            PARTITION BY o.user_nid 
+            ORDER BY o.created_at
+        ) AS order_sequence,
+        
+        -- Days since last order
+        DATEDIFF(
+            o.created_at,
+            LAG(o.created_at) OVER (
+                PARTITION BY o.user_nid 
+                ORDER BY o.created_at
+            )
+        ) AS days_since_last_order,
+        
+        -- Cumulative spend
+        SUM(o.total_amount) OVER (
+            PARTITION BY o.user_nid 
+            ORDER BY o.created_at
+            ROWS UNBOUNDED PRECEDING
+        ) AS cumulative_spend
+        
+    FROM ordered_item o
+    WHERE o.payment_status = 'PAID'
+),
+customer_summary AS (
+    SELECT 
+        user_nid,
+        COUNT(*) AS total_orders,
+        SUM(total_amount) AS lifetime_value,
+        AVG(total_amount) AS avg_order_value,
+        MIN(created_at) AS first_purchase,
+        MAX(created_at) AS last_purchase,
+        AVG(days_since_last_order) AS avg_days_between_orders,
+        
+        -- Spending quartile
+        NTILE(4) OVER (ORDER BY SUM(total_amount)) AS spending_quartile
+    FROM customer_orders
+    GROUP BY user_nid
+)
+SELECT 
+    u.name AS customer_name,
+    cs.user_nid,
+    cs.total_orders,
+    cs.lifetime_value,
+    ROUND(cs.avg_order_value, 2) AS avg_order_value,
+    cs.first_purchase,
+    cs.last_purchase,
+    DATEDIFF(CURDATE(), cs.last_purchase) AS days_inactive,
+    ROUND(cs.avg_days_between_orders, 0) AS avg_purchase_frequency_days,
+    
+    -- Customer Segment
+    CASE cs.spending_quartile
+        WHEN 4 THEN 'High Value'
+        WHEN 3 THEN 'Medium-High'
+        WHEN 2 THEN 'Medium-Low'
+        ELSE 'Low Value'
+    END AS customer_segment,
+    
+    -- Recency Score
+    CASE 
+        WHEN DATEDIFF(CURDATE(), cs.last_purchase) <= 7 THEN 'Active'
+        WHEN DATEDIFF(CURDATE(), cs.last_purchase) <= 30 THEN 'Recent'
+        WHEN DATEDIFF(CURDATE(), cs.last_purchase) <= 90 THEN 'Lapsed'
+        ELSE 'Churned'
+    END AS recency_status,
+    
+    -- Favorite products (subquery)
+    (
+        SELECT GROUP_CONCAT(DISTINCT s.name ORDER BY cnt DESC SEPARATOR ', ')
+        FROM (
+            SELECT oi.item_id, COUNT(*) AS cnt
+            FROM order_items oi
+            JOIN ordered_item o ON oi.order_id = o.id
+            WHERE o.user_nid = cs.user_nid AND o.payment_status = 'PAID'
+            GROUP BY oi.item_id
+            ORDER BY cnt DESC
+            LIMIT 3
+        ) top_items
+        JOIN shop_items s ON top_items.item_id = s.id
+    ) AS favorite_products
+
+FROM customer_summary cs
+JOIN reg_info u ON cs.user_nid = u.nid
+ORDER BY cs.lifetime_value DESC;
+
+
+-- ========================================
+-- QUERY 12: Revenue Trend Analysis with Time Buckets
+-- Pivot-style revenue report by month and payment method
+-- ========================================
+SELECT 
+    YEAR(created_at) AS year,
+    payment_method,
+    
+    -- Monthly Revenue Pivot
+    SUM(CASE WHEN MONTH(created_at) = 1 THEN total_amount ELSE 0 END) AS `Jan_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 2 THEN total_amount ELSE 0 END) AS `Feb_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 3 THEN total_amount ELSE 0 END) AS `Mar_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 4 THEN total_amount ELSE 0 END) AS `Apr_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 5 THEN total_amount ELSE 0 END) AS `May_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 6 THEN total_amount ELSE 0 END) AS `Jun_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 7 THEN total_amount ELSE 0 END) AS `Jul_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 8 THEN total_amount ELSE 0 END) AS `Aug_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 9 THEN total_amount ELSE 0 END) AS `Sep_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 10 THEN total_amount ELSE 0 END) AS `Oct_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 11 THEN total_amount ELSE 0 END) AS `Nov_Revenue`,
+    SUM(CASE WHEN MONTH(created_at) = 12 THEN total_amount ELSE 0 END) AS `Dec_Revenue`,
+    
+    -- Totals
+    SUM(total_amount) AS `Total_Revenue`,
+    COUNT(*) AS `Total_Orders`,
+    ROUND(AVG(total_amount), 2) AS `Avg_Order_Value`,
+    
+    -- Monthly Order Counts
+    SUM(CASE WHEN MONTH(created_at) = 1 THEN 1 ELSE 0 END) AS `Jan_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 2 THEN 1 ELSE 0 END) AS `Feb_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 3 THEN 1 ELSE 0 END) AS `Mar_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 4 THEN 1 ELSE 0 END) AS `Apr_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 5 THEN 1 ELSE 0 END) AS `May_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 6 THEN 1 ELSE 0 END) AS `Jun_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 7 THEN 1 ELSE 0 END) AS `Jul_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 8 THEN 1 ELSE 0 END) AS `Aug_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 9 THEN 1 ELSE 0 END) AS `Sep_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 10 THEN 1 ELSE 0 END) AS `Oct_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 11 THEN 1 ELSE 0 END) AS `Nov_Orders`,
+    SUM(CASE WHEN MONTH(created_at) = 12 THEN 1 ELSE 0 END) AS `Dec_Orders`
+    
+FROM ordered_item
+WHERE payment_status = 'PAID'
+GROUP BY YEAR(created_at), payment_method WITH ROLLUP
+ORDER BY 
+    CASE WHEN YEAR(created_at) IS NULL THEN 1 ELSE 0 END,
+    YEAR(created_at) DESC,
+    CASE WHEN payment_method IS NULL THEN 1 ELSE 0 END,
+    payment_method;

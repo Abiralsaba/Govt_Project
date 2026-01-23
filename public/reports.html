@@ -33,7 +33,11 @@
                 <a href="#" onclick="showTab('services')"><i class="fas fa-tasks"></i> Service Reports</a>
                 <a href="#" onclick="showTab('land')"><i class="fas fa-map"></i> Land Reports</a>
                 <a href="#" onclick="showTab('community')"><i class="fas fa-comments"></i> Community</a>
+                <a href="#" onclick="showTab('shop')"><i class="fas fa-store"></i> Shop Management</a>
+                <a href="#" onclick="showTab('education')"><i class="fas fa-graduation-cap"></i> Education</a>
+                <a href="#" onclick="showTab('admissions')"><i class="fas fa-university"></i> Admissions</a>
                 <a href="#" onclick="showTab('audit')"><i class="fas fa-history"></i> Audit Log</a>
+                <a href="#" onclick="showTab('stipends')"><i class="fas fa-hand-holding-usd"></i> Stipends</a>
             </nav>
         </aside>
 
@@ -191,6 +195,520 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Shop Management Tab -->
+            <div id="shop-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Shop Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage products in the Government Shop</p>
+
+                <!-- Add Product Form -->
+                <div class="report-table-container" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-plus-circle"></i> Add New Product</h3>
+                    <form id="addProductForm"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;"
+                        enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" id="productName" class="form-control" required
+                                placeholder="Enter product name">
+                        </div>
+                        <div class="form-group">
+                            <label>Price (৳)</label>
+                            <input type="number" id="productPrice" class="form-control" required placeholder="0.00"
+                                step="0.01">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Description</label>
+                            <textarea id="productDescription" class="form-control" rows="2"
+                                placeholder="Product description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Product Image</label>
+                            <input type="file" id="productImage" class="form-control" accept="image/*">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button type="submit" class="btn-primary" style="width: 100%;">
+                                <i class="fas fa-plus"></i> Add Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Products List -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-box"></i> Current Products</h3>
+                    <div id="shopItemsTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+
+                <!-- Orders List -->
+                <div class="report-table-container" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-shopping-bag"></i> Recent Orders</h3>
+                    <div id="ordersTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education Management Tab -->
+            <div id="education-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Education Results Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage JSC, SSC, and HSC exam results</p>
+
+                <!-- Exam Type Tabs -->
+                <div class="report-table-container" style="margin-bottom: 2rem;">
+                    <div class="modal-filter-bar" style="margin-bottom: 1rem;">
+                        <button class="filter-btn active" onclick="selectExamType('jsc')">JSC Results</button>
+                        <button class="filter-btn" onclick="selectExamType('ssc')">SSC Results</button>
+                        <button class="filter-btn" onclick="selectExamType('hsc')">HSC Results</button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div id="educationStats" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <div
+                            style="background: rgba(253, 224, 71, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #fde047;" id="jscCount">0</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">JSC Results</div>
+                        </div>
+                        <div
+                            style="background: rgba(74, 222, 128, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #4ade80;" id="sscCount">0</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">SSC Results</div>
+                        </div>
+                        <div
+                            style="background: rgba(96, 165, 250, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;" id="hscCount">0</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">HSC Results</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Result Form -->
+                <div class="report-table-container" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-plus-circle"></i> Add New Result <span id="currentExamTypeLabel"
+                            style="color: #fde047;">(JSC)</span></h3>
+                    <form id="addResultForm"
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem;">
+                        <!-- Student Info -->
+                        <div class="form-group">
+                            <label>Roll Number *</label>
+                            <input type="text" id="resultRoll" class="form-control" required placeholder="123456">
+                        </div>
+                        <div class="form-group">
+                            <label>Registration No.</label>
+                            <input type="text" id="resultReg" class="form-control" placeholder="REG2024001">
+                        </div>
+                        <div class="form-group">
+                            <label>Exam Year *</label>
+                            <select id="resultYear" class="form-control" required>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Board *</label>
+                            <select id="resultBoard" class="form-control" required>
+                                <option value="">Select Board</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Student Name *</label>
+                            <input type="text" id="resultName" class="form-control" required placeholder="Student Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Father's Name</label>
+                            <input type="text" id="resultFather" class="form-control" placeholder="Father's Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Mother's Name</label>
+                            <input type="text" id="resultMother" class="form-control" placeholder="Mother's Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Institution *</label>
+                            <select id="resultInstitution" class="form-control" required>
+                                <option value="">Select Board First</option>
+                            </select>
+                        </div>
+
+                        <!-- Subject Grades - Dynamic based on exam type -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <h4 style="color: #fde047; margin-bottom: 0.5rem;">Subject Grades</h4>
+                            <div id="subjectGradesContainer"
+                                style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                                <!-- Filled dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- GPA and Status -->
+                        <div class="form-group">
+                            <label>GPA *</label>
+                            <input type="number" id="resultGPA" class="form-control" required step="0.01" min="0"
+                                max="5" placeholder="5.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Result Status *</label>
+                            <select id="resultStatus" class="form-control" required>
+                                <option value="Passed">Passed</option>
+                                <option value="Failed">Failed</option>
+                                <option value="Withheld">Withheld</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 3 / -1; display: flex; align-items: flex-end;">
+                            <button type="submit" class="btn-primary" style="width: 100%;">
+                                <i class="fas fa-plus"></i> Add Result
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Results Table -->
+                <div class="report-table-container">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-list"></i> Results List</h3>
+                        <input type="text" id="educationSearch" class="form-control"
+                            placeholder="Search by roll or name..." style="max-width: 300px;">
+                    </div>
+                    <div id="educationResultsTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admissions Management Tab -->
+            <div id="admissions-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">University Admissions Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage universities, admission posts, and applications
+                </p>
+
+                <!-- Admissions Sub-Tabs -->
+                <div class="report-table-container" style="margin-bottom: 2rem;">
+                    <div class="modal-filter-bar" style="margin-bottom: 1rem;">
+                        <button class="filter-btn active"
+                            onclick="selectAdmissionsTab('universities')">Universities</button>
+                        <button class="filter-btn" onclick="selectAdmissionsTab('posts')">Admission Posts</button>
+                        <button class="filter-btn" onclick="selectAdmissionsTab('applications')">Applications</button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div id="admissionsStats" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <div
+                            style="background: rgba(253, 224, 71, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #fde047;" id="universitiesCount">0
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Universities</div>
+                        </div>
+                        <div
+                            style="background: rgba(74, 222, 128, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #4ade80;" id="admissionPostsCount">0
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Admission Posts</div>
+                        </div>
+                        <div
+                            style="background: rgba(96, 165, 250, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;" id="applicationsCount">0
+                            </div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Applications</div>
+                        </div>
+                        <div
+                            style="background: rgba(251, 146, 60, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #fb923c;"
+                                id="pendingApplicationsCount">0</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Pending Review</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Universities Section -->
+                <div id="universities-tab" class="admissions-tab-content">
+                    <!-- Add University Form -->
+                    <div class="report-table-container" style="margin-bottom: 2rem;">
+                        <h3><i class="fas fa-plus-circle"></i> Add New University</h3>
+                        <form id="addUniversityForm"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label>University Name *</label>
+                                <input type="text" id="universityName" class="form-control" required
+                                    placeholder="e.g. University of Dhaka">
+                            </div>
+                            <div class="form-group">
+                                <label>Short Code *</label>
+                                <input type="text" id="universityCode" class="form-control" required
+                                    placeholder="e.g. DU">
+                            </div>
+                            <div class="form-group">
+                                <label>Type *</label>
+                                <select id="universityType" class="form-control" required>
+                                    <option value="General">General</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Medical">Medical</option>
+                                    <option value="Agricultural">Agricultural</option>
+                                    <option value="Science & Technology">Science & Technology</option>
+                                    <option value="Public">Public</option>
+                                    <option value="Private">Private</option>
+                                    <option value="National">National</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Location *</label>
+                                <input type="text" id="universityLocation" class="form-control" required
+                                    placeholder="e.g. Dhaka">
+                            </div>
+                            <div class="form-group">
+                                <label>University Name (Bangla)</label>
+                                <input type="text" id="universityNameBn" class="form-control"
+                                    placeholder="e.g. ঢাকা বিশ্ববিদ্যালয়">
+                            </div>
+                            <div class="form-group">
+                                <label>Website</label>
+                                <input type="url" id="universityWebsite" class="form-control" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label>Logo URL</label>
+                                <input type="url" id="universityLogo" class="form-control"
+                                    placeholder="https://example.com/logo.png">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Description</label>
+                                <textarea id="universityDescription" class="form-control" rows="3"
+                                    placeholder="Brief description of the university..."></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">
+                                    <i class="fas fa-plus"></i> Add University
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Universities List -->
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-university"></i> Universities List</h3>
+                        <div id="universitiesTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admission Posts Section -->
+                <div id="posts-tab" class="admissions-tab-content" style="display: none;">
+                    <!-- Add Admission Post Form -->
+                    <div class="report-table-container" style="margin-bottom: 2rem;">
+                        <h3><i class="fas fa-plus-circle"></i> Create Admission Post</h3>
+                        <form id="addAdmissionPostForm"
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label>University *</label>
+                                <select id="postUniversity" class="form-control" required>
+                                    <option value="">Select University</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Session *</label>
+                                <input type="text" id="postSession" class="form-control" required
+                                    placeholder="e.g. 2026-2027">
+                            </div>
+                            <div class="form-group">
+                                <label>Unit *</label>
+                                <select id="postUnit" class="form-control" required>
+                                    <option value="A">A - Science</option>
+                                    <option value="B">B - Arts/Humanities</option>
+                                    <option value="C">C - Commerce</option>
+                                    <option value="D">D - Combined</option>
+                                    <option value="ENG">ENG - Engineering</option>
+                                    <option value="MED">MED - Medical</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Required Group *</label>
+                                <select id="postRequiredGroup" class="form-control" required>
+                                    <option value="">Any Group</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="Commerce">Commerce</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Minimum GPA *</label>
+                                <input type="number" id="postMinGPA" class="form-control" required step="0.01" min="0"
+                                    max="5" placeholder="4.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Application Fee (৳) *</label>
+                                <input type="number" id="postFee" class="form-control" required placeholder="1000">
+                            </div>
+                            <div class="form-group">
+                                <label>Application Start Date *</label>
+                                <input type="date" id="postStartDate" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Application End Date *</label>
+                                <input type="date" id="postEndDate" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Exam Date</label>
+                                <input type="date" id="postExamDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Total Seats</label>
+                                <input type="number" id="postSeats" class="form-control" placeholder="500">
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="postStatus" class="form-control">
+                                    <option value="Active">Active</option>
+                                    <option value="Upcoming">Upcoming</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Requirements/Notes</label>
+                                <textarea id="postRequirements" class="form-control" rows="2"
+                                    placeholder="Additional requirements or notes..."></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">
+                                    <i class="fas fa-plus"></i> Create Admission Post
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Admission Posts List -->
+                    <div class="report-table-container">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3><i class="fas fa-clipboard-list"></i> Admission Posts</h3>
+                            <select id="filterPostStatus" class="form-control" style="width: auto;"
+                                onchange="filterAdmissionPosts()">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Upcoming">Upcoming</option>
+                                <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+                        <div id="admissionPostsTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Applications Section -->
+                <div id="applications-tab" class="admissions-tab-content" style="display: none;">
+                    <div class="report-table-container">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <h3><i class="fas fa-file-alt"></i> Student Applications</h3>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <select id="filterAppStatus" class="form-control" style="width: auto;"
+                                    onchange="filterApplications()">
+                                    <option value="">All Status</option>
+                                    <option value="Submitted">Submitted</option>
+                                    <option value="Verified">Verified</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Draft">Draft</option>
+                                </select>
+                                <select id="filterAppUniversity" class="form-control" style="width: auto;"
+                                    onchange="filterApplications()">
+                                    <option value="">All Universities</option>
+                                </select>
+                                <input type="text" id="searchApplications" class="form-control"
+                                    placeholder="Search by roll or name..." style="width: 200px;"
+                                    oninput="filterApplications()">
+                            </div>
+                        </div>
+                        <div id="applicationsTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Stipend Management Tab -->
+            <div id="stipends-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Stipend Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage educational grants and student applications</p>
+
+                <!-- Sub-Tabs -->
+                <div class="report-table-container" style="margin-bottom: 2rem;">
+                    <div class="modal-filter-bar" style="margin-bottom: 1rem;">
+                        <button class="filter-btn active" onclick="selectStipendTab('grants')">Manage Grants</button>
+                        <button class="filter-btn" onclick="selectStipendTab('applications')">Student
+                            Applications</button>
+                    </div>
+                </div>
+
+                <!-- Grants Tab -->
+                <div id="stipend-grants-tab" class="stipend-tab-content">
+                    <!-- Add Grant Form -->
+                    <div class="report-table-container" style="margin-bottom: 2rem;">
+                        <h3><i class="fas fa-plus-circle"></i> Create New Grant</h3>
+                        <form id="addStipendForm"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label>Title *</label>
+                                <input type="text" id="grantTitle" class="form-control" required
+                                    placeholder="Ex: Merit Scholarship 2026">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount (BDT) *</label>
+                                <input type="number" id="grantAmount" class="form-control" required placeholder="5000">
+                            </div>
+                            <div class="form-group">
+                                <label>Type *</label>
+                                <select id="grantType" class="form-control" required>
+                                    <option value="Merit">Merit</option>
+                                    <option value="Need">Need-based</option>
+                                    <option value="Research">Research</option>
+                                    <option value="Disability">Disability</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Minimum GPA</label>
+                                <input type="number" id="grantGPA" class="form-control" step="0.01"
+                                    placeholder="Optional">
+                            </div>
+                            <div class="form-group">
+                                <label>Max Family Income (Monthly)</label>
+                                <input type="number" id="grantIncome" class="form-control" placeholder="Optional">
+                            </div>
+                            <div class="form-group">
+                                <label>Deadline *</label>
+                                <input type="date" id="grantDeadline" class="form-control" required>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Description *</label>
+                                <textarea id="grantDescription" class="form-control" rows="2" required></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">Create Grant</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Grants List -->
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-list"></i> Active Grants</h3>
+                        <div id="stipendGrantsTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Applications Tab -->
+                <div id="stipend-applications-tab" class="stipend-tab-content" style="display: none;">
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-users"></i> Received Applications</h3>
+                        <div id="stipendApplicationsTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -306,6 +824,48 @@
             </div>
             <div class="modal-body" id="newUsersModalBody">
                 <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div class="admin-modal" id="editProductModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Edit Product</h2>
+                <button class="modal-close" onclick="closeModal('editProductModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"
+                    enctype="multipart/form-data">
+                    <input type="hidden" id="editProductId">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="editProductName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (৳)</label>
+                        <input type="number" id="editProductPrice" class="form-control" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock</label>
+                        <input type="number" id="editProductStock" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Description</label>
+                        <textarea id="editProductDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Change Image (Optional)</label>
+                        <input type="file" id="editProductImage" class="form-control" accept="image/*">
+                        <small style="color: #94a3b8;">Leave empty to keep current image</small>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+                        <button type="submit" class="btn-primary" style="width: 100%;">
+                            <i class="fas fa-save"></i> Update Product
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

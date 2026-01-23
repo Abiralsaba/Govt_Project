@@ -675,4 +675,786 @@ router.put('/community-posts/:id/reject', async (req, res) => {
     }
 });
 
+// ==========================================
+// SHOP MANAGEMENT
+// ==========================================
+
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for product images
+const productStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '../../public/uploads/products'));
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const productUpload = multer({
+    storage: productStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        }
+        cb(new Error('Only image files are allowed'));
+    }
+});
+
+/**
+ * GET /api/admin/shop-items - Get all shop items
+ */
+router.get('/shop-items', async (req, res) => {
+    try {
+        const [items] = await db.query('SELECT * FROM shop_items ORDER BY created_at DESC');
+        res.json(items);
+    } catch (error) {
+        console.error('Error fetching shop items:', error);
+        res.status(500).json({ error: 'Failed to fetch shop items' });
+    }
+});
+
+/**
+ * POST /api/admin/shop-items - Add new shop item
+ */
+router.post('/shop-items', productUpload.single('image'), async (req, res) => {
+    try {
+        const { name, description, price, stock_quantity } = req.body;
+
+        let image_url = '<i class="fas fa-box"></i>'; // Default icon
+        if (req.file) {
+            image_url = `/uploads/products/${req.file.filename}`;
+        }
+
+        const [result] = await db.query(
+            `INSERT INTO shop_items (name, description, price, image_url, stock_quantity) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [name, description, price, image_url, stock_quantity || 100]
+        );
+
+        res.json({
+            success: true,
+            message: 'Product added successfully',
+            item: { id: result.insertId, name, description, price, image_url }
+        });
+    } catch (error) {
+        console.error('Error adding shop item:', error);
+        res.status(500).json({ error: 'Failed to add product' });
+    }
+});
+
+/**
+ * PUT /api/admin/shop-items/:id - Update shop item
+ */
+router.put('/shop-items/:id', productUpload.single('image'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, price, stock_quantity } = req.body;
+
+        let updateQuery = `UPDATE shop_items SET name=?, description=?, price=?, stock_quantity=?`;
+        let queryParams = [name, description, price, stock_quantity];
+
+        if (req.file) {
+            updateQuery += `, image_url=?`;
+            queryParams.push(`/uploads/products/${req.file.filename}`);
+        }
+
+        updateQuery += ` WHERE id=?`;
+        queryParams.push(id);
+
+        await db.query(updateQuery, queryParams);
+
+        res.json({
+            success: true,
+            message: 'Product updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating shop item:', error);
+        res.status(500).json({ error: 'Failed to update product' });
+    }
+});
+
+
+
+/**
+ * DELETE /api/admin/shop-items/:id - Delete shop item
+ */
+router.delete('/shop-items/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM shop_items WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting shop item:', error);
+        res.status(500).json({ error: 'Failed to delete product' });
+    }
+});
+
+/**
+ * GET /api/admin/orders - Get all orders
+ * (Existing Code)
+ */
+
+// ==========================================
+// STIPEND MANAGEMENT
+// ==========================================
+
+/**
+ * GET /api/admin/stipends - Get all stipends
+ */
+router.get('/stipends', async (req, res) => {
+    try {
+        const [stipends] = await db.query('SELECT * FROM available_stipends ORDER BY created_at DESC');
+        res.json(stipends);
+    } catch (error) {
+        console.error('Error fetching stipends:', error);
+        res.status(500).json({ error: 'Failed to fetch stipends' });
+    }
+});
+
+/**
+ * POST /api/admin/stipends - Add new stipend
+ */
+router.post('/stipends', async (req, res) => {
+    try {
+        const { title, description, amount, type, min_gpa, max_income, deadline, is_active } = req.body;
+
+        await db.query(
+            `INSERT INTO available_stipends (title, description, amount, type, min_gpa, max_income, deadline, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [title, description, amount, type, min_gpa || 0, max_income, deadline, is_active ? 1 : 0]
+        );
+
+        res.json({ success: true, message: 'Stipend added successfully' });
+    } catch (error) {
+        console.error('Error adding stipend:', error);
+        res.status(500).json({ error: 'Failed to add stipend' });
+    }
+});
+
+/**
+ * GET /api/admin/stipend-applications - Get all applications
+ */
+router.get('/stipend-applications', async (req, res) => {
+    try {
+        const [apps] = await db.query(`
+            SELECT 
+                sa.*,
+                s.title AS stipend_title,
+                u.name AS student_name,
+                u.nid AS student_nid
+            FROM stipends_applications sa
+            JOIN available_stipends s ON sa.stipend_id = s.id
+            JOIN reg_info u ON sa.user_id = u.id
+            ORDER BY sa.submitted_at DESC
+        `);
+        res.json(apps);
+    } catch (error) {
+        console.error('Error fetching stipend applications:', error);
+        res.status(500).json({ error: 'Failed to fetch applications' });
+    }
+});
+
+/**
+ * PUT /api/admin/stipend-applications/:id/status - Update status
+ */
+router.put('/stipend-applications/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, remarks } = req.body; // Approved / Rejected
+
+        await db.query(
+            'UPDATE stipends_applications SET status = ? WHERE id = ?',
+            [status, id]
+        );
+
+        res.json({ success: true, message: `Application ${status}` });
+    } catch (error) {
+        console.error('Error updating status:', error);
+        res.status(500).json({ error: 'Failed to update status' });
+    }
+});
+
+
+router.get('/orders', async (req, res) => {
+    try {
+        const [orders] = await db.query(`
+            SELECT 
+                o.*,
+                u.name as customer_name,
+                u.email as customer_email
+            FROM Ordered_item o
+            LEFT JOIN reg_info u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+        `);
+        res.json(orders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+});
+
+/**
+ * PUT /api/admin/orders/:id/status - Update order status
+ */
+router.put('/orders/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body; // 'DELIVERED', 'CANCELED', 'PENDING'
+
+        await db.query(
+            'UPDATE Ordered_item SET payment_status = ? WHERE id = ?',
+            [status, id]
+        );
+
+        res.json({ success: true, message: 'Order status updated' });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ error: 'Failed to update order status' });
+    }
+});
+
+// ==========================================
+// EDUCATION RESULTS MANAGEMENT
+// ==========================================
+
+/**
+ * GET /api/admin/education/boards - Get all education boards
+ */
+router.get('/education/boards', async (req, res) => {
+    try {
+        const [boards] = await db.query('SELECT * FROM education_boards ORDER BY name');
+        res.json(boards);
+    } catch (error) {
+        console.error('Error fetching boards:', error);
+        res.status(500).json({ error: 'Failed to fetch boards' });
+    }
+});
+
+/**
+ * GET /api/admin/education/institutions/:boardId - Get institutions by board
+ */
+router.get('/education/institutions/:boardId', async (req, res) => {
+    try {
+        const { boardId } = req.params;
+        const [institutions] = await db.query(
+            'SELECT * FROM education_institutions WHERE board_id = ? ORDER BY name',
+            [boardId]
+        );
+        res.json(institutions);
+    } catch (error) {
+        console.error('Error fetching institutions:', error);
+        res.status(500).json({ error: 'Failed to fetch institutions' });
+    }
+});
+
+/**
+ * GET /api/admin/education/results/:examType - Get all results for an exam type
+ * examType: jsc, ssc, hsc
+ */
+router.get('/education/results/:examType', async (req, res) => {
+    try {
+        const { examType } = req.params;
+        const { year, search } = req.query;
+
+        const validExamTypes = ['jsc', 'ssc', 'hsc'];
+        if (!validExamTypes.includes(examType.toLowerCase())) {
+            return res.status(400).json({ error: 'Invalid exam type' });
+        }
+
+        const tableName = `${examType.toLowerCase()}_results`;
+
+        let query = `
+            SELECT r.*, b.name as board_name
+            FROM ${tableName} r
+            LEFT JOIN education_boards b ON r.board_id = b.id
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (year) {
+            query += ` AND r.exam_year = ?`;
+            params.push(year);
+        }
+
+        if (search) {
+            query += ` AND (r.roll_number LIKE ? OR r.student_name LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`);
+        }
+
+        query += ` ORDER BY r.created_at DESC`;
+
+        const [results] = await db.query(query, params);
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching education results:', error);
+        res.status(500).json({ error: 'Failed to fetch results' });
+    }
+});
+
+/**
+ * POST /api/admin/education/results/:examType - Add new result
+ */
+router.post('/education/results/:examType', async (req, res) => {
+    try {
+        const { examType } = req.params;
+        const data = req.body;
+
+        const validExamTypes = ['jsc', 'ssc', 'hsc'];
+        if (!validExamTypes.includes(examType.toLowerCase())) {
+            return res.status(400).json({ error: 'Invalid exam type' });
+        }
+
+        const tableName = `${examType.toLowerCase()}_results`;
+
+        // Build dynamic insert based on exam type
+        let columns = ['roll_number', 'registration_number', 'exam_year', 'student_name',
+            'father_name', 'mother_name', 'date_of_birth', 'institution_name',
+            'board_id', 'gpa', 'result_status'];
+
+        if (examType.toLowerCase() === 'jsc') {
+            columns.push('bangla', 'english', 'mathematics', 'general_science',
+                'bangladesh_global_studies', 'religion', 'ict');
+        } else if (examType.toLowerCase() === 'ssc') {
+            columns.push('exam_group', 'bangla_1st', 'bangla_2nd', 'english_1st', 'english_2nd',
+                'mathematics', 'physics', 'chemistry', 'biology', 'higher_math',
+                'bangladesh_global_studies', 'religion', 'ict');
+        } else if (examType.toLowerCase() === 'hsc') {
+            columns.push('exam_group', 'bangla_1st', 'bangla_2nd', 'english_1st', 'english_2nd',
+                'physics_1st', 'physics_2nd', 'chemistry_1st', 'chemistry_2nd',
+                'biology_1st', 'biology_2nd', 'higher_math_1st', 'higher_math_2nd',
+                'ict', 'optional_subject_name', 'optional_subject_grade');
+        }
+
+        const values = columns.map(col => data[col] || null);
+        const placeholders = columns.map(() => '?').join(', ');
+
+        const [result] = await db.query(
+            `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`,
+            values
+        );
+
+        res.json({
+            success: true,
+            message: 'Result added successfully',
+            id: result.insertId
+        });
+    } catch (error) {
+        console.error('Error adding result:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: 'Result already exists for this roll number and year' });
+        }
+        res.status(500).json({ error: 'Failed to add result' });
+    }
+});
+
+/**
+ * PUT /api/admin/education/results/:examType/:id - Update result
+ */
+router.put('/education/results/:examType/:id', async (req, res) => {
+    try {
+        const { examType, id } = req.params;
+        const data = req.body;
+
+        const validExamTypes = ['jsc', 'ssc', 'hsc'];
+        if (!validExamTypes.includes(examType.toLowerCase())) {
+            return res.status(400).json({ error: 'Invalid exam type' });
+        }
+
+        const tableName = `${examType.toLowerCase()}_results`;
+
+        // Build dynamic update
+        const updateFields = [];
+        const values = [];
+
+        for (const [key, value] of Object.entries(data)) {
+            if (key !== 'id' && value !== undefined) {
+                updateFields.push(`${key} = ?`);
+                values.push(value);
+            }
+        }
+
+        values.push(id);
+
+        await db.query(
+            `UPDATE ${tableName} SET ${updateFields.join(', ')} WHERE id = ?`,
+            values
+        );
+
+        res.json({ success: true, message: 'Result updated successfully' });
+    } catch (error) {
+        console.error('Error updating result:', error);
+        res.status(500).json({ error: 'Failed to update result' });
+    }
+});
+
+/**
+ * DELETE /api/admin/education/results/:examType/:id - Delete result
+ */
+router.delete('/education/results/:examType/:id', async (req, res) => {
+    try {
+        const { examType, id } = req.params;
+
+        const validExamTypes = ['jsc', 'ssc', 'hsc'];
+        if (!validExamTypes.includes(examType.toLowerCase())) {
+            return res.status(400).json({ error: 'Invalid exam type' });
+        }
+
+        const tableName = `${examType.toLowerCase()}_results`;
+
+        await db.query(`DELETE FROM ${tableName} WHERE id = ?`, [id]);
+
+        res.json({ success: true, message: 'Result deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting result:', error);
+        res.status(500).json({ error: 'Failed to delete result' });
+    }
+});
+
+/**
+ * GET /api/admin/education/stats - Get education statistics
+ */
+router.get('/education/stats', async (req, res) => {
+    try {
+        const [jscCount] = await db.query('SELECT COUNT(*) as count FROM jsc_results');
+        const [sscCount] = await db.query('SELECT COUNT(*) as count FROM ssc_results');
+        const [hscCount] = await db.query('SELECT COUNT(*) as count FROM hsc_results');
+
+        res.json({
+            jsc: jscCount[0].count,
+            ssc: sscCount[0].count,
+            hsc: hscCount[0].count,
+            total: jscCount[0].count + sscCount[0].count + hscCount[0].count
+        });
+    } catch (error) {
+        console.error('Error fetching education stats:', error);
+        res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+});
+
+// ==========================================
+// UNIVERSITY ADMISSION MANAGEMENT
+// ==========================================
+
+/**
+ * GET /api/admin/universities - Get all universities
+ */
+router.get('/universities', async (req, res) => {
+    try {
+        const [universities] = await db.query(`
+            SELECT id, name, name_bn, code AS short_code, type AS university_type, 
+                   location, website, logo_url, description, is_active
+            FROM universities ORDER BY name
+        `);
+        res.json({ success: true, data: universities });
+    } catch (error) {
+        console.error('Error fetching universities:', error);
+        res.status(500).json({ error: 'Failed to fetch universities' });
+    }
+});
+
+/**
+ * POST /api/admin/universities - Add new university
+ */
+router.post('/universities', async (req, res) => {
+    try {
+        const {
+            name, name_bn,
+            code, short_code, // Accept both 'code' and 'short_code'
+            type, university_type, // Accept both 'type' and 'university_type'
+            location, website, logo_url, description
+        } = req.body;
+
+        const universityCode = code || short_code;
+        const universityType = type || university_type || 'General';
+
+        if (!name || !universityCode) {
+            return res.status(400).json({ success: false, message: 'Name and code are required' });
+        }
+
+        const [result] = await db.query(`
+            INSERT INTO universities (name, name_bn, code, type, location, website, logo_url, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [name, name_bn || null, universityCode, universityType, location, website, logo_url || null, description || null]);
+
+        res.json({ success: true, id: result.insertId, message: 'University added successfully' });
+    } catch (error) {
+        console.error('Error adding university:', error);
+        res.status(500).json({ success: false, message: 'Failed to add university', error: error.sqlMessage || error.message });
+    }
+});
+
+/**
+ * PUT /api/admin/universities/:id - Update university
+ */
+router.put('/universities/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            name, name_bn,
+            code, short_code,
+            type, university_type,
+            location, website, logo_url, description, is_active
+        } = req.body;
+
+        const universityCode = code || short_code;
+        const universityTypeVal = type || university_type;
+
+        await db.query(`
+            UPDATE universities SET 
+                name = ?, name_bn = ?, code = ?, type = ?, location = ?, 
+                website = ?, logo_url = ?, description = ?, is_active = ?
+            WHERE id = ?
+        `, [name, name_bn, universityCode, universityTypeVal, location, website, logo_url, description, is_active !== false, id]);
+
+        res.json({ success: true, message: 'University updated successfully' });
+    } catch (error) {
+        console.error('Error updating university:', error);
+        res.status(500).json({ success: false, message: 'Failed to update university' });
+    }
+});
+
+/**
+ * GET /api/admin/admission-posts - Get all admission posts
+ */
+router.get('/admission-posts', async (req, res) => {
+    try {
+        const [posts] = await db.query(`
+            SELECT ap.id, ap.university_id, ap.session, ap.unit_code AS unit, 
+                   ap.unit_name, ap.min_gpa, ap.required_group, ap.application_fee,
+                   ap.start_date AS application_start, ap.end_date AS application_end,
+                   ap.exam_date, ap.total_seats, ap.status, ap.requirements,
+                   u.name AS university_name, u.code AS university_code,
+                (SELECT COUNT(*) FROM university_applications WHERE admission_post_id = ap.id) AS application_count,
+                (SELECT COUNT(*) FROM university_applications WHERE admission_post_id = ap.id AND payment_status = 'Paid') AS paid_count
+            FROM admission_posts ap
+            JOIN universities u ON ap.university_id = u.id
+            ORDER BY ap.created_at DESC
+        `);
+        res.json({ success: true, data: posts });
+    } catch (error) {
+        console.error('Error fetching admission posts:', error);
+        res.status(500).json({ error: 'Failed to fetch admission posts' });
+    }
+});
+
+/**
+ * POST /api/admin/admission-posts - Create admission post
+ */
+router.post('/admission-posts', async (req, res) => {
+    try {
+        const {
+            university_id, session,
+            unit, unit_code: unitCodeAlt, // Accept both 'unit' and 'unit_code'
+            unit_name, unit_description,
+            min_gpa, min_gpa_science, min_gpa_english, required_group,
+            application_fee,
+            application_start, start_date: startDateAlt, // Accept both names
+            application_end, end_date: endDateAlt,
+            exam_date, result_date,
+            total_seats, status, requirements, instructions
+        } = req.body;
+
+        // Use whichever field name was provided
+        const unitCode = unit || unitCodeAlt;
+        const startDate = application_start || startDateAlt;
+        const endDate = application_end || endDateAlt;
+
+        // Generate unit name if not provided
+        const unitName = unit_name || `Unit ${unitCode}`;
+
+        if (!university_id || !session || !unitCode || !startDate || !endDate) {
+            return res.status(400).json({ success: false, message: 'Missing required fields: university_id, session, unit, application_start, application_end' });
+        }
+
+        const [result] = await db.query(`
+            INSERT INTO admission_posts (
+                university_id, session, unit_code, unit_name, unit_description,
+                min_gpa, min_gpa_science, min_gpa_english, required_group,
+                application_fee, start_date, end_date, exam_date, result_date,
+                total_seats, status, requirements, instructions
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            university_id, session, unitCode, unitName, unit_description,
+            min_gpa || 3.50, min_gpa_science, min_gpa_english, required_group || 'Any',
+            application_fee || 1000, startDate, endDate, exam_date, result_date,
+            total_seats, status || 'Upcoming', requirements, instructions
+        ]);
+
+        res.json({ success: true, id: result.insertId, message: 'Admission post created successfully' });
+    } catch (error) {
+        console.error('Error creating admission post:', error);
+        res.status(500).json({ error: 'Failed to create admission post' });
+    }
+});
+
+/**
+ * PUT /api/admin/admission-posts/:id - Update admission post
+ */
+router.put('/admission-posts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            university_id, session,
+            unit, unit_code: unitCodeAlt,
+            unit_name, unit_description,
+            min_gpa, min_gpa_science, min_gpa_english, required_group,
+            application_fee,
+            application_start, start_date: startDateAlt,
+            application_end, end_date: endDateAlt,
+            exam_date, result_date,
+            total_seats, status, requirements, instructions
+        } = req.body;
+
+        // Use whichever field name was provided
+        const unitCode = unit || unitCodeAlt;
+        const startDate = application_start || startDateAlt;
+        const endDate = application_end || endDateAlt;
+        const unitName = unit_name || `Unit ${unitCode}`;
+
+        await db.query(`
+            UPDATE admission_posts SET
+                session = ?, unit_code = ?, unit_name = ?,
+                min_gpa = ?, required_group = ?,
+                application_fee = ?, start_date = ?, end_date = ?, exam_date = ?,
+                total_seats = ?, status = ?
+            WHERE id = ?
+        `, [
+            session, unitCode, unitName,
+            min_gpa, required_group,
+            application_fee, startDate, endDate, exam_date,
+            total_seats, status, id
+        ]);
+
+        res.json({ success: true, message: 'Admission post updated successfully' });
+    } catch (error) {
+        console.error('Error updating admission post:', error);
+        res.status(500).json({ success: false, message: 'Failed to update admission post' });
+    }
+});
+
+/**
+ * DELETE /api/admin/admission-posts/:id - Delete admission post
+ */
+router.delete('/admission-posts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Check if there are any applications
+        const [apps] = await db.query('SELECT COUNT(*) AS count FROM university_applications WHERE admission_post_id = ?', [id]);
+        if (apps[0].count > 0) {
+            return res.status(400).json({ error: 'Cannot delete admission post with existing applications' });
+        }
+
+        await db.query('DELETE FROM admission_posts WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Admission post deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting admission post:', error);
+        res.status(500).json({ error: 'Failed to delete admission post' });
+    }
+});
+
+/**
+ * GET /api/admin/university-applications - Get all applications
+ */
+router.get('/university-applications', async (req, res) => {
+    try {
+        const { status, admission_id } = req.query;
+
+        let query = `
+            SELECT ua.*, ap.unit_name, ap.unit_code, u.name AS university_name, u.code AS university_code
+            FROM university_applications ua
+            JOIN admission_posts ap ON ua.admission_post_id = ap.id
+            JOIN universities u ON ap.university_id = u.id
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (status) {
+            query += ' AND ua.application_status = ?';
+            params.push(status);
+        }
+
+        if (admission_id) {
+            query += ' AND ua.admission_post_id = ?';
+            params.push(admission_id);
+        }
+
+        query += ' ORDER BY ua.created_at DESC';
+
+        const [applications] = await db.query(query, params);
+        // Map unit_code to unit for frontend compatibility
+        const mappedApps = applications.map(app => ({
+            ...app,
+            unit: app.unit_code,
+            university_id: app.university_id || 0
+        }));
+        res.json({ success: true, data: mappedApps });
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+        res.status(500).json({ error: 'Failed to fetch applications' });
+    }
+});
+
+/**
+ * PUT /api/admin/university-applications/:id/verify - Verify application
+ */
+router.put('/university-applications/:id/verify', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, rejection_reason } = req.body;
+
+        await db.query(`
+            UPDATE university_applications SET 
+                application_status = ?,
+                rejection_reason = ?,
+                verified_at = NOW()
+            WHERE id = ?
+        `, [status, rejection_reason, id]);
+
+        res.json({ success: true, message: 'Application status updated' });
+    } catch (error) {
+        console.error('Error verifying application:', error);
+        res.status(500).json({ error: 'Failed to verify application' });
+    }
+});
+
+/**
+ * GET /api/admin/admission-stats - Get admission statistics
+ */
+router.get('/admission-stats', async (req, res) => {
+    try {
+        const [universities] = await db.query('SELECT COUNT(*) AS count FROM universities WHERE is_active = TRUE');
+        const [activeAdmissions] = await db.query('SELECT COUNT(*) AS count FROM admission_posts WHERE status = "Active"');
+        const [totalApplications] = await db.query('SELECT COUNT(*) AS count FROM university_applications');
+        const [paidApplications] = await db.query('SELECT COUNT(*) AS count FROM university_applications WHERE payment_status = "Paid"');
+        const [totalRevenue] = await db.query('SELECT COALESCE(SUM(payment_amount), 0) AS total FROM university_applications WHERE payment_status = "Paid"');
+
+        const [pendingApps] = await db.query('SELECT COUNT(*) AS count FROM university_applications WHERE application_status = "Submitted"');
+        const [totalPosts] = await db.query('SELECT COUNT(*) AS count FROM admission_posts');
+
+        res.json({
+            success: true,
+            data: {
+                totalUniversities: universities[0].count,
+                totalPosts: totalPosts[0].count,
+                activeAdmissions: activeAdmissions[0].count,
+                totalApplications: totalApplications[0].count,
+                pendingApplications: pendingApps[0].count,
+                paidApplications: paidApplications[0].count,
+                totalRevenue: totalRevenue[0].total
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching admission stats:', error);
+        res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+});
+
 module.exports = router;
