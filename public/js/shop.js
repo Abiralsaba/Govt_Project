@@ -171,10 +171,14 @@ async function openCartModal() {
         list.innerHTML = cartItems.map(item => {
             const itemTotal = item.price * item.quantity;
             total += itemTotal;
+            const isIcon = item.image_url && item.image_url.includes('<i');
+            const imgHtml = isIcon
+                ? `<div class="product-icon" style="font-size: 1.5rem; color: var(--text-muted);">${item.image_url}</div>`
+                : `<img src="${item.image_url}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">`;
             return `
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="font-size: 1.5rem; color: var(--text-muted);">${item.image_url}</div>
+                        ${imgHtml}
                         <div>
                             <h4 style="margin: 0; color: white;">${item.name}</h4>
                             <p style="margin: 0; color: var(--text-muted);">৳ ${item.price} x ${item.quantity}</p>

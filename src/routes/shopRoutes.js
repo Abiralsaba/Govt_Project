@@ -104,7 +104,7 @@ router.get('/cart', async (req, res) => {
                 c.id as cart_id,
                 c.quantity,
                 c.product_id,
-                c.product_name,
+                i.name AS name,
                 i.price,
                 i.image_url
             FROM cart_item c

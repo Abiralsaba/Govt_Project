@@ -450,19 +450,21 @@ CREATE TABLE IF NOT EXISTS notifications (
   CONSTRAINT notifications_ibfk_1 FOREIGN KEY (user_id) REFERENCES reg_info (id) ON DELETE CASCADE
 );
 
--- Table: orders
-CREATE TABLE IF NOT EXISTS orders (
+-- Table: Ordered_item
+CREATE TABLE IF NOT EXISTS Ordered_item (
   id int(11) NOT NULL AUTO_INCREMENT,
-  user_nid varchar(50) NOT NULL,
+  user_id int(11) NOT NULL,
+  user_nid varchar(50) DEFAULT NULL,
   total_amount decimal(10,2) NOT NULL,
   payment_method enum('COD','ONLINE') NOT NULL,
   payment_status enum('PENDING','PAID','FAILED') DEFAULT 'PENDING',
   delivery_address text NOT NULL,
   contact_number varchar(20) NOT NULL,
+  product_details json DEFAULT NULL,
   created_at timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (id),
-  KEY user_nid (user_nid),
-  CONSTRAINT orders_ibfk_1 FOREIGN KEY (user_nid) REFERENCES reg_info (nid) ON DELETE CASCADE
+  KEY user_id (user_id),
+  CONSTRAINT ordered_item_ibfk_1 FOREIGN KEY (user_id) REFERENCES reg_info (id) ON DELETE CASCADE
 );
 
 -- Table: order_items
@@ -475,7 +477,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   PRIMARY KEY (id),
   KEY order_id (order_id),
   KEY item_id (item_id),
-  CONSTRAINT order_items_ibfk_1 FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+  CONSTRAINT order_items_ibfk_1 FOREIGN KEY (order_id) REFERENCES Ordered_item (id) ON DELETE CASCADE,
   CONSTRAINT order_items_ibfk_2 FOREIGN KEY (item_id) REFERENCES shop_items (id) ON DELETE CASCADE
 );
 
