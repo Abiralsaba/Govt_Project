@@ -4,57 +4,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Govt of Bangladesh</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Login | Government of Bangladesh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
-    <div class="bg-shape shape-1"></div>
-    <div class="bg-shape shape-2"></div>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        
+        <div class="wave-container">
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+    </div>
 
-    <div class="container">
+    <!-- Floating Icons -->
+    <div class="floating-icons">
+        <i class="fas fa-landmark floating-icon"></i>
+        <i class="fas fa-id-card floating-icon"></i>
+        <i class="fas fa-file-alt floating-icon"></i>
+        <i class="fas fa-university floating-icon"></i>
+    </div>
+
+    <!-- Main Container -->
+    <div class="auth-container">
         <div class="auth-card">
-            <div class="logo-area">
-                <i class="fas fa-university fa-3x" style="color: #34d399; margin-bottom: 15px;"></i>
-                <h1>Govt Portal</h1>
-                <p>Secure Access System</p>
+            <!-- Decorative Corners -->
+            <div class="corner-decoration top-left"></div>
+            <div class="corner-decoration bottom-right"></div>
+
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="flag-emblem">
+                    <div class="flag-circle"></div>
+                </div>
+                <h1>গণপ্রজাতন্ত্রী বাংলাদেশ</h1>
+                <p>Government e-Service Portal</p>
+                <div class="govt-badge">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>Secure Government Login</span>
+                </div>
             </div>
 
-            
+            <!-- Alert Box -->
+            <div id="alertBox" class="alert"></div>
 
-            <form id="loginForm">
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
                 <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" class="form-control" placeholder="citizen@bangladesh.gov.bd"
-                        required>
+                    <label for="email">
+                        <i class="fas fa-envelope"></i> Email Address
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" class="form-control" 
+                               placeholder="citizen@bangladesh.gov.bd" required>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" class="form-control" 
+                               placeholder="Enter your password" required>
+                        <i class="fas fa-lock input-icon"></i>
+                    </div>
                 </div>
-                <button type="submit" class="btn-primary">Secure Login</button>
+
+                <button type="submit" class="btn-submit">
+                    <span>Login to Portal</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
             </form>
 
+            <!-- Forgot Password -->
+            <div class="forgot-link">
+                <a href="forgot-password.html">
+                    <i class="fas fa-key"></i> Forgot Password?
+                </a>
+            </div>
+
+            <!-- Auth Links -->
             <div class="auth-links">
                 <span>New Citizen?</span>
-                <a href="register.html">Register here</a>
+                <a href="register.html">
+                    Create Account <i class="fas fa-user-plus"></i>
+                </a>
             </div>
 
-            <div class="auth-links" style="margin-top: 10px; font-size: 0.8rem;">
-                <a href="forgot-password.html" style="color: #ccc;">Forgot Password?</a>
-            </div>
-
-            <div style="margin-top: 20px; font-size: 0.7rem; color: #777;">
-                <i class="fas fa-lock"></i> Secured with 256-bit Encryption
+            <!-- Security Badge -->
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>
+                <span>Protected with 256-bit SSL Encryption</span>
+                <i class="fas fa-certificate"></i>
             </div>
         </div>
     </div>
 
     <script src="js/auth.js"></script>
+    
+    <!-- Additional Animations Script -->
+    <script>
+        // Add focus effects
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.parentElement.classList.add('focused');
+            });
+            input.addEventListener('blur', function() {
+                this.parentElement.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Button loading state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = this.querySelector('.btn-submit');
+            btn.classList.add('loading');
+            btn.innerHTML = '<span>Authenticating...</span>';
+        });
+    </script>
 </body>
 
 </html>
