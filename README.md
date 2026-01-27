@@ -27,7 +27,7 @@ npm start
 ```
 Or directly:
 ```bash
-node src/app.js
+node src/app.js30
 ```
 
 The application will be available at: **http://localhost:3000**
