@@ -100,7 +100,11 @@
     flex-direction: column;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
     z-index: 1000;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
@@ -279,17 +283,31 @@
 
 /* ===== Dashboard Container ===== */
 .dashboard-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
+    display: block;
     min-height: 100vh;
     width: 100%;
 }
 
 /* ===== Main Content Area ===== */
 .main-content {
+    margin-left: 280px;
     padding: 2rem;
-    overflow-y: auto;
+    min-height: 100vh;
     position: relative;
+    overflow-x: hidden;
+}
+
+/* Layout class for pages using .layout instead of .dashboard-container */
+.layout {
+    display: block;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.layout .main-content {
+    margin-left: 280px;
+    padding: 2rem;
+    min-height: 100vh;
 }
 
 /* ===== Mobile Close Button ===== */
@@ -320,11 +338,20 @@
 /* Tablet */
 @media (max-width: 1024px) {
     .dashboard-container {
-        grid-template-columns: 240px 1fr;
+        display: block;
     }
 
     .sidebar {
+        width: 240px;
         padding: 1.5rem 1rem;
+    }
+
+    .main-content {
+        margin-left: 240px;
+    }
+
+    .layout .main-content {
+        margin-left: 240px;
     }
 
     .user-avatar {
@@ -354,7 +381,7 @@
     }
 
     .dashboard-container {
-        grid-template-columns: 1fr;
+        display: block;
     }
 
     .sidebar {
@@ -373,8 +400,14 @@
     }
 
     .main-content {
+        margin-left: 0;
         padding: 80px 1rem 1rem;
         width: 100%;
+    }
+
+    .layout .main-content {
+        margin-left: 0;
+        padding: 80px 1rem 1rem;
     }
 
     /* Adjust header bar for mobile */
@@ -444,6 +477,12 @@
     }
 
     .main-content {
+        margin-left: 0;
+        padding: 70px 0.8rem 0.8rem;
+    }
+
+    .layout .main-content {
+        margin-left: 0;
         padding: 70px 0.8rem 0.8rem;
     }
 
