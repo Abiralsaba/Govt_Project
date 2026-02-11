@@ -19,7 +19,7 @@ const register = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, mobile } = req.body;
+    const { name, email, password, mobile, nid } = req.body;
 
     try {
         // Check if email already exists
@@ -33,9 +33,9 @@ const register = async (req, res) => {
 
         // Insert admin with pending status
         const [result] = await db.query(
-            `INSERT INTO admins (name, email, password, mobile, status) 
-             VALUES (?, ?, ?, ?, 'pending')`,
-            [name, email, hashedPassword, mobile]
+            `INSERT INTO admins (name, email, password, mobile, nid, status) 
+             VALUES (?, ?, ?, ?, ?, 'pending')`,
+            [name, email, hashedPassword, mobile, nid]
         );
 
         res.status(201).json({

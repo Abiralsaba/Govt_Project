@@ -9,16 +9,16 @@ router.use(verifyToken);
 
 router.post('/', async (req, res) => {
     try {
-        const { subject, message } = req.body;
+        const { department, subject, message } = req.body;
         const userId = req.user.id;
 
-        if (!subject || !message) {
-            return res.status(400).json({ error: 'Subject and message are required' });
+        if (!department || !subject || !message) {
+            return res.status(400).json({ error: 'Department, subject, and message are required' });
         }
 
         const [result] = await db.query(
-            'INSERT INTO contact_messages (user_id, subject, message) VALUES (?, ?, ?)',
-            [userId, subject, message]
+            'INSERT INTO contact_messages (user_id, department, subject, message) VALUES (?, ?, ?, ?)',
+            [userId, department, subject, message]
         );
 
         res.json({ success: true, message: 'Message sent successfully', ticketId: result.insertId });

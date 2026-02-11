@@ -9,7 +9,7 @@ const adminName = localStorage.getItem('adminName') || 'Admin';
 
 // Redirect to admin login if not authenticated
 if (!adminToken) {
-    window.location.href = 'admin-login.html';
+    window.location.href = 'index.html#admin';
 }
 
 // Current tab
@@ -41,7 +41,7 @@ async function fetchAdminAPI(endpoint, method = 'GET', body = null) {
         if (res.status === 401 || res.status === 403) {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminName');
-            window.location.href = 'admin-login.html';
+            window.location.href = 'index.html#admin';
             return null;
         }
         if (!res.ok) throw new Error('API Error');
@@ -62,7 +62,7 @@ async function fetchReportsAPI(endpoint) {
         if (res.status === 401 || res.status === 403) {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminName');
-            window.location.href = 'admin-login.html';
+            window.location.href = 'index.html#admin';
             return null;
         }
 
@@ -117,7 +117,7 @@ function getRankBadge(rank) {
 function adminLogout() {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminName');
-    window.location.href = 'admin-login.html';
+    window.location.href = 'index.html#admin';
 }
 
 // =====================
@@ -158,7 +158,7 @@ function showTab(tab) {
     currentTab = tab;
 
     // Hide all sections
-    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends'].forEach(t => {
+    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends', 'notices'].forEach(t => {
         const el = document.getElementById(t + '-section');
         if (el) el.style.display = 'none';
     });
@@ -187,6 +187,7 @@ async function loadTabData(tab) {
         case 'admissions': loadAdmissions(); break;
         case 'audit': loadAudit(); break;
         case 'stipends': loadStipends(); break;
+        case 'notices': loadNotices(); break;
     }
 }
 
@@ -1446,6 +1447,297 @@ async function deleteShopItem(id) {
 }
 
 // =====================
+// MARKET SUB-TAB NAVIGATION
+// =====================
+
+function showMarketSubTab(panel) {
+    // Hide all panels
+    ['products', 'prices', 'complaints'].forEach(p => {
+        const el = document.getElementById(`marketPanel-${p}`);
+        if (el) el.style.display = 'none';
+        const btn = document.getElementById(`marketSubTab-${p}`);
+        if (btn) btn.classList.remove('active');
+    });
+
+    // Show selected panel
+    const selected = document.getElementById(`marketPanel-${panel}`);
+    if (selected) selected.style.display = 'block';
+    const selectedBtn = document.getElementById(`marketSubTab-${panel}`);
+    if (selectedBtn) selectedBtn.classList.add('active');
+
+    // Load data
+    if (panel === 'prices') loadMarketPrices();
+    if (panel === 'complaints') loadAdminComplaints();
+}
+
+// =====================
+// MARKET PRICES MANAGEMENT
+// =====================
+
+let allMarketPrices = [];
+
+async function loadMarketPrices() {
+    const prices = await fetchAdminAPI('market-prices');
+    if (prices) {
+        allMarketPrices = prices;
+        renderMarketPrices(prices);
+    }
+
+    // Setup form handler
+    const form = document.getElementById('addMarketPriceForm');
+    if (form && !form.hasAttribute('data-listener')) {
+        form.setAttribute('data-listener', 'true');
+        form.addEventListener('submit', addMarketPrice);
+    }
+}
+
+function renderMarketPrices(prices) {
+    if (!prices || prices.length === 0) {
+        document.getElementById('marketPricesTable').innerHTML = '<p style="color:#64748b;">No market prices yet.</p>';
+        return;
+    }
+
+    let html = `<table class="report-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Item Name</th>
+                <th>Bangla</th>
+                <th>Category</th>
+                <th>Unit</th>
+                <th>Price (৳)</th>
+                <th>Effective Date</th>
+                <th style="text-align:center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    prices.forEach(p => {
+        html += `<tr>
+            <td>${p.id}</td>
+            <td><strong>${p.item_name}</strong></td>
+            <td>${p.item_name_bn || '-'}</td>
+            <td><span class="badge regular">${p.category}</span></td>
+            <td>${p.unit}</td>
+            <td style="color:#10b981;font-weight:600;">৳${parseFloat(p.price).toFixed(2)}</td>
+            <td>${formatDate(p.effective_date || p.updated_at)}</td>
+            <td class="action-cell" style="white-space:nowrap;text-align:center;">
+                <button class="action-btn edit" onclick="editMarketPrice(${p.id})" style="background:#3b82f6;color:white;margin-right:5px;padding:5px 10px;">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="action-btn reject" onclick="deleteMarketPrice(${p.id})" style="padding:5px 10px;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('marketPricesTable').innerHTML = html;
+}
+
+async function addMarketPrice(e) {
+    e.preventDefault();
+
+    const data = {
+        item_name: document.getElementById('mpItemName').value,
+        item_name_bn: document.getElementById('mpItemNameBn').value || null,
+        category: document.getElementById('mpCategory').value,
+        unit: document.getElementById('mpUnit').value,
+        price: document.getElementById('mpPrice').value
+    };
+
+    try {
+        const result = await fetchAdminAPI('market-prices', 'POST', data);
+        if (result?.success) {
+            Swal.fire({ icon: 'success', title: 'Price Added!', timer: 1500, showConfirmButton: false });
+            document.getElementById('addMarketPriceForm').reset();
+            loadMarketPrices();
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: result?.error || 'Failed to add price' });
+        }
+    } catch (err) {
+        console.error('Add market price error:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to add price' });
+    }
+}
+
+async function editMarketPrice(id) {
+    const item = allMarketPrices.find(p => p.id === id);
+    if (!item) return;
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Edit Market Price',
+        html: `
+            <div style="text-align:left;">
+                <label style="display:block;margin-bottom:0.3rem;color:#94a3b8;font-size:0.85rem;">Item Name</label>
+                <input id="swal-name" class="swal2-input" value="${item.item_name}" style="width:100%;margin:0 0 0.8rem 0;">
+                <label style="display:block;margin-bottom:0.3rem;color:#94a3b8;font-size:0.85rem;">Bangla Name</label>
+                <input id="swal-nameBn" class="swal2-input" value="${item.item_name_bn || ''}" style="width:100%;margin:0 0 0.8rem 0;">
+                <label style="display:block;margin-bottom:0.3rem;color:#94a3b8;font-size:0.85rem;">Category</label>
+                <select id="swal-cat" class="swal2-select" style="width:100%;margin:0 0 0.8rem 0;padding:0.5rem;">
+                    ${['Rice', 'Vegetables', 'Fish', 'Meat', 'Oil', 'Spices', 'Dairy', 'Fruits', 'Grains', 'Other'].map(c =>
+            `<option value="${c}" ${c === item.category ? 'selected' : ''}>${c}</option>`
+        ).join('')}
+                </select>
+                <label style="display:block;margin-bottom:0.3rem;color:#94a3b8;font-size:0.85rem;">Unit</label>
+                <select id="swal-unit" class="swal2-select" style="width:100%;margin:0 0 0.8rem 0;padding:0.5rem;">
+                    ${['kg', 'litre', 'piece', 'dozen'].map(u =>
+            `<option value="${u}" ${u === item.unit ? 'selected' : ''}>${u}</option>`
+        ).join('')}
+                </select>
+                <label style="display:block;margin-bottom:0.3rem;color:#94a3b8;font-size:0.85rem;">Price (৳)</label>
+                <input id="swal-price" type="number" class="swal2-input" value="${item.price}" step="0.01" style="width:100%;margin:0;">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        confirmButtonColor: '#3b82f6',
+        background: '#1e293b',
+        color: '#f1f5f9',
+        preConfirm: () => ({
+            item_name: document.getElementById('swal-name').value,
+            item_name_bn: document.getElementById('swal-nameBn').value || null,
+            category: document.getElementById('swal-cat').value,
+            unit: document.getElementById('swal-unit').value,
+            price: document.getElementById('swal-price').value
+        })
+    });
+
+    if (formValues) {
+        const result = await fetchAdminAPI(`market-prices/${id}`, 'PUT', formValues);
+        if (result?.success) {
+            Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+            loadMarketPrices();
+        }
+    }
+}
+
+async function deleteMarketPrice(id) {
+    const confirm = await Swal.fire({
+        title: 'Delete Price Item?',
+        text: 'This will remove it from the public market price list.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        confirmButtonColor: '#ef4444'
+    });
+
+    if (confirm.isConfirmed) {
+        const result = await fetchAdminAPI(`market-prices/${id}`, 'DELETE');
+        if (result?.success) {
+            Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
+            loadMarketPrices();
+        }
+    }
+}
+
+// =====================
+// PRICE COMPLAINTS MANAGEMENT
+// =====================
+
+let allAdminComplaints = [];
+let currentComplaintFilter = 'all';
+
+async function loadAdminComplaints() {
+    const complaints = await fetchAdminAPI('complaints');
+    if (complaints) {
+        allAdminComplaints = complaints;
+        renderAdminComplaints(complaints);
+    }
+}
+
+function filterComplaints(status) {
+    currentComplaintFilter = status;
+    const filtered = status === 'all' ? allAdminComplaints : allAdminComplaints.filter(c => c.status === status);
+    renderAdminComplaints(filtered);
+
+    // Update button active states
+    const buttons = document.querySelectorAll('#marketPanel-complaints .filter-btn');
+    buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase() === status);
+    });
+}
+
+function renderAdminComplaints(complaints) {
+    if (!complaints || complaints.length === 0) {
+        document.getElementById('complaintsTable').innerHTML = '<p style="color:#64748b;">No complaints found.</p>';
+        return;
+    }
+
+    let html = `<table class="report-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Reporter</th>
+                <th>Shop</th>
+                <th>Item</th>
+                <th>Official ৳</th>
+                <th>Charged ৳</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th style="text-align:center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    complaints.forEach(c => {
+        const statusColors = {
+            pending: '#f59e0b', investigating: '#3b82f6', resolved: '#22c55e', dismissed: '#64748b'
+        };
+        const statusColor = statusColors[c.status] || '#64748b';
+
+        html += `<tr>
+            <td>#${c.id}</td>
+            <td><strong>${c.reporter_name || 'Unknown'}</strong><div style="font-size:0.8rem;color:#64748b;">${c.reporter_email || ''}</div></td>
+            <td><strong>${c.shop_name}</strong>${c.shop_phone ? `<div style="font-size:0.8rem;color:#64748b;">${c.shop_phone}</div>` : ''}</td>
+            <td>${c.item_name}</td>
+            <td>${c.official_price ? '৳' + parseFloat(c.official_price).toFixed(2) : '-'}</td>
+            <td style="color:#ef4444;font-weight:600;">৳${parseFloat(c.charged_price).toFixed(2)}</td>
+            <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.shop_location}</td>
+            <td><span style="background:${statusColor};color:white;padding:2px 8px;border-radius:12px;font-size:0.8rem;">${c.status}</span></td>
+            <td>${formatDate(c.created_at)}</td>
+            <td class="action-cell" style="white-space:nowrap;text-align:center;">
+                <select onchange="updateComplaintStatus(${c.id}, this.value)" style="background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:6px;padding:4px 8px;font-size:0.8rem;">
+                    <option value="" disabled selected>Change</option>
+                    <option value="investigating">Investigate</option>
+                    <option value="resolved">Resolve</option>
+                    <option value="dismissed">Dismiss</option>
+                </select>
+            </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('complaintsTable').innerHTML = html;
+}
+
+async function updateComplaintStatus(id, status) {
+    if (!status) return;
+
+    const { value: notes } = await Swal.fire({
+        title: `Mark as ${status}?`,
+        input: 'textarea',
+        inputLabel: 'Admin Notes (optional)',
+        inputPlaceholder: 'Add notes about this complaint...',
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        confirmButtonColor: '#3b82f6',
+        background: '#1e293b',
+        color: '#f1f5f9'
+    });
+
+    if (notes !== undefined) {
+        const result = await fetchAdminAPI(`complaints/${id}`, 'PUT', { status, admin_notes: notes || null });
+        if (result?.success) {
+            Swal.fire({ icon: 'success', title: 'Updated!', text: `Complaint marked as ${status}`, timer: 1500, showConfirmButton: false });
+            loadAdminComplaints();
+        }
+    }
+}
+
+// =====================
 // EDUCATION MANAGEMENT
 // =====================
 
@@ -2649,6 +2941,268 @@ async function rejectStipendApp(id) {
         }
     }
 }
+
+// =====================
+// GOVT NOTICES MANAGEMENT
+// =====================
+
+let allAdminNotices = [];
+
+async function loadNotices() {
+    try {
+        const res = await fetch('/api/notices/admin/all', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (res.status === 401 || res.status === 403) {
+            adminLogout();
+            return;
+        }
+        allAdminNotices = await res.json();
+
+        // Update stats
+        document.getElementById('adminNoticesTotal').textContent = allAdminNotices.length;
+        document.getElementById('adminNoticesUrgent').textContent = allAdminNotices.filter(n => n.category === 'Urgent').length;
+        document.getElementById('adminNoticesTenders').textContent = allAdminNotices.filter(n => n.category === 'Tender').length;
+        document.getElementById('adminNoticesRecruitment').textContent = allAdminNotices.filter(n => n.category === 'Recruitment').length;
+
+        // Render table
+        renderAdminNotices(allAdminNotices);
+    } catch (err) {
+        console.error('Load notices error:', err);
+    }
+}
+
+function renderAdminNotices(notices) {
+    const container = document.getElementById('adminNoticesTable');
+    if (!notices.length) {
+        container.innerHTML = '<p style="text-align:center;color:#64748b;padding:2rem;">No notices found</p>';
+        return;
+    }
+
+    let html = `<div class="table-responsive"><table class="modal-table" style="min-width: 1100px;">
+        <thead>
+            <tr>
+                <th style="width:40px;">ID</th>
+                <th style="min-width:280px;">Title</th>
+                <th style="min-width:160px;">Department</th>
+                <th style="width:100px;">Category</th>
+                <th style="width:80px;">Priority</th>
+                <th style="width:90px;">Status</th>
+                <th style="width:100px;">Published</th>
+                <th style="width:90px;">Created By</th>
+                <th style="min-width:160px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    notices.forEach(n => {
+        const catColors = {
+            'General': '#60a5fa', 'Urgent': '#f87171', 'Circular': '#c084fc',
+            'Tender': '#fbbf24', 'Recruitment': '#34d399'
+        };
+        const priColors = { 'High': '#f87171', 'Medium': '#60a5fa', 'Low': '#34d399' };
+        const pubDate = n.publish_date ? new Date(n.publish_date).toLocaleDateString() : '-';
+
+        html += `<tr>
+            <td>${n.id}</td>
+            <td>
+                <div style="line-height:1.4;">
+                    <strong style="display:block; margin-bottom:2px;">${n.title}</strong>
+                    ${n.title_bn ? `<div style="font-size:0.75rem; color:#94a3b8; line-height:1.3;">${n.title_bn}</div>` : ''}
+                </div>
+            </td>
+            <td><span style="font-size:0.8rem; display:block; line-height:1.3;">${n.department}</span></td>
+            <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;white-space:nowrap;background:${catColors[n.category] || '#64748b'}22;color:${catColors[n.category] || '#64748b'};">${n.category}</span></td>
+            <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;white-space:nowrap;background:${priColors[n.priority] || '#64748b'}22;color:${priColors[n.priority] || '#64748b'};">${n.priority}</span></td>
+            <td>${getStatusBadge(n.status)}</td>
+            <td style="white-space:nowrap;">${pubDate}</td>
+            <td style="font-size:0.8rem;">${n.created_by_name || '<span style="color:#64748b">N/A</span>'}</td>
+            <td>
+                <div style="display:flex; gap:6px; flex-wrap:nowrap;">
+                    <button class="action-btn approve" onclick="editNotice(${n.id})" style="white-space:nowrap;">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="action-btn reject" onclick="deleteNotice(${n.id})" style="white-space:nowrap;">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+// =====================
+// EDIT NOTICE
+// =====================
+function editNotice(id) {
+    const notice = allAdminNotices.find(n => n.id === id);
+    if (!notice) return;
+
+    // Populate edit form fields
+    document.getElementById('editNoticeId').value = notice.id;
+    document.getElementById('editNoticeTitle').value = notice.title || '';
+    document.getElementById('editNoticeTitleBn').value = notice.title_bn || '';
+    document.getElementById('editNoticeDepartment').value = notice.department || '';
+    document.getElementById('editNoticeCategory').value = notice.category || 'General';
+    document.getElementById('editNoticePriority').value = notice.priority || 'Medium';
+    document.getElementById('editNoticeRefNo').value = notice.reference_no || '';
+    document.getElementById('editNoticeContent').value = notice.content || '';
+    document.getElementById('editNoticeStatus').value = notice.status || 'Published';
+    document.getElementById('editNoticeAttachment').value = notice.attachment_url || '';
+
+    // Handle dates — format as YYYY-MM-DD for date inputs
+    if (notice.publish_date) {
+        document.getElementById('editNoticePublishDate').value = new Date(notice.publish_date).toISOString().split('T')[0];
+    }
+    if (notice.expiry_date) {
+        document.getElementById('editNoticeExpiryDate').value = new Date(notice.expiry_date).toISOString().split('T')[0];
+    } else {
+        document.getElementById('editNoticeExpiryDate').value = '';
+    }
+
+    // Open the edit modal
+    document.getElementById('editNoticeModal').classList.add('active');
+}
+
+async function deleteNotice(id) {
+    const confirm = await Swal.fire({
+        title: 'Delete Notice?',
+        text: 'This will permanently remove this notice.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        confirmButtonColor: '#ef4444'
+    });
+
+    if (confirm.isConfirmed) {
+        try {
+            const res = await fetch(`/api/notices/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
+                loadNotices();
+            } else {
+                Swal.fire('Error', data.error || 'Failed to delete', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Network error', 'error');
+        }
+    }
+}
+
+// Add Notice Form Handler
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Create Notice Form ---
+    const noticeForm = document.getElementById('addNoticeForm');
+    if (noticeForm) {
+        // Set default publish date to today
+        document.getElementById('noticePublishDate').valueAsDate = new Date();
+
+        noticeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                title: document.getElementById('noticeTitle').value,
+                title_bn: document.getElementById('noticeTitleBn').value || null,
+                department: document.getElementById('noticeDepartment').value,
+                category: document.getElementById('noticeCategory').value,
+                priority: document.getElementById('noticePriority').value,
+                content: document.getElementById('noticeContent').value,
+                reference_no: document.getElementById('noticeRefNo').value || null,
+                publish_date: document.getElementById('noticePublishDate').value,
+                expiry_date: document.getElementById('noticeExpiryDate').value || null,
+                attachment_url: document.getElementById('noticeAttachment').value || null,
+                status: document.getElementById('noticeStatus').value
+            };
+
+            try {
+                const res = await fetch('/api/notices', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Notice Published!',
+                        text: `Notice #${data.noticeId} created successfully.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    noticeForm.reset();
+                    document.getElementById('noticePublishDate').valueAsDate = new Date();
+                    loadNotices();
+                } else {
+                    Swal.fire('Error', data.error || 'Failed to create notice', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Network error occurred', 'error');
+            }
+        });
+    }
+
+    // --- Edit Notice Form ---
+    const editForm = document.getElementById('editNoticeForm');
+    if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const noticeId = document.getElementById('editNoticeId').value;
+            const payload = {
+                title: document.getElementById('editNoticeTitle').value,
+                title_bn: document.getElementById('editNoticeTitleBn').value || null,
+                department: document.getElementById('editNoticeDepartment').value,
+                category: document.getElementById('editNoticeCategory').value,
+                priority: document.getElementById('editNoticePriority').value,
+                content: document.getElementById('editNoticeContent').value,
+                reference_no: document.getElementById('editNoticeRefNo').value || null,
+                publish_date: document.getElementById('editNoticePublishDate').value,
+                expiry_date: document.getElementById('editNoticeExpiryDate').value || null,
+                attachment_url: document.getElementById('editNoticeAttachment').value || null,
+                status: document.getElementById('editNoticeStatus').value
+            };
+
+            try {
+                const res = await fetch(`/api/notices/${noticeId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Notice Updated!',
+                        text: 'The notice has been updated successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    document.getElementById('editNoticeModal').classList.remove('active');
+                    loadNotices();
+                } else {
+                    Swal.fire('Error', data.error || 'Failed to update notice', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Network error occurred', 'error');
+            }
+        });
+    }
+});
 
 // =====================
 // INITIALIZATION

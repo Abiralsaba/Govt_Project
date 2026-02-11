@@ -921,6 +921,143 @@ router.put('/orders/:id/status', async (req, res) => {
 });
 
 // ==========================================
+// MARKET PRICE MANAGEMENT
+// ==========================================
+
+/**
+ * GET /api/admin/market-prices - Get all market prices
+ */
+router.get('/market-prices', async (req, res) => {
+    try {
+        const [prices] = await db.query('SELECT * FROM market_prices ORDER BY category, item_name');
+        res.json(prices);
+    } catch (error) {
+        console.error('Error fetching market prices:', error);
+        res.status(500).json({ error: 'Failed to fetch market prices' });
+    }
+});
+
+/**
+ * POST /api/admin/market-prices - Add new market price item
+ */
+router.post('/market-prices', async (req, res) => {
+    try {
+        const { item_name, item_name_bn, category, unit, price } = req.body;
+
+        if (!item_name || !price || !unit) {
+            return res.status(400).json({ error: 'Item name, price, and unit are required' });
+        }
+
+        const [result] = await db.query(
+            `INSERT INTO market_prices (item_name, item_name_bn, category, unit, price, updated_by)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [item_name, item_name_bn || null, category || 'Other', unit, price, req.admin.id]
+        );
+
+        res.json({ success: true, message: 'Market price added', id: result.insertId });
+    } catch (error) {
+        console.error('Error adding market price:', error);
+        res.status(500).json({ error: 'Failed to add market price' });
+    }
+});
+
+/**
+ * PUT /api/admin/market-prices/:id - Update market price
+ */
+router.put('/market-prices/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { item_name, item_name_bn, category, unit, price } = req.body;
+
+        await db.query(
+            `UPDATE market_prices SET item_name=?, item_name_bn=?, category=?, unit=?, price=?, updated_by=?, effective_date=CURDATE()
+             WHERE id=?`,
+            [item_name, item_name_bn || null, category, unit, price, req.admin.id, id]
+        );
+
+        res.json({ success: true, message: 'Market price updated' });
+    } catch (error) {
+        console.error('Error updating market price:', error);
+        res.status(500).json({ error: 'Failed to update market price' });
+    }
+});
+
+/**
+ * DELETE /api/admin/market-prices/:id - Delete market price item
+ */
+router.delete('/market-prices/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM market_prices WHERE id = ?', [id]);
+        res.json({ success: true, message: 'Market price deleted' });
+    } catch (error) {
+        console.error('Error deleting market price:', error);
+        res.status(500).json({ error: 'Failed to delete market price' });
+    }
+});
+
+// ==========================================
+// PRICE COMPLAINTS MANAGEMENT
+// ==========================================
+
+/**
+ * GET /api/admin/complaints - Get all price complaints
+ */
+router.get('/complaints', async (req, res) => {
+    try {
+        const status = req.query.status;
+        let query = `
+            SELECT c.*, u.name as reporter_name, u.email as reporter_email
+            FROM price_complaints c
+            LEFT JOIN reg_info u ON c.user_id = u.id
+        `;
+        const params = [];
+
+        if (status) {
+            query += ' WHERE c.status = ?';
+            params.push(status);
+        }
+
+        query += ' ORDER BY c.created_at DESC';
+        const [complaints] = await db.query(query, params);
+        res.json(complaints);
+    } catch (error) {
+        console.error('Error fetching complaints:', error);
+        res.status(500).json({ error: 'Failed to fetch complaints' });
+    }
+});
+
+/**
+ * PUT /api/admin/complaints/:id - Update complaint status
+ */
+router.put('/complaints/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, admin_notes } = req.body;
+
+        await db.query(
+            'UPDATE price_complaints SET status = ?, admin_notes = ? WHERE id = ?',
+            [status, admin_notes || null, id]
+        );
+
+        // Notify the user
+        const [complaint] = await db.query('SELECT user_id, shop_name FROM price_complaints WHERE id = ?', [id]);
+        if (complaint.length > 0) {
+            const statusMsg = status === 'resolved' ? 'resolved' : status === 'investigating' ? 'being investigated' : 'dismissed';
+            await db.query(
+                `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, ?, ?, false)`,
+                [complaint[0].user_id, 'Market', `Your complaint against "${complaint[0].shop_name}" is now ${statusMsg}.`]
+            );
+        }
+
+        res.json({ success: true, message: 'Complaint updated' });
+    } catch (error) {
+        console.error('Error updating complaint:', error);
+        res.status(500).json({ error: 'Failed to update complaint' });
+    }
+});
+
+// ==========================================
 // EDUCATION RESULTS MANAGEMENT
 // ==========================================
 

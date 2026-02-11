@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GovShop | Govt of Bangladesh</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/shop_images.css">
@@ -354,6 +355,26 @@
             display: block;
             opacity: 0.5;
         }
+
+        .back-btn-shop {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+
+        .back-btn-shop:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #34d399;
+            transform: translateX(-3px);
+        }
     </style>
 </head>
 
@@ -379,8 +400,8 @@
                 <a href="history.html"><i class="fas fa-history"></i> History</a>
                 <a href="todo.html"><i class="fas fa-tasks"></i> To Do</a>
                 <a href="community.html"><i class="fas fa-users"></i> Community</a>
-                <a href="#" class="active"><i class="fas fa-shopping-cart"></i> Shop</a>
-                <a href="events.html"><i class="fas fa-trophy"></i> Events</a>
+                <a href="market.html"><i class="fas fa-chart-line"></i> Market Info</a>
+                <a href="events.html"><i class="fas fa-bullhorn"></i> Notices</a>
                 <a href="education.html"><i class="fas fa-graduation-cap"></i> Education</a>
                 <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
                 <a href="javascript:void(0)" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -394,6 +415,9 @@
                     <div class="menu-toggle" onclick="toggleSidebar()">
                         <i class="fas fa-bars"></i>
                     </div>
+                    <a href="market.html" class="back-btn-shop">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
                     <div>
                         <h1>Official Store</h1>
                         <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">Government publications &

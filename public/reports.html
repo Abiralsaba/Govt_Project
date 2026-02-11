@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Govt of Bangladesh</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/reports.css">
@@ -34,11 +35,12 @@
                 <a href="#" onclick="showTab('services')"><i class="fas fa-tasks"></i> Service Reports</a>
                 <a href="#" onclick="showTab('land')"><i class="fas fa-map"></i> Land Reports</a>
                 <a href="#" onclick="showTab('community')"><i class="fas fa-comments"></i> Community</a>
-                <a href="#" onclick="showTab('shop')"><i class="fas fa-store"></i> Shop Management</a>
+                <a href="#" onclick="showTab('shop')"><i class="fas fa-chart-line"></i> Market Management</a>
                 <a href="#" onclick="showTab('education')"><i class="fas fa-graduation-cap"></i> Education</a>
                 <a href="#" onclick="showTab('admissions')"><i class="fas fa-university"></i> Admissions</a>
                 <a href="#" onclick="showTab('audit')"><i class="fas fa-history"></i> Audit Log</a>
                 <a href="#" onclick="showTab('stipends')"><i class="fas fa-hand-holding-usd"></i> Stipends</a>
+                <a href="#" onclick="showTab('notices')"><i class="fas fa-bullhorn"></i> Notices</a>
             </nav>
         </aside>
 
@@ -197,57 +199,149 @@
                 </div>
             </div>
 
-            <!-- Shop Management Tab -->
+            <!-- Market Management Tab -->
             <div id="shop-section" style="display: none;">
-                <h1 style="color: white; margin-bottom: 0.5rem;">Shop Management</h1>
-                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage products in the Government Shop</p>
+                <h1 style="color: white; margin-bottom: 0.5rem;">Market Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage shop products, market prices, and citizen
+                    complaints</p>
 
-                <!-- Add Product Form -->
-                <div class="report-table-container" style="margin-bottom: 2rem;">
-                    <h3><i class="fas fa-plus-circle"></i> Add New Product</h3>
-                    <form id="addProductForm"
-                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;"
-                        enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label>Product Name</label>
-                            <input type="text" id="productName" class="form-control" required
-                                placeholder="Enter product name">
-                        </div>
-                        <div class="form-group">
-                            <label>Price (৳)</label>
-                            <input type="number" id="productPrice" class="form-control" required placeholder="0.00"
-                                step="0.01">
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label>Description</label>
-                            <textarea id="productDescription" class="form-control" rows="2"
-                                placeholder="Product description"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Product Image</label>
-                            <input type="file" id="productImage" class="form-control" accept="image/*">
-                        </div>
-                        <div class="form-group" style="display: flex; align-items: flex-end;">
-                            <button type="submit" class="btn-primary" style="width: 100%;">
-                                <i class="fas fa-plus"></i> Add Product
-                            </button>
-                        </div>
-                    </form>
+                <!-- Sub-tabs for Market Management -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <button class="filter-btn active" id="marketSubTab-products"
+                        onclick="showMarketSubTab('products')"><i class="fas fa-box"></i> Store Products</button>
+                    <button class="filter-btn" id="marketSubTab-prices" onclick="showMarketSubTab('prices')"><i
+                            class="fas fa-tags"></i> Market Prices</button>
+                    <button class="filter-btn" id="marketSubTab-complaints" onclick="showMarketSubTab('complaints')"><i
+                            class="fas fa-flag"></i> Price Complaints</button>
                 </div>
 
-                <!-- Products List -->
-                <div class="report-table-container">
-                    <h3><i class="fas fa-box"></i> Current Products</h3>
-                    <div id="shopItemsTable">
-                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                <!-- Sub-tab: Store Products -->
+                <div id="marketPanel-products">
+                    <!-- Add Product Form -->
+                    <div class="report-table-container" style="margin-bottom: 2rem;">
+                        <h3><i class="fas fa-plus-circle"></i> Add New Product</h3>
+                        <form id="addProductForm"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;"
+                            enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label>Product Name</label>
+                                <input type="text" id="productName" class="form-control" required
+                                    placeholder="Enter product name">
+                            </div>
+                            <div class="form-group">
+                                <label>Price (৳)</label>
+                                <input type="number" id="productPrice" class="form-control" required placeholder="0.00"
+                                    step="0.01">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Description</label>
+                                <textarea id="productDescription" class="form-control" rows="2"
+                                    placeholder="Product description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Product Image</label>
+                                <input type="file" id="productImage" class="form-control" accept="image/*">
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">
+                                    <i class="fas fa-plus"></i> Add Product
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Products List -->
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-box"></i> Current Products</h3>
+                        <div id="shopItemsTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Orders List -->
+                    <div class="report-table-container" style="margin-top: 2rem;">
+                        <h3><i class="fas fa-shopping-bag"></i> Recent Orders</h3>
+                        <div id="ordersTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Orders List -->
-                <div class="report-table-container" style="margin-top: 2rem;">
-                    <h3><i class="fas fa-shopping-bag"></i> Recent Orders</h3>
-                    <div id="ordersTable">
-                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                <!-- Sub-tab: Market Prices -->
+                <div id="marketPanel-prices" style="display: none;">
+                    <div class="report-table-container" style="margin-bottom: 2rem;">
+                        <h3><i class="fas fa-plus-circle"></i> Add Market Price Item</h3>
+                        <form id="addMarketPriceForm"
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="form-group">
+                                <label>Item Name (English) *</label>
+                                <input type="text" id="mpItemName" class="form-control" required
+                                    placeholder="e.g. Onion">
+                            </div>
+                            <div class="form-group">
+                                <label>Item Name (Bangla)</label>
+                                <input type="text" id="mpItemNameBn" class="form-control" placeholder="e.g. পেঁয়াজ">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="mpCategory" class="form-control">
+                                    <option value="Rice">Rice</option>
+                                    <option value="Vegetables">Vegetables</option>
+                                    <option value="Fish">Fish</option>
+                                    <option value="Meat">Meat</option>
+                                    <option value="Oil">Oil</option>
+                                    <option value="Spices">Spices</option>
+                                    <option value="Dairy">Dairy</option>
+                                    <option value="Fruits">Fruits</option>
+                                    <option value="Grains">Grains</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Unit *</label>
+                                <select id="mpUnit" class="form-control">
+                                    <option value="kg">kg</option>
+                                    <option value="litre">litre</option>
+                                    <option value="piece">piece</option>
+                                    <option value="dozen">dozen</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (৳) *</label>
+                                <input type="number" id="mpPrice" class="form-control" required placeholder="0.00"
+                                    step="0.01">
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: flex-end;">
+                                <button type="submit" class="btn-primary" style="width: 100%;">
+                                    <i class="fas fa-plus"></i> Add Price
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-tags"></i> Current Market Prices</h3>
+                        <div id="marketPricesTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-tab: Price Complaints -->
+                <div id="marketPanel-complaints" style="display: none;">
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-flag"></i> Citizen Price Complaints</h3>
+                        <div style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                            <button class="filter-btn active" onclick="filterComplaints('all')">All</button>
+                            <button class="filter-btn" onclick="filterComplaints('pending')">Pending</button>
+                            <button class="filter-btn"
+                                onclick="filterComplaints('investigating')">Investigating</button>
+                            <button class="filter-btn" onclick="filterComplaints('resolved')">Resolved</button>
+                            <button class="filter-btn" onclick="filterComplaints('dismissed')">Dismissed</button>
+                        </div>
+                        <div id="complaintsTable">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -710,7 +804,241 @@
                 </div>
             </div>
 
+            <!-- Notices Management Tab -->
+            <div id="notices-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;">Government Notices Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Create and manage public notices, circulars, and tenders
+                </p>
+
+                <!-- Stats -->
+                <div id="noticesAdminStats" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <div
+                        style="background: rgba(52, 211, 153, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #34d399;" id="adminNoticesTotal">0</div>
+                        <div style="font-size: 0.8rem; color: #94a3b8;">Total Notices</div>
+                    </div>
+                    <div
+                        style="background: rgba(248, 113, 113, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #f87171;" id="adminNoticesUrgent">0
+                        </div>
+                        <div style="font-size: 0.8rem; color: #94a3b8;">Urgent</div>
+                    </div>
+                    <div
+                        style="background: rgba(251, 191, 36, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #fbbf24;" id="adminNoticesTenders">0
+                        </div>
+                        <div style="font-size: 0.8rem; color: #94a3b8;">Tenders</div>
+                    </div>
+                    <div
+                        style="background: rgba(96, 165, 250, 0.1); padding: 1rem; border-radius: 8px; flex: 1; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;" id="adminNoticesRecruitment">0
+                        </div>
+                        <div style="font-size: 0.8rem; color: #94a3b8;">Recruitment</div>
+                    </div>
+                </div>
+
+                <!-- Add Notice Form -->
+                <div class="report-table-container" style="margin-bottom: 2rem;">
+                    <h3><i class="fas fa-plus-circle"></i> Publish New Notice</h3>
+                    <form id="addNoticeForm"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div class="form-group">
+                            <label>Title (English) *</label>
+                            <input type="text" id="noticeTitle" class="form-control" required
+                                placeholder="Notice title in English">
+                        </div>
+                        <div class="form-group">
+                            <label>Title (Bangla)</label>
+                            <input type="text" id="noticeTitleBn" class="form-control" placeholder="বিজ্ঞপ্তির শিরোনাম">
+                        </div>
+                        <div class="form-group">
+                            <label>Department *</label>
+                            <select id="noticeDepartment" class="form-control" required>
+                                <option value="">Select Department</option>
+                                <option value="Ministry of Finance">Ministry of Finance</option>
+                                <option value="Ministry of Education">Ministry of Education</option>
+                                <option value="Ministry of Health">Ministry of Health</option>
+                                <option value="Ministry of Land">Ministry of Land</option>
+                                <option value="Ministry of Public Administration">Ministry of Public Administration
+                                </option>
+                                <option value="Ministry of Disaster Management">Ministry of Disaster Management</option>
+                                <option value="Ministry of Home Affairs">Ministry of Home Affairs</option>
+                                <option value="Ministry of Agriculture">Ministry of Agriculture</option>
+                                <option value="Ministry of Commerce">Ministry of Commerce</option>
+                                <option value="Ministry of Defense">Ministry of Defense</option>
+                                <option value="ICT Division">ICT Division</option>
+                                <option value="Bangladesh Public Service Commission">Bangladesh Public Service
+                                    Commission</option>
+                                <option value="Cabinet Division">Cabinet Division</option>
+                                <option value="Prime Minister's Office">Prime Minister's Office</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="noticeCategory" class="form-control" required>
+                                <option value="General">General</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Circular">Circular</option>
+                                <option value="Tender">Tender</option>
+                                <option value="Recruitment">Recruitment</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority *</label>
+                            <select id="noticePriority" class="form-control" required>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference No.</label>
+                            <input type="text" id="noticeRefNo" class="form-control"
+                                placeholder="e.g. MOF/BUD/2026/001">
+                        </div>
+                        <div class="form-group">
+                            <label>Publish Date *</label>
+                            <input type="date" id="noticePublishDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <input type="date" id="noticeExpiryDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Attachment URL</label>
+                            <input type="url" id="noticeAttachment" class="form-control" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="noticeStatus" class="form-control">
+                                <option value="Published">Published</option>
+                                <option value="Draft">Draft</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Content *</label>
+                            <textarea id="noticeContent" class="form-control" rows="4" required
+                                placeholder="Full notice content..."></textarea>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn-primary" style="width: 100%;">
+                                <i class="fas fa-bullhorn"></i> Publish Notice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Notices List -->
+                <div class="report-table-container">
+                    <h3><i class="fas fa-list"></i> All Notices</h3>
+                    <div id="adminNoticesTable">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
+            </div>
+
         </main>
+
+        <!-- Edit Notice Modal -->
+        <div class="admin-modal" id="editNoticeModal">
+            <div class="modal-content" style="max-width: 750px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-edit"></i> Edit Notice</h2>
+                    <button class="modal-close" onclick="closeModal('editNoticeModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editNoticeForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <input type="hidden" id="editNoticeId">
+                        <div class="form-group">
+                            <label>Title (English) *</label>
+                            <input type="text" id="editNoticeTitle" class="form-control" required
+                                placeholder="Notice title in English">
+                        </div>
+                        <div class="form-group">
+                            <label>Title (Bangla)</label>
+                            <input type="text" id="editNoticeTitleBn" class="form-control"
+                                placeholder="বিজ্ঞপ্তির শিরোনাম">
+                        </div>
+                        <div class="form-group">
+                            <label>Department *</label>
+                            <select id="editNoticeDepartment" class="form-control" required>
+                                <option value="">Select Department</option>
+                                <option value="Ministry of Finance">Ministry of Finance</option>
+                                <option value="Ministry of Education">Ministry of Education</option>
+                                <option value="Ministry of Health">Ministry of Health</option>
+                                <option value="Ministry of Land">Ministry of Land</option>
+                                <option value="Ministry of Public Administration">Ministry of Public Administration
+                                </option>
+                                <option value="Ministry of Disaster Management">Ministry of Disaster Management
+                                </option>
+                                <option value="Ministry of Home Affairs">Ministry of Home Affairs</option>
+                                <option value="Ministry of Agriculture">Ministry of Agriculture</option>
+                                <option value="Ministry of Commerce">Ministry of Commerce</option>
+                                <option value="Ministry of Defense">Ministry of Defense</option>
+                                <option value="ICT Division">ICT Division</option>
+                                <option value="Bangladesh Public Service Commission">Bangladesh Public Service
+                                    Commission</option>
+                                <option value="Cabinet Division">Cabinet Division</option>
+                                <option value="Prime Minister's Office">Prime Minister's Office</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="editNoticeCategory" class="form-control" required>
+                                <option value="General">General</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Circular">Circular</option>
+                                <option value="Tender">Tender</option>
+                                <option value="Recruitment">Recruitment</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority *</label>
+                            <select id="editNoticePriority" class="form-control" required>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference No.</label>
+                            <input type="text" id="editNoticeRefNo" class="form-control"
+                                placeholder="e.g. MOF/BUD/2026/001">
+                        </div>
+                        <div class="form-group">
+                            <label>Publish Date *</label>
+                            <input type="date" id="editNoticePublishDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <input type="date" id="editNoticeExpiryDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Attachment URL</label>
+                            <input type="url" id="editNoticeAttachment" class="form-control" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="editNoticeStatus" class="form-control">
+                                <option value="Published">Published</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Expired">Expired</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Content *</label>
+                            <textarea id="editNoticeContent" class="form-control" rows="5" required
+                                placeholder="Full notice content..."></textarea>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn-primary" style="width: 100%;">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Admin Modals -->

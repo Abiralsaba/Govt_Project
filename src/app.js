@@ -67,6 +67,8 @@ const stipendRoutes = require('./routes/stipendRoutes');
 app.use('/api/stipends', stipendRoutes);
 const contactRoutes = require('./routes/contactRoutes');
 app.use('/api/contact', contactRoutes);
+const noticeRoutes = require('./routes/noticeRoutes');
+app.use('/api/notices', noticeRoutes);
 
 // Admin Routes
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
@@ -92,5 +94,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

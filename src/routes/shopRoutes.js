@@ -55,6 +55,40 @@ router.post('/payment/ipn', async (req, res) => {
 
 
 // ==========================================
+// PUBLIC MARKET PRICES (No auth required)
+// ==========================================
+
+router.get('/market-prices', async (req, res) => {
+    try {
+        const { category } = req.query;
+        let query = 'SELECT * FROM market_prices';
+        const params = [];
+
+        if (category && category !== 'All') {
+            query += ' WHERE category = ?';
+            params.push(category);
+        }
+
+        query += ' ORDER BY category, item_name';
+        const [prices] = await db.query(query, params);
+        res.json(prices);
+    } catch (error) {
+        console.error('Error fetching market prices:', error);
+        res.status(500).json({ error: 'Failed to fetch market prices' });
+    }
+});
+
+router.get('/market-prices/categories', async (req, res) => {
+    try {
+        const [categories] = await db.query('SELECT DISTINCT category FROM market_prices ORDER BY category');
+        res.json(categories.map(c => c.category));
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+});
+
+// ==========================================
 // AUTHENTICATED ROUTES
 // ==========================================
 
@@ -279,6 +313,46 @@ router.post('/order', async (req, res) => {
     } catch (error) {
         console.error('Order Error:', error);
         res.status(500).json({ error: 'Database error: ' + error.message });
+    }
+});
+
+// (Market prices routes moved to public section above verifyToken)
+
+// ==========================================
+// PRICE COMPLAINTS
+// ==========================================
+
+router.post('/complaints', async (req, res) => {
+    const { shop_name, shop_phone, shop_location, item_name, official_price, charged_price, description } = req.body;
+
+    if (!shop_name || !shop_location || !item_name || !charged_price) {
+        return res.status(400).json({ error: 'Shop name, location, item name, and charged price are required' });
+    }
+
+    try {
+        const [result] = await db.query(
+            `INSERT INTO price_complaints (user_id, shop_name, shop_phone, shop_location, item_name, official_price, charged_price, description)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [req.user.dbId, shop_name, shop_phone || null, shop_location, item_name, official_price || null, charged_price, description || null]
+        );
+
+        res.json({ success: true, message: 'Complaint submitted successfully. We will investigate this matter.', id: result.insertId });
+    } catch (error) {
+        console.error('Error submitting complaint:', error);
+        res.status(500).json({ error: 'Failed to submit complaint' });
+    }
+});
+
+router.get('/complaints/my', async (req, res) => {
+    try {
+        const [complaints] = await db.query(
+            'SELECT * FROM price_complaints WHERE user_id = ? ORDER BY created_at DESC',
+            [req.user.dbId]
+        );
+        res.json(complaints);
+    } catch (error) {
+        console.error('Error fetching complaints:', error);
+        res.status(500).json({ error: 'Failed to fetch complaints' });
     }
 });
 

@@ -272,8 +272,8 @@
                 <a href="history.html"><i class="fas fa-history"></i> History</a>
                 <a href="todo.html"><i class="fas fa-tasks"></i> To Do</a>
                 <a href="community.html"><i class="fas fa-users"></i> Community</a>
-                <a href="shop.html"><i class="fas fa-shopping-cart"></i> Shop</a>
-                <a href="events.html"><i class="fas fa-trophy"></i> Events</a>
+                <a href="market.html"><i class="fas fa-chart-line"></i> Market Info</a>
+                <a href="events.html"><i class="fas fa-bullhorn"></i> Notices</a>
                 <a href="education.html"><i class="fas fa-graduation-cap"></i> Education</a>
                 <a href="#" class="active"><i class="fas fa-envelope"></i> Contact</a>
                 <a href="javascript:void(0)" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -292,6 +292,21 @@
                 <!-- Contact Form -->
                 <div class="contact-form">
                     <h3><i class="fas fa-paper-plane"></i> অভিযোগ / পরামর্শ পাঠান</h3>
+
+                    <div class="form-group">
+                        <label>বিভাগ নির্বাচন করুন</label>
+                        <select id="contactDepartment" class="form-control">
+                            <option value="কৃষি মন্ত্রণালয়">কৃষি মন্ত্রণালয়</option>
+                            <option value="ভূমি মন্ত্রণালয়">ভূমি মন্ত্রণালয়</option>
+                            <option value="শিক্ষা মন্ত্রণালয়">শিক্ষা মন্ত্রণালয়</option>
+                            <option value="স্বাস্থ্য ও পরিবার কল্যাণ">স্বাস্থ্য ও পরিবার কল্যাণ</option>
+                            <option value="পাসপোর্ট ও ইমিগ্রেশন">পাসপোর্ট ও ইমিগ্রেশন</option>
+                            <option value="নির্বাচন কমিশন">নির্বাচন কমিশন</option>
+                            <option value="জাতীয় রাজস্ব বোর্ড">জাতীয় রাজস্ব বোর্ড</option>
+                            <option value="পানি সম্পদ মন্ত্রণালয়">পানি সম্পদ মন্ত্রণালয়</option>
+                            <option value="অন্যান্য">অন্যান্য</option>
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label>বিষয় নির্বাচন করুন</label>
@@ -387,11 +402,12 @@
 
     <script>
         async function sendContactMessage() {
+            const department = document.getElementById('contactDepartment').value;
             const subject = document.getElementById('contactSubject').value;
             const message = document.getElementById('contactMessage').value;
             const token = localStorage.getItem('token');
 
-            if (!message) {
+            if (!department || !message) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'বার্তা লিখুন',
@@ -427,7 +443,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ subject, message })
+                    body: JSON.stringify({ department, subject, message })
                 });
 
                 const data = await res.json();
