@@ -39,6 +39,47 @@ router.post('/agriculture/report', async (req, res) => {
     }
 });
 
+// Get All Subsidies (History)
+router.get('/agriculture/subsidies/history', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM agri_subsidies WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get All Reports (History)
+router.get('/agriculture/reports/history', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM agri_crop_reports WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Ask Expert - Submit Question
+router.post('/agriculture/expert/ask', async (req, res) => {
+    const { question } = req.body;
+    try {
+        await db.query('INSERT INTO agri_expert_queries (user_id, question) VALUES (?, ?)', [req.user.id, question]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Ask Expert - Get My Questions
+router.get('/agriculture/expert/my-queries', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM agri_expert_queries WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Get Applications (Unified for demo)
 router.get('/agriculture/applications', async (req, res) => {
     try {

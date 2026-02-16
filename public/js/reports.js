@@ -158,7 +158,7 @@ function showTab(tab) {
     currentTab = tab;
 
     // Hide all sections
-    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends', 'notices'].forEach(t => {
+    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends', 'notices', 'agriculture'].forEach(t => {
         const el = document.getElementById(t + '-section');
         if (el) el.style.display = 'none';
     });
@@ -188,6 +188,7 @@ async function loadTabData(tab) {
         case 'audit': loadAudit(); break;
         case 'stipends': loadStipends(); break;
         case 'notices': loadNotices(); break;
+        case 'agriculture': loadAgriculture(); break;
     }
 }
 
@@ -3203,6 +3204,453 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// =====================
+// AGRICULTURE ADMIN
+// =====================
+
+const AGRI_API = '/api/agriculture';
+
+async function fetchAgriAPI(url, method = 'GET', body = null) {
+    const options = {
+        method,
+        headers: { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }
+    };
+    if (body) options.body = JSON.stringify(body);
+    const res = await fetch(url, options);
+    if (!res.ok) throw new Error(res.statusText);
+    return res.json();
+}
+
+async function loadAgriculture() {
+    try {
+        const stats = await fetchAgriAPI(`${AGRI_API}/admin/stats`);
+        document.getElementById('admin-agri-subsidies').textContent = stats.subsidies?.total || 0;
+        document.getElementById('admin-agri-sub-pending').textContent = stats.subsidies?.pending || 0;
+        document.getElementById('admin-agri-queries').textContent = stats.queries?.total || 0;
+        document.getElementById('admin-agri-reports').textContent = stats.reports?.total || 0;
+        document.getElementById('admin-agri-market').textContent = stats.market?.total || 0;
+    } catch (e) { console.error(e); }
+    loadAdminQueries();
+}
+
+function switchAgriAdminTab(tab) {
+    const tabs = ['queries', 'subsidies', 'crops', 'market', 'training', 'views'];
+    tabs.forEach(t => {
+        const panel = document.getElementById(`agriPanel-${t}`);
+        const btn = document.getElementById(`agriSubTab-${t}`);
+        if (panel) panel.style.display = t === tab ? 'block' : 'none';
+        if (btn) {
+            btn.className = t === tab ? 'report-tab active' : 'report-tab';
+        }
+    });
+    if (tab === 'queries') loadAdminQueries();
+    if (tab === 'subsidies') loadAdminSubsidies();
+    if (tab === 'crops') loadAdminCropSummary();
+    if (tab === 'market') loadAdminMarketListings();
+    if (tab === 'training') loadAdminTraining();
+    if (tab === 'views') loadAdminAgriViews();
+}
+
+// --- Expert Q&A ---
+async function loadAdminQueries() {
+    const container = document.getElementById('adminQueriesList');
+    if (!container) return;
+    try {
+        const data = await fetchAgriAPI(`${AGRI_API}/admin/queries`);
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: #64748b; text-align: center; padding: 2rem;">No queries found.</p>';
+            return;
+        }
+        container.innerHTML = data.map(q => `
+            <div class="query-card">
+                <div class="query-header">
+                    <span><strong style="color: #6ee7b7;">${q.user_name || 'User #' + q.user_id}</strong></span>
+                    <span class="badge-${q.status === 'Replied' ? 'replied' : 'pending'}">${q.status}</span>
+                </div>
+                <div class="query-question">${q.question}</div>
+                <div class="query-meta">
+                    ${q.category ? `<span><i class="fas fa-tag" style="color: #f0c040;"></i> ${q.category}</span>` : ''}
+                    ${q.crop_name ? `<span><i class="fas fa-leaf" style="color: #6ee7b7;"></i> ${q.crop_name}</span>` : ''}
+                    <span><i class="fas fa-calendar"></i> ${formatDate(q.created_at)}</span>
+                </div>
+                ${q.answer ? `
+                    <div class="answer-box"><div class="expert-label"><i class="fas fa-user-check"></i> ${q.answered_by || 'Expert'}</div><p>${q.answer}</p></div>
+                ` : `
+                    <button class="btn-agri" style="margin-top: 0.8rem;" onclick="answerQuery(${q.id})">
+                        <i class="fas fa-reply"></i> Answer
+                    </button>
+                `}
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<p style="color: #ef4444;">Failed to load queries.</p>';
+    }
+}
+
+async function answerQuery(id) {
+    const { value: formValues } = await Swal.fire({
+        title: 'Answer Expert Query',
+        html: `
+            <textarea id="swal-answer" class="swal2-textarea" placeholder="Type your expert reply..." rows="5" style="width:100%;"></textarea>
+            <input id="swal-expert-name" class="swal2-input" placeholder="Your name / designation" style="width:100%;">
+        `,
+        background: '#0b1a0f',
+        color: '#fff',
+        showCancelButton: true,
+        confirmButtonColor: '#2d6a4f',
+        confirmButtonText: '<i class="fas fa-paper-plane"></i> Send Reply',
+        preConfirm: () => {
+            const answer = document.getElementById('swal-answer').value;
+            if (!answer.trim()) { Swal.showValidationMessage('Please type your answer.'); return false; }
+            return {
+                answer,
+                answered_by: document.getElementById('swal-expert-name').value || 'Agriculture Officer'
+            };
+        }
+    });
+
+    if (formValues) {
+        try {
+            await fetchAgriAPI(`${AGRI_API}/admin/answer/${id}`, 'PUT', formValues);
+            Swal.fire({ icon: 'success', title: 'Reply Sent!', background: '#0b1a0f', color: '#fff', timer: 1500, showConfirmButton: false });
+            loadAdminQueries();
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Failed', background: '#0b1a0f', color: '#fff' });
+        }
+    }
+}
+
+// --- Subsidies ---
+async function loadAdminSubsidies() {
+    const tbody = document.getElementById('adminSubsidiesBody');
+    if (!tbody) return;
+    try {
+        const data = await fetchAgriAPI(`${AGRI_API}/admin/subsidies`);
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:2rem;">No applications.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(s => {
+            const isPending = s.status === 'Pending' || s.status === 'Under Review';
+            return `
+                <tr>
+                    <td>#${s.id}</td>
+                    <td>${s.farmer_name}<div style="font-size:0.75rem; color:#64748b;">${s.user_name || ''}</div></td>
+                    <td>${s.subsidy_type}</td>
+                    <td>৳${Number(s.amount_requested).toLocaleString()}</td>
+                    <td>${s.district_name || '—'}</td>
+                    <td><span class="badge-${s.status === 'Approved' ? 'approved' : s.status === 'Rejected' ? 'rejected' : 'pending'}">${s.status}</span></td>
+                    <td>${formatDate(s.created_at)}</td>
+                    <td>
+                        ${isPending ? `
+                            <button class="btn-agri" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="updateSubsidy(${s.id}, 'Approved')"><i class="fas fa-check"></i></button>
+                            <button style="background:#ef4444; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:8px; cursor:pointer; font-size:0.8rem;" onclick="updateSubsidy(${s.id}, 'Rejected')"><i class="fas fa-times"></i></button>
+                        ` : '—'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:#ef4444; text-align:center;">Failed to load.</td></tr>';
+    }
+}
+
+async function updateSubsidy(id, status) {
+    const { value: remarks } = await Swal.fire({
+        title: `${status} Subsidy #${id}?`,
+        input: 'textarea',
+        inputLabel: 'Admin Remarks (optional)',
+        inputPlaceholder: 'Any notes...',
+        showCancelButton: true,
+        confirmButtonText: status,
+        confirmButtonColor: status === 'Approved' ? '#2d6a4f' : '#ef4444',
+        background: '#0b1a0f',
+        color: '#fff'
+    });
+
+    if (remarks !== undefined) {
+        try {
+            await fetchAgriAPI(`${AGRI_API}/admin/subsidy/${id}`, 'PUT', { status, admin_remarks: remarks });
+            Swal.fire({ icon: 'success', title: `${status}!`, timer: 1500, showConfirmButton: false, background: '#0b1a0f', color: '#fff' });
+            loadAdminSubsidies();
+            loadAgriculture();
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Failed', background: '#0b1a0f', color: '#fff' });
+        }
+    }
+}
+
+// --- Crop Summary ---
+async function loadAdminCropSummary() {
+    const tbody = document.getElementById('adminCropSummaryBody');
+    if (!tbody) return;
+    try {
+        const data = await fetchAgriAPI(`${AGRI_API}/admin/crop-summary`);
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:2rem;">No crop data yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(r => `
+            <tr>
+                <td>${r.division_name || '—'}</td>
+                <td>${r.district_name || '—'}</td>
+                <td>${r.crop_name}</td>
+                <td>${r.season}</td>
+                <td>${r.total_reports}</td>
+                <td style="font-weight: 700; color: #6ee7b7;">${Number(r.total_yield_mt || 0).toFixed(2)}</td>
+                <td>${r.total_land_acres ? Number(r.total_land_acres).toFixed(2) : '—'}</td>
+                <td>${r.avg_market_price ? '৳' + Number(r.avg_market_price).toLocaleString() : '—'}</td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:#ef4444; text-align:center;">Failed to load.</td></tr>';
+    }
+}
+
+// --- Market Listings ---
+async function loadAdminMarketListings() {
+    const tbody = document.getElementById('adminMarketBody');
+    if (!tbody) return;
+    try {
+        const data = await fetchAgriAPI(`${AGRI_API}/admin/market-listings`);
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:2rem;">No listings.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(m => {
+            const isPending = m.status === 'Pending';
+            return `
+                <tr>
+                    <td>#${m.id}</td>
+                    <td>${m.farmer_name}<div style="font-size:0.75rem; color:#64748b;">${m.phone}</div></td>
+                    <td>${m.product_name}<div style="font-size:0.75rem; color:#64748b;">${m.product_category}</div></td>
+                    <td>${m.quantity} ${m.unit}</td>
+                    <td>৳${Number(m.price_per_unit).toLocaleString()}</td>
+                    <td>${m.district_name || '—'}</td>
+                    <td><span class="badge-${m.status === 'Approved' ? 'approved' : m.status === 'Rejected' ? 'rejected' : 'pending'}">${m.status}</span></td>
+                    <td>
+                        ${isPending ? `
+                            <button class="btn-agri" style="padding:0.4rem 0.8rem; font-size:0.8rem;" onclick="updateMarketListing(${m.id}, 'Approved')"><i class="fas fa-check"></i></button>
+                            <button style="background:#ef4444; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:8px; cursor:pointer; font-size:0.8rem;" onclick="updateMarketListing(${m.id}, 'Rejected')"><i class="fas fa-times"></i></button>
+                        ` : '—'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:#ef4444; text-align:center;">Failed to load.</td></tr>';
+    }
+}
+
+async function updateMarketListing(id, status) {
+    try {
+        await fetchAgriAPI(`${AGRI_API}/admin/market/${id}`, 'PUT', { status });
+        Swal.fire({ icon: 'success', title: `${status}!`, timer: 1500, showConfirmButton: false, background: '#0b1a0f', color: '#fff' });
+        loadAdminMarketListings();
+    } catch (e) {
+        Swal.fire({ icon: 'error', title: 'Failed', background: '#0b1a0f', color: '#fff' });
+    }
+}
+
+// --- Training ---
+async function loadAdminTraining() {
+    const tbody = document.getElementById('adminTrainingBody');
+    if (!tbody) return;
+    try {
+        const data = await fetchAgriAPI(`${AGRI_API}/admin/training`);
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:2rem;">No training programs.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(t => `
+            <tr>
+                <td>#${t.id}</td>
+                <td>${t.title}</td>
+                <td>${t.category}</td>
+                <td>${t.location || (t.district_name || '—')}</td>
+                <td>${formatDate(t.start_date)} — ${formatDate(t.end_date)}</td>
+                <td>${t.capacity}</td>
+                <td style="font-weight:700; color: #6ee7b7;">${t.registered_count || 0}</td>
+                <td><span class="badge-${t.status === 'Upcoming' ? 'pending' : t.status === 'Ongoing' ? 'approved' : t.status === 'Completed' ? 'replied' : 'rejected'}">${t.status}</span></td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:#ef4444; text-align:center;">Failed to load.</td></tr>';
+    }
+}
+
+async function showCreateTrainingForm() {
+    const { value: formValues } = await Swal.fire({
+        title: '📚 Create Training Program',
+        html: `
+            <div class="swal-form-grid">
+                <div class="swal-form-group" style="grid-column: 1/-1;">
+                    <label>Title *</label>
+                    <input id="tp-title" class="form-control" placeholder="Training program name">
+                </div>
+                <div class="swal-form-group">
+                    <label>Category *</label>
+                    <select id="tp-category" class="form-control">
+                        <option value="Crop Management">Crop Management</option>
+                        <option value="Pest Control">Pest Control</option>
+                        <option value="Modern Farming">Modern Farming</option>
+                        <option value="Livestock">Livestock</option>
+                        <option value="Fishery">Fishery</option>
+                        <option value="Organic Farming">Organic Farming</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Technology">Technology</option>
+                    </select>
+                </div>
+                <div class="swal-form-group">
+                    <label>Location *</label>
+                    <input id="tp-location" class="form-control" placeholder="Where?">
+                </div>
+                <div class="swal-form-group">
+                    <label>Start Date *</label>
+                    <input id="tp-start" class="form-control" type="date">
+                </div>
+                <div class="swal-form-group">
+                    <label>End Date *</label>
+                    <input id="tp-end" class="form-control" type="date">
+                </div>
+                <div class="swal-form-group">
+                    <label>Capacity</label>
+                    <input id="tp-capacity" class="form-control" type="number" value="50">
+                </div>
+                <div class="swal-form-group">
+                    <label>Trainer Name</label>
+                    <input id="tp-trainer" class="form-control" placeholder="Trainer name">
+                </div>
+                <div class="swal-form-group" style="grid-column: 1/-1;">
+                    <label>Description</label>
+                    <textarea id="tp-desc" class="form-control" placeholder="Describe the program..." rows="3"></textarea>
+                </div>
+            </div>
+        `,
+        width: '700px',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: '<i class="fas fa-plus"></i> Create Program',
+        background: '#0f172a',
+        color: '#fff',
+        preConfirm: () => {
+            const title = document.getElementById('tp-title').value;
+            const start_date = document.getElementById('tp-start').value;
+            const end_date = document.getElementById('tp-end').value;
+            if (!title || !start_date || !end_date) {
+                Swal.showValidationMessage('Title and dates required');
+                return false;
+            }
+            return {
+                title,
+                category: document.getElementById('tp-category').value,
+                location: document.getElementById('tp-location').value,
+                start_date,
+                end_date,
+                capacity: document.getElementById('tp-capacity').value || 50,
+                trainer_name: document.getElementById('tp-trainer').value || null,
+                description: document.getElementById('tp-desc').value || null
+            };
+        }
+    });
+
+    if (formValues) {
+        try {
+            await fetchAgriAPI(`${AGRI_API}/admin/training`, 'POST', formValues);
+            Swal.fire({ icon: 'success', title: 'Program Created!', background: '#0f172a', color: '#fff', timer: 1500, showConfirmButton: false });
+            loadAdminTraining();
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Failed', background: '#0f172a', color: '#fff' });
+        }
+    }
+}
+
+// --- Database Views ---
+async function loadAdminAgriViews() {
+    const emptyRow = (cols) => `<tr><td colspan="${cols}" style="text-align:center; color:#64748b; padding:2rem;">No data available.</td></tr>`;
+    const errorRow = (cols) => `<tr><td colspan="${cols}" style="color:#ef4444; text-align:center;">Failed to load view data.</td></tr>`;
+
+    // Subsidy Overview
+    const subsidyBody = document.getElementById('viewSubsidyBody');
+    if (subsidyBody) {
+        try {
+            const data = await fetchAgriAPI(`${AGRI_API}/admin/views/subsidy-overview`);
+            if (!data || data.length === 0) {
+                subsidyBody.innerHTML = emptyRow(8);
+            } else {
+                subsidyBody.innerHTML = data.map(r => `
+                    <tr>
+                        <td>${r.subsidy_type}</td>
+                        <td><span class="badge-${r.status === 'Approved' ? 'approved' : r.status === 'Rejected' ? 'rejected' : 'pending'}">${r.status}</span></td>
+                        <td>${r.division_name}</td>
+                        <td>${r.district_name}</td>
+                        <td style="font-weight:700;">${r.total_applications}</td>
+                        <td>৳${Number(r.total_amount_requested).toLocaleString()}</td>
+                        <td style="color:#6ee7b7; font-weight:700;">৳${Number(r.total_amount_approved).toLocaleString()}</td>
+                        <td>${r.approval_rate_pct}%</td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            subsidyBody.innerHTML = errorRow(8);
+        }
+    }
+
+    // Crop Production
+    const cropBody = document.getElementById('viewCropBody');
+    if (cropBody) {
+        try {
+            const data = await fetchAgriAPI(`${AGRI_API}/admin/views/crop-production`);
+            if (!data || data.length === 0) {
+                cropBody.innerHTML = emptyRow(8);
+            } else {
+                const ratingColors = { 'High Yield': '#6ee7b7', 'Medium Yield': '#fbbf24', 'Low Yield': '#f87171', 'No Data': '#64748b' };
+                cropBody.innerHTML = data.map(r => `
+                    <tr>
+                        <td><strong>${r.crop_name}</strong></td>
+                        <td>${r.season}</td>
+                        <td>${r.division_name}</td>
+                        <td>${r.district_name}</td>
+                        <td>${r.total_reports}</td>
+                        <td style="font-weight:700; color:#6ee7b7;">${Number(r.total_yield_mt).toFixed(2)}</td>
+                        <td>${Number(r.yield_per_acre_mt).toFixed(3)}</td>
+                        <td><span style="color:${ratingColors[r.productivity_rating] || '#64748b'}; font-weight:600;">${r.productivity_rating}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            cropBody.innerHTML = errorRow(8);
+        }
+    }
+
+    // Training Summary
+    const trainingBody = document.getElementById('viewTrainingBody');
+    if (trainingBody) {
+        try {
+            const data = await fetchAgriAPI(`${AGRI_API}/admin/views/training-summary`);
+            if (!data || data.length === 0) {
+                trainingBody.innerHTML = emptyRow(8);
+            } else {
+                const demandColors = { 'Full': '#f87171', 'Nearly Full': '#fbbf24', 'Open': '#6ee7b7', 'Low Interest': '#64748b' };
+                trainingBody.innerHTML = data.map(r => `
+                    <tr>
+                        <td><strong>${r.program_title}</strong></td>
+                        <td>${r.category}</td>
+                        <td>${r.location}</td>
+                        <td>${formatDate(r.start_date)} — ${formatDate(r.end_date)}</td>
+                        <td>${r.trainer_name}</td>
+                        <td style="font-weight:700;">${r.total_registered} / ${r.capacity}</td>
+                        <td>${r.fill_rate_pct}%</td>
+                        <td><span style="color:${demandColors[r.demand_level] || '#64748b'}; font-weight:600;">${r.demand_level}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            trainingBody.innerHTML = errorRow(8);
+        }
+    }
+}
 
 // =====================
 // INITIALIZATION

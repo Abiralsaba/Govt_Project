@@ -41,6 +41,8 @@
                 <a href="#" onclick="showTab('audit')"><i class="fas fa-history"></i> Audit Log</a>
                 <a href="#" onclick="showTab('stipends')"><i class="fas fa-hand-holding-usd"></i> Stipends</a>
                 <a href="#" onclick="showTab('notices')"><i class="fas fa-bullhorn"></i> Notices</a>
+                <a href="#" onclick="showTab('agriculture')" style="border-top: 1px solid rgba(45,106,79,0.3);"><i
+                        class="fas fa-leaf" style="color: #6ee7b7;"></i> Agriculture</a>
             </nav>
         </aside>
 
@@ -937,6 +939,299 @@
                 </div>
             </div>
 
+            <!-- Agriculture Admin Section -->
+            <div id="agriculture-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;"><i class="fas fa-seedling" style="color: #34d399;"></i>
+                    Agriculture Ministry Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage subsidies, expert queries, crop reports, farmer
+                    marketplace, and training programs</p>
+
+                <!-- Stats Grid -->
+                <div class="report-grid" id="agriAdminStatsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="stat-value" id="admin-agri-subsidies">0</div>
+                        <div class="stat-label">Subsidy Applications</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                        <div class="stat-value" id="admin-agri-sub-pending">0</div>
+                        <div class="stat-label">Pending Subsidies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-comments"></i></div>
+                        <div class="stat-value" id="admin-agri-queries">0</div>
+                        <div class="stat-label">Expert Queries</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i class="fas fa-wheat-awn"></i></div>
+                        <div class="stat-value" id="admin-agri-reports">0</div>
+                        <div class="stat-label">Crop Reports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-store"></i></div>
+                        <div class="stat-value" id="admin-agri-market">0</div>
+                        <div class="stat-label">Market Listings</div>
+                    </div>
+                </div>
+
+                <!-- Sub-tabs -->
+                <div class="report-tabs">
+                    <button class="report-tab active" id="agriSubTab-queries" onclick="switchAgriAdminTab('queries')"><i
+                            class="fas fa-comments"></i> Expert Q&A</button>
+                    <button class="report-tab" id="agriSubTab-subsidies" onclick="switchAgriAdminTab('subsidies')"><i
+                            class="fas fa-hand-holding-usd"></i> Subsidies</button>
+                    <button class="report-tab" id="agriSubTab-crops" onclick="switchAgriAdminTab('crops')"><i
+                            class="fas fa-chart-bar"></i> Crop Analytics</button>
+                    <button class="report-tab" id="agriSubTab-market" onclick="switchAgriAdminTab('market')"><i
+                            class="fas fa-store"></i> Farmer Market</button>
+                    <button class="report-tab" id="agriSubTab-training" onclick="switchAgriAdminTab('training')"><i
+                            class="fas fa-chalkboard-teacher"></i> Training</button>
+                    <button class="report-tab" id="agriSubTab-views" onclick="switchAgriAdminTab('views')"><i
+                            class="fas fa-database"></i> DB Views</button>
+                </div>
+
+                <!-- Expert Q&A Panel -->
+                <div id="agriPanel-queries">
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-comments" style="color: #60a5fa;"></i> Pending Expert Questions</h3>
+                        <div id="adminQueriesList">
+                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subsidies Panel -->
+                <div id="agriPanel-subsidies" style="display:none;">
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-hand-holding-usd" style="color: #34d399;"></i> All Subsidy Applications
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Farmer</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminSubsidiesBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crop Analytics Panel -->
+                <div id="agriPanel-crops" style="display:none;">
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-chart-bar" style="color: #22d3ee;"></i> Crop Production Summary</h3>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Division</th>
+                                        <th>District</th>
+                                        <th>Crop</th>
+                                        <th>Season</th>
+                                        <th>Reports</th>
+                                        <th>Total Yield (MT)</th>
+                                        <th>Land (Acres)</th>
+                                        <th>Avg Price (৳/MT)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminCropSummaryBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Panel -->
+                <div id="agriPanel-market" style="display:none;">
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-store" style="color: #a78bfa;"></i> Farmer Market Listings</h3>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Farmer</th>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminMarketBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Panel -->
+                <div id="agriPanel-training" style="display:none;">
+                    <div class="report-table-container">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                            <h3 style="margin-bottom: 0;"><i class="fas fa-chalkboard-teacher"
+                                    style="color: #fbbf24;"></i>
+                                Training Programs</h3>
+                            <button class="action-btn approve" onclick="showCreateTrainingForm()"
+                                style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                                <i class="fas fa-plus"></i> Create Program
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Dates</th>
+                                        <th>Capacity</th>
+                                        <th>Registered</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTrainingBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DB Views Panel -->
+                <div id="agriPanel-views" style="display:none;">
+
+                    <!-- Subsidy Overview View -->
+                    <div class="report-table-container" style="margin-bottom: 1.5rem;">
+                        <h3><i class="fas fa-chart-pie" style="color: #34d399;"></i> Subsidy Overview
+                            <span
+                                style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-left: 0.5rem;">v_agri_subsidy_overview</span>
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Division</th>
+                                        <th>District</th>
+                                        <th>Applications</th>
+                                        <th>Total Requested (৳)</th>
+                                        <th>Total Approved (৳)</th>
+                                        <th>Approval Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="viewSubsidyBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Crop Production View -->
+                    <div class="report-table-container" style="margin-bottom: 1.5rem;">
+                        <h3><i class="fas fa-seedling" style="color: #22d3ee;"></i> Crop Production Analytics
+                            <span
+                                style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-left: 0.5rem;">v_agri_crop_production</span>
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Crop</th>
+                                        <th>Season</th>
+                                        <th>Division</th>
+                                        <th>District</th>
+                                        <th>Reports</th>
+                                        <th>Yield (MT)</th>
+                                        <th>Yield/Acre</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="viewCropBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Training Summary View -->
+                    <div class="report-table-container">
+                        <h3><i class="fas fa-graduation-cap" style="color: #fbbf24;"></i> Training Program Summary
+                            <span
+                                style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-left: 0.5rem;">v_agri_training_summary</span>
+                        </h3>
+                        <div class="table-responsive">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Program</th>
+                                        <th>Category</th>
+                                        <th>Location</th>
+                                        <th>Dates</th>
+                                        <th>Trainer</th>
+                                        <th>Registered</th>
+                                        <th>Fill Rate</th>
+                                        <th>Demand</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="viewTrainingBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
         </main>
 
         <!-- Edit Notice Modal -->
@@ -1198,6 +1493,8 @@
             </div>
         </div>
     </div>
+
+
 
     <script src="js/sidebar.js"></script>
     <script src="js/reports.js"></script>

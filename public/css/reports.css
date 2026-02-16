@@ -1,3 +1,34 @@
+/* Body Reset for Admin Panel - Overriding style.css global flex */
+body {
+    display: block !important;
+    background: #0f172a !important;
+    /* Slate 900 */
+    /* Removed padding:0 and overflow-y:hidden to prevent content clipping */
+}
+
+/* Agriculture Section Specific Beautification */
+#agriculture-section h1 i {
+    filter: drop-shadow(0 0 10px rgba(52, 211, 153, 0.4));
+}
+
+#agriculture-section .stat-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+#agriculture-section .stat-card:hover {
+    border-color: #34d399;
+}
+
+#agriculture-section .report-tab.active {
+    background: linear-gradient(135deg, #059669, #10b981);
+    /* Green theme for Agriculture */
+}
+
+#agriculture-section .report-table-container {
+    border-top: 3px solid #10b981;
+}
+
 /* Report Cards */
 .report-grid {
     display: grid;
@@ -588,12 +619,200 @@
     gap: 0.5rem;
 }
 
-/* Item count badge in modal header */
-.item-count {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
+
+/* --- Agriculture Admin Component Styles --- */
+
+/* Buttons */
+.btn-agri {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
     font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-agri:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-agri-outline {
+    background: transparent;
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-agri-outline:hover,
+.btn-agri-outline.active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #34d399;
+    color: white;
+}
+
+/* Specific Badges for Agriculture */
+.badge-pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.badge-approved {
+    background: rgba(52, 211, 153, 0.2);
+    color: #34d399;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.badge-rejected {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge-replied {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+/* Query Cards (Expert Q&A) */
+.query-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.query-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.query-question {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 0.8rem;
+}
+
+.query-meta {
+    display: flex;
+    gap: 0.8rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 1rem;
+}
+
+.query-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.answer-box {
+    background: rgba(16, 185, 129, 0.05);
+    border-left: 3px solid #10b981;
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    margin-top: 1rem;
+}
+
+.expert-label {
+    color: #34d399;
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Market Listing Cards (optional if simpler table used, but good to have) */
+.market-card {
+    /* In case we use cards in admin too, though admin usually uses tables */
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* Modal Form Grid Layout */
+.swal-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    text-align: left;
+    margin-top: 1rem;
+}
+
+.swal-form-group {
+    margin-bottom: 0.5rem;
+}
+
+.swal-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* SweetAlert Theme Override for Admin Panel */
+.swal2-popup {
+    background: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    padding: 2rem !important;
+}
+
+.swal2-title {
+    color: white !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+.swal2-close {
+    color: #94a3b8 !important;
+}
+
+.swal2-input,
+.swal2-textarea {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+    font-size: 1rem !important;
+    border-radius: 12px !important;
+}
+
+.swal2-input:focus,
+.swal2-textarea:focus {
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2) !important;
 }

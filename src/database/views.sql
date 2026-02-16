@@ -912,3 +912,188 @@ FROM (
     WHERE h.gpa = 5.00 AND h.result_status = 'Passed'
 ) combined
 ORDER BY exam_year DESC, exam_type, board_name;
+
+
+-- ==========================================
+-- AGRICULTURE MINISTRY VIEWS
+-- Analytics for subsidies, crop production, and training
+-- ==========================================
+
+
+-- ==========================================
+-- VIEW: Agriculture Subsidy Overview
+-- Aggregated subsidy analytics by type, status, and location
+-- ==========================================
+CREATE OR REPLACE VIEW v_agri_subsidy_overview AS
+SELECT 
+    s.subsidy_type,
+    s.status,
+    
+    -- Location
+    COALESCE(d.name, '—') AS division_name,
+    COALESCE(di.name, '—') AS district_name,
+    
+    -- Counts
+    COUNT(*) AS total_applications,
+    SUM(CASE WHEN s.status = 'Approved' THEN 1 ELSE 0 END) AS approved_count,
+    SUM(CASE WHEN s.status = 'Pending' THEN 1 ELSE 0 END) AS pending_count,
+    SUM(CASE WHEN s.status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_count,
+    SUM(CASE WHEN s.status = 'Under Review' THEN 1 ELSE 0 END) AS under_review_count,
+    
+    -- Financial
+    COALESCE(SUM(s.amount_requested), 0) AS total_amount_requested,
+    COALESCE(SUM(CASE WHEN s.status = 'Approved' THEN s.amount_requested ELSE 0 END), 0) AS total_amount_approved,
+    ROUND(AVG(s.amount_requested), 2) AS avg_amount_per_application,
+    
+    -- Land
+    COALESCE(SUM(s.land_size_acres), 0) AS total_land_acres,
+    ROUND(AVG(s.land_size_acres), 2) AS avg_land_acres,
+    
+    -- Timeline
+    MIN(s.created_at) AS earliest_application,
+    MAX(s.created_at) AS latest_application,
+    
+    -- Approval Rate
+    CASE 
+        WHEN COUNT(*) > 0 THEN ROUND(SUM(CASE WHEN s.status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2)
+        ELSE 0
+    END AS approval_rate_pct
+
+FROM agri_subsidies s
+LEFT JOIN divisions d ON s.division_id = d.id
+LEFT JOIN districts di ON s.district_id = di.id
+GROUP BY s.subsidy_type, s.status, d.name, di.name
+ORDER BY s.subsidy_type, total_applications DESC;
+
+
+-- ==========================================
+-- VIEW: Agriculture Crop Production Analytics
+-- Aggregated crop production by crop, season, and district
+-- ==========================================
+CREATE OR REPLACE VIEW v_agri_crop_production AS
+SELECT 
+    r.crop_name,
+    r.season,
+    
+    -- Location
+    COALESCE(d.name, '—') AS division_name,
+    COALESCE(di.name, '—') AS district_name,
+    
+    -- Production Stats
+    COUNT(*) AS total_reports,
+    COALESCE(SUM(r.yield_metric_ton), 0) AS total_yield_mt,
+    ROUND(AVG(r.yield_metric_ton), 2) AS avg_yield_mt,
+    MAX(r.yield_metric_ton) AS max_yield_mt,
+    
+    -- Land
+    COALESCE(SUM(r.land_area_acres), 0) AS total_land_acres,
+    ROUND(AVG(r.land_area_acres), 2) AS avg_land_acres,
+    
+    -- Yield per Acre
+    CASE 
+        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 
+        THEN ROUND(SUM(r.yield_metric_ton) / SUM(r.land_area_acres), 3)
+        ELSE 0
+    END AS yield_per_acre_mt,
+    
+    -- Market
+    ROUND(AVG(r.market_price_per_ton), 2) AS avg_price_per_ton,
+    COALESCE(SUM(r.yield_metric_ton * r.market_price_per_ton), 0) AS estimated_total_value,
+    
+    -- Irrigation
+    GROUP_CONCAT(DISTINCT r.irrigation_method SEPARATOR ', ') AS irrigation_methods_used,
+    
+    -- Timeline
+    MIN(r.harvest_date) AS earliest_harvest,
+    MAX(r.harvest_date) AS latest_harvest,
+    MIN(r.created_at) AS first_report_date,
+    MAX(r.created_at) AS last_report_date,
+    
+    -- Productivity Rating
+    CASE 
+        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 
+             AND ROUND(SUM(r.yield_metric_ton) / SUM(r.land_area_acres), 3) >= 3 THEN 'High Yield'
+        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 
+             AND ROUND(SUM(r.yield_metric_ton) / SUM(r.land_area_acres), 3) >= 1.5 THEN 'Medium Yield'
+        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 THEN 'Low Yield'
+        ELSE 'No Data'
+    END AS productivity_rating
+
+FROM agri_crop_reports r
+LEFT JOIN divisions d ON r.division_id = d.id
+LEFT JOIN districts di ON r.district_id = di.id
+GROUP BY r.crop_name, r.season, d.name, di.name
+ORDER BY total_yield_mt DESC;
+
+
+-- ==========================================
+-- VIEW: Agriculture Training Program Summary
+-- Training programs with registration analytics
+-- ==========================================
+CREATE OR REPLACE VIEW v_agri_training_summary AS
+SELECT 
+    t.id AS program_id,
+    t.title AS program_title,
+    t.category,
+    t.status AS program_status,
+    
+    -- Location
+    COALESCE(t.location, '—') AS location,
+    COALESCE(d.name, '—') AS division_name,
+    COALESCE(di.name, '—') AS district_name,
+    
+    -- Schedule
+    t.start_date,
+    t.end_date,
+    DATEDIFF(t.end_date, t.start_date) AS duration_days,
+    
+    -- Trainer
+    COALESCE(t.trainer_name, 'TBA') AS trainer_name,
+    COALESCE(t.trainer_designation, '—') AS trainer_designation,
+    
+    -- Capacity
+    t.capacity,
+    COALESCE(reg.total_registered, 0) AS total_registered,
+    t.capacity - COALESCE(reg.total_registered, 0) AS seats_available,
+    
+    -- Fill Rate
+    CASE 
+        WHEN t.capacity > 0 THEN ROUND(COALESCE(reg.total_registered, 0) * 100.0 / t.capacity, 1)
+        ELSE 0
+    END AS fill_rate_pct,
+    
+    -- Registration Breakdown
+    COALESCE(reg.attended_count, 0) AS attended_count,
+    COALESCE(reg.cancelled_count, 0) AS cancelled_count,
+    
+    -- Attendance Rate
+    CASE 
+        WHEN COALESCE(reg.total_registered, 0) > 0 
+        THEN ROUND(COALESCE(reg.attended_count, 0) * 100.0 / reg.total_registered, 1)
+        ELSE 0
+    END AS attendance_rate_pct,
+    
+    -- Timeline
+    t.created_at AS program_created_at,
+    
+    -- Program Classification
+    CASE 
+        WHEN COALESCE(reg.total_registered, 0) >= t.capacity THEN 'Full'
+        WHEN COALESCE(reg.total_registered, 0) >= t.capacity * 0.75 THEN 'Nearly Full'
+        WHEN COALESCE(reg.total_registered, 0) >= t.capacity * 0.25 THEN 'Open'
+        ELSE 'Low Interest'
+    END AS demand_level
+
+FROM agri_training_programs t
+LEFT JOIN divisions d ON t.division_id = d.id
+LEFT JOIN districts di ON t.district_id = di.id
+LEFT JOIN (
+    SELECT 
+        program_id,
+        COUNT(*) AS total_registered,
+        SUM(CASE WHEN status = 'Attended' THEN 1 ELSE 0 END) AS attended_count,
+        SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled_count
+    FROM agri_training_registrations
+    GROUP BY program_id
+) reg ON t.id = reg.program_id
+ORDER BY t.start_date DESC;

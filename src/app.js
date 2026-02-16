@@ -23,7 +23,7 @@ app.use(helmet({
             styleSrc: ["'self'", "fonts.googleapis.com", "cdnjs.cloudflare.com", "cdn.jsdelivr.net", "'unsafe-inline'"],
             fontSrc: ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "cdn.jsdelivr.net", "https://ui-avatars.com", "blob:"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", "https://api.open-meteo.com", "https://power.larc.nasa.gov"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: null,
         },
@@ -69,6 +69,8 @@ const contactRoutes = require('./routes/contactRoutes');
 app.use('/api/contact', contactRoutes);
 const noticeRoutes = require('./routes/noticeRoutes');
 app.use('/api/notices', noticeRoutes);
+const agricultureRoutes = require('./routes/agricultureRoutes');
+app.use('/api/agriculture', agricultureRoutes);
 
 // Admin Routes
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
