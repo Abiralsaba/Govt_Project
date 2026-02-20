@@ -342,7 +342,7 @@ exports.submitServiceRequest = async (req, res) => {
 exports.getDepartments = (req, res) => {
     // Returning a rich list of departments for the frontend grid
     const departments = [
-        { id: 'agri', name: 'Agriculture', icon: 'fa-wheat', desc: 'Subsidies, Crop Reports', link: 'agriculture.html' },
+        { id: 'agri', name: 'Agriculture', icon: 'fa-seedling', desc: 'Subsidies, Crop Reports', link: 'agriculture.html' },
         { id: 'land', name: 'Land Ministry', icon: 'fa-landmark', desc: 'Mutations, Records', link: 'land.html' },
         { id: 'tax', name: 'NBR (Tax)', icon: 'fa-file-invoice-dollar', desc: 'Tax Returns, TIN', link: 'tax.html' },
         { id: 'passport', name: 'Passport', icon: 'fa-passport', desc: 'Applications, Renewal', link: 'passport.html' },

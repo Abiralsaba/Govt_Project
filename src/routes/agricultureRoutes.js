@@ -230,6 +230,7 @@ router.get('/expert/my-queries', async (req, res) => {
         );
         res.json(rows);
     } catch (error) {
+        console.error('Error fetching expert queries:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });
@@ -277,6 +278,7 @@ router.get('/market/my-listings', async (req, res) => {
         `, [req.user.id]);
         res.json(rows);
     } catch (error) {
+        console.error('Error fetching market listings:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });
@@ -329,6 +331,7 @@ router.get('/training/my-registrations', async (req, res) => {
         `, [req.user.id]);
         res.json(rows);
     } catch (error) {
+        console.error('Error fetching training registrations:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });
@@ -571,21 +574,10 @@ router.get('/admin/stats', async (req, res) => {
 // DATABASE VIEWS (Admin)
 // ===========================
 
-// Subsidy Overview View
-router.get('/admin/views/subsidy-overview', async (req, res) => {
+// District Agriculture Summary View
+router.get('/admin/views/district-summary', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM v_agri_subsidy_overview');
-        res.json(rows);
-    } catch (error) {
-        console.error('View query error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// Crop Production View
-router.get('/admin/views/crop-production', async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT * FROM v_agri_crop_production');
+        const [rows] = await db.query('SELECT * FROM v_agri_district_summary');
         res.json(rows);
     } catch (error) {
         console.error('View query error:', error);

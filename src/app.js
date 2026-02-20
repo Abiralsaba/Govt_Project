@@ -4,6 +4,28 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
+const fs = require('fs');
+
+// Debugging: Log crashes
+process.on('uncaughtException', (err) => {
+    const msg = `Uncaught Exception: ${err.stack}\n`;
+    console.error(msg);
+    fs.appendFileSync('server_crash.log', msg);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    const msg = `Unhandled Rejection: ${reason}\n`;
+    console.error(msg);
+    fs.appendFileSync('server_crash.log', msg);
+    process.exit(1);
+});
+
+process.on('exit', (code) => {
+    const msg = `Process exited with code: ${code}\n`;
+    console.log(msg);
+    fs.appendFileSync('server_crash.log', msg);
+});
 
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -71,6 +93,16 @@ const noticeRoutes = require('./routes/noticeRoutes');
 app.use('/api/notices', noticeRoutes);
 const agricultureRoutes = require('./routes/agricultureRoutes');
 app.use('/api/agriculture', agricultureRoutes);
+const taxRoutes = require('./routes/taxRoutes');
+app.use('/api/tax', taxRoutes);
+const passportRoutes = require('./routes/passportRoutes');
+app.use('/api/passport', passportRoutes);
+const nidRoutes = require('./routes/nidRoutes');
+app.use('/api/nid', nidRoutes);
+const healthRoutes = require('./routes/healthRoutes');
+app.use('/api/health', healthRoutes);
+const waterRoutes = require('./routes/waterRoutes');
+app.use('/api/water', waterRoutes);
 
 // Admin Routes
 const adminAuthRoutes = require('./routes/adminAuthRoutes');
@@ -97,4 +129,8 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    // Debug: Force keep-alive
+    setInterval(() => {
+        // console.log('Server heartbeat...');
+    }, 10000);
 });

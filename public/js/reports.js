@@ -158,7 +158,7 @@ function showTab(tab) {
     currentTab = tab;
 
     // Hide all sections
-    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends', 'notices', 'agriculture'].forEach(t => {
+    ['overview', 'users', 'services', 'land', 'community', 'shop', 'education', 'admissions', 'audit', 'stipends', 'notices', 'agriculture', 'tax'].forEach(t => {
         const el = document.getElementById(t + '-section');
         if (el) el.style.display = 'none';
     });
@@ -189,6 +189,7 @@ async function loadTabData(tab) {
         case 'stipends': loadStipends(); break;
         case 'notices': loadNotices(); break;
         case 'agriculture': loadAgriculture(); break;
+        case 'tax': loadTaxAdmin(); break;
     }
 }
 
@@ -3571,56 +3572,36 @@ async function loadAdminAgriViews() {
     const emptyRow = (cols) => `<tr><td colspan="${cols}" style="text-align:center; color:#64748b; padding:2rem;">No data available.</td></tr>`;
     const errorRow = (cols) => `<tr><td colspan="${cols}" style="color:#ef4444; text-align:center;">Failed to load view data.</td></tr>`;
 
-    // Subsidy Overview
-    const subsidyBody = document.getElementById('viewSubsidyBody');
-    if (subsidyBody) {
+    // District Agriculture Summary
+    const districtBody = document.getElementById('viewDistrictBody');
+    if (districtBody) {
         try {
-            const data = await fetchAgriAPI(`${AGRI_API}/admin/views/subsidy-overview`);
+            const data = await fetchAgriAPI(`${AGRI_API}/admin/views/district-summary`);
             if (!data || data.length === 0) {
-                subsidyBody.innerHTML = emptyRow(8);
-            } else {
-                subsidyBody.innerHTML = data.map(r => `
-                    <tr>
-                        <td>${r.subsidy_type}</td>
-                        <td><span class="badge-${r.status === 'Approved' ? 'approved' : r.status === 'Rejected' ? 'rejected' : 'pending'}">${r.status}</span></td>
-                        <td>${r.division_name}</td>
-                        <td>${r.district_name}</td>
-                        <td style="font-weight:700;">${r.total_applications}</td>
-                        <td>৳${Number(r.total_amount_requested).toLocaleString()}</td>
-                        <td style="color:#6ee7b7; font-weight:700;">৳${Number(r.total_amount_approved).toLocaleString()}</td>
-                        <td>${r.approval_rate_pct}%</td>
-                    </tr>
-                `).join('');
-            }
-        } catch (e) {
-            subsidyBody.innerHTML = errorRow(8);
-        }
-    }
-
-    // Crop Production
-    const cropBody = document.getElementById('viewCropBody');
-    if (cropBody) {
-        try {
-            const data = await fetchAgriAPI(`${AGRI_API}/admin/views/crop-production`);
-            if (!data || data.length === 0) {
-                cropBody.innerHTML = emptyRow(8);
+                districtBody.innerHTML = emptyRow(14);
             } else {
                 const ratingColors = { 'High Yield': '#6ee7b7', 'Medium Yield': '#fbbf24', 'Low Yield': '#f87171', 'No Data': '#64748b' };
-                cropBody.innerHTML = data.map(r => `
+                districtBody.innerHTML = data.map(r => `
                     <tr>
-                        <td><strong>${r.crop_name}</strong></td>
-                        <td>${r.season}</td>
+                        <td><strong>${r.district_name}</strong></td>
                         <td>${r.division_name}</td>
-                        <td>${r.district_name}</td>
-                        <td>${r.total_reports}</td>
+                        <td style="font-weight:700; color:#60a5fa;">${r.crop_name}</td>
+                        <td>${r.season}</td>
+                        <td style="font-weight:700;">${r.total_reports}</td>
                         <td style="font-weight:700; color:#6ee7b7;">${Number(r.total_yield_mt).toFixed(2)}</td>
-                        <td>${Number(r.yield_per_acre_mt).toFixed(3)}</td>
+                        <td>${r.total_land_acres ? Number(r.total_land_acres).toFixed(2) : '—'}</td>
+                        <td>${r.avg_price_per_ton ? '৳' + Number(r.avg_price_per_ton).toLocaleString() : '—'}</td>
+                        <td style="color:#fbbf24;">৳${Number(r.estimated_crop_value).toLocaleString()}</td>
+                        <td style="font-size:0.8rem;">${r.irrigation_methods}</td>
+                        <td style="font-weight:700;">${r.total_subsidy_apps}</td>
+                        <td>৳${Number(r.total_amount_requested).toLocaleString()}</td>
+                        <td style="color:#6ee7b7; font-weight:700;">৳${Number(r.total_amount_approved).toLocaleString()}</td>
                         <td><span style="color:${ratingColors[r.productivity_rating] || '#64748b'}; font-weight:600;">${r.productivity_rating}</span></td>
                     </tr>
                 `).join('');
             }
         } catch (e) {
-            cropBody.innerHTML = errorRow(8);
+            districtBody.innerHTML = errorRow(14);
         }
     }
 
@@ -3649,6 +3630,442 @@ async function loadAdminAgriViews() {
         } catch (e) {
             trainingBody.innerHTML = errorRow(8);
         }
+    }
+}
+
+// =====================
+// TAX / NBR ADMIN
+// =====================
+
+let currentTaxTab = 'returns';
+
+async function loadTaxAdmin() {
+    try {
+        const res = await fetch('/api/admin/tax/stats', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (res.status === 401 || res.status === 403) { adminLogout(); return; }
+        const stats = await res.json();
+
+        document.getElementById('admin-tax-tin-total').textContent = stats.tin?.total_tin || 0;
+        document.getElementById('admin-tax-tin-pending').textContent = stats.tin?.pending_tin || 0;
+        document.getElementById('admin-tax-returns-total').textContent = stats.returns?.total_returns || 0;
+        document.getElementById('admin-tax-returns-pending').textContent = stats.returns?.pending_returns || 0;
+        document.getElementById('admin-tax-revenue').textContent = '৳' + Number(stats.payments?.verified_revenue || 0).toLocaleString('en-IN');
+        document.getElementById('admin-tax-vat-active').textContent = stats.vat?.active_vat || 0;
+    } catch (e) { console.error('Tax stats error:', e); }
+
+    loadTaxAdminTab('returns');
+}
+
+function loadTaxAdminTab(tab) {
+    currentTaxTab = tab;
+    // Update tab buttons
+    ['returns', 'tin', 'payments', 'notices'].forEach(t => {
+        const btn = document.getElementById(`taxTab-${t}`);
+        if (btn) btn.style.background = t === tab ? '' : '#334155';
+    });
+
+    const container = document.getElementById('taxAdminContent');
+    container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+
+    switch (tab) {
+        case 'returns': loadTaxAdminReturns(); break;
+        case 'tin': loadTaxAdminTIN(); break;
+        case 'payments': loadTaxAdminPayments(); break;
+        case 'notices': loadTaxAdminNoticesTab(); break;
+    }
+}
+
+async function loadTaxAdminReturns() {
+    const container = document.getElementById('taxAdminContent');
+    try {
+        const res = await fetch('/api/admin/tax/returns', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#64748b;padding:2rem;">No tax returns found.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <h3 style="color:#fff; margin-bottom:1rem;"><i class="fas fa-file-invoice" style="color:#34d399;"></i> Tax Returns</h3>
+            <div class="table-responsive"><table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Ref No.</th>
+                        <th>Taxpayer</th>
+                        <th>Year</th>
+                        <th>Total Income</th>
+                        <th>Tax Liability</th>
+                        <th>Tax Due</th>
+                        <th>Status</th>
+                        <th>Filed On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(r => `
+                        <tr>
+                            <td style="font-family:monospace; color:#60a5fa;">${r.submission_ref}</td>
+                            <td>${r.user_name || 'User #' + r.user_id}</td>
+                            <td>${r.assessment_year}</td>
+                            <td>৳${Number(r.total_income).toLocaleString('en-IN')}</td>
+                            <td>৳${Number(r.net_tax_liability).toLocaleString('en-IN')}</td>
+                            <td style="color:${r.tax_due > 0 ? '#f87171' : '#34d399'};">৳${Number(r.tax_due).toLocaleString('en-IN')}</td>
+                            <td>${getStatusBadge(r.status)}</td>
+                            <td>${formatDate(r.created_at)}</td>
+                            <td class="action-cell">
+                                ${r.status === 'Submitted' || r.status === 'Under Review' ? `
+                                    <button class="action-btn approve" onclick="updateTaxReturn(${r.id}, 'Accepted')"><i class="fas fa-check"></i></button>
+                                    <button class="action-btn reject" onclick="updateTaxReturn(${r.id}, 'Rejected')"><i class="fas fa-times"></i></button>
+                                ` : '—'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table></div>`;
+    } catch (e) {
+        container.innerHTML = '<p style="color:#ef4444;text-align:center;">Failed to load returns.</p>';
+    }
+}
+
+async function updateTaxReturn(id, status) {
+    const { value: remarks } = await Swal.fire({
+        title: `${status} Return #${id}?`,
+        input: 'textarea',
+        inputLabel: 'Remarks (optional)',
+        showCancelButton: true,
+        confirmButtonText: status,
+        confirmButtonColor: status === 'Accepted' ? '#10b981' : '#ef4444'
+    });
+
+    if (remarks !== undefined) {
+        try {
+            const res = await fetch(`/api/admin/tax/returns/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ status, remarks })
+            });
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: `${status}!`, timer: 1500, showConfirmButton: false });
+                loadTaxAdminReturns();
+                loadTaxAdmin();
+            }
+        } catch (e) { Swal.fire('Error', 'Failed to update.', 'error'); }
+    }
+}
+
+async function loadTaxAdminTIN() {
+    const container = document.getElementById('taxAdminContent');
+    try {
+        const res = await fetch('/api/admin/tax/tin-applications', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#64748b;padding:2rem;">No TIN applications found.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <h3 style="color:#fff; margin-bottom:1rem;"><i class="fas fa-id-card" style="color:#34d399;"></i> TIN Applications</h3>
+            <div class="table-responsive"><table class="report-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>NID</th>
+                        <th>Type</th>
+                        <th>Source</th>
+                        <th>Mobile</th>
+                        <th>TIN</th>
+                        <th>Status</th>
+                        <th>Applied</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(t => `
+                        <tr>
+                            <td>#${t.id}</td>
+                            <td><strong>${t.taxpayer_name}</strong><div style="font-size:0.75rem; color:#64748b;">${t.user_name || ''}</div></td>
+                            <td>${t.nid_number || '—'}</td>
+                            <td>${t.taxpayer_type}</td>
+                            <td>${t.source_of_income || '—'}</td>
+                            <td>${t.mobile || '—'}</td>
+                            <td style="font-family:monospace; color:#34d399;">${t.tin_number || '—'}</td>
+                            <td>${getStatusBadge(t.status)}</td>
+                            <td>${formatDate(t.created_at)}</td>
+                            <td class="action-cell">
+                                ${t.status === 'Pending' ? `
+                                    <button class="action-btn approve" onclick="approveTIN(${t.id})"><i class="fas fa-check"></i></button>
+                                    <button class="action-btn reject" onclick="rejectTIN(${t.id})"><i class="fas fa-times"></i></button>
+                                ` : '—'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table></div>`;
+    } catch (e) {
+        container.innerHTML = '<p style="color:#ef4444;text-align:center;">Failed to load TIN applications.</p>';
+    }
+}
+
+async function approveTIN(id) {
+    const confirm = await Swal.fire({
+        title: 'Approve TIN Application?',
+        text: 'A 12-digit TIN number will be generated automatically.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Approve',
+        confirmButtonColor: '#10b981'
+    });
+
+    if (confirm.isConfirmed) {
+        try {
+            const res = await fetch(`/api/admin/tax/tin/${id}/approve`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ action: 'approve' })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: 'Approved!', text: `TIN: ${result.tin_number}`, timer: 3000, showConfirmButton: true });
+                loadTaxAdminTIN();
+                loadTaxAdmin();
+            } else {
+                Swal.fire('Error', result.error, 'error');
+            }
+        } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
+    }
+}
+
+async function rejectTIN(id) {
+    const { value: remarks } = await Swal.fire({
+        title: 'Reject TIN Application?',
+        input: 'textarea',
+        inputLabel: 'Reason for rejection',
+        inputPlaceholder: 'Enter reason...',
+        showCancelButton: true,
+        confirmButtonText: 'Reject',
+        confirmButtonColor: '#ef4444'
+    });
+
+    if (remarks !== undefined) {
+        try {
+            const res = await fetch(`/api/admin/tax/tin/${id}/approve`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ action: 'reject', remarks })
+            });
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: 'Rejected', timer: 1500, showConfirmButton: false });
+                loadTaxAdminTIN();
+                loadTaxAdmin();
+            }
+        } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
+    }
+}
+
+async function loadTaxAdminPayments() {
+    const container = document.getElementById('taxAdminContent');
+    try {
+        const res = await fetch('/api/admin/tax/payments', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#64748b;padding:2rem;">No payments found.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <h3 style="color:#fff; margin-bottom:1rem;"><i class="fas fa-money-bill-wave" style="color:#34d399;"></i> Tax Payments</h3>
+            <div class="table-responsive"><table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Receipt No.</th>
+                        <th>Taxpayer</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Transaction ID</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(p => `
+                        <tr>
+                            <td style="font-family:monospace;">${p.receipt_no || '—'}</td>
+                            <td>${p.user_name || 'User #' + p.user_id}</td>
+                            <td>${p.payment_type}</td>
+                            <td style="font-weight:600; color:#34d399;">৳${Number(p.amount).toLocaleString('en-IN')}</td>
+                            <td>${p.payment_method}</td>
+                            <td>${p.transaction_id || '—'}</td>
+                            <td>${getStatusBadge(p.status)}</td>
+                            <td>${formatDate(p.payment_date)}</td>
+                            <td class="action-cell">
+                                ${p.status === 'Pending' ? `
+                                    <button class="action-btn approve" onclick="verifyPayment(${p.id}, 'Verified')"><i class="fas fa-check"></i></button>
+                                    <button class="action-btn reject" onclick="verifyPayment(${p.id}, 'Failed')"><i class="fas fa-times"></i></button>
+                                ` : '—'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table></div>`;
+    } catch (e) {
+        container.innerHTML = '<p style="color:#ef4444;text-align:center;">Failed to load payments.</p>';
+    }
+}
+
+async function verifyPayment(id, status) {
+    try {
+        const res = await fetch(`/api/admin/tax/payments/${id}/verify`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+            body: JSON.stringify({ status })
+        });
+        if (res.ok) {
+            Swal.fire({ icon: 'success', title: `Payment ${status}!`, timer: 1500, showConfirmButton: false });
+            loadTaxAdminPayments();
+            loadTaxAdmin();
+        }
+    } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
+}
+
+async function loadTaxAdminNoticesTab() {
+    const container = document.getElementById('taxAdminContent');
+    container.innerHTML = `
+        <h3 style="color:#fff; margin-bottom:1rem;"><i class="fas fa-bell" style="color:#34d399;"></i> Issue Tax Notice</h3>
+        <form id="taxNoticeForm" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
+            <div class="form-group">
+                <label>User ID <span style="color:#f87171;">*</span></label>
+                <input type="number" id="tn-user-id" class="form-control" placeholder="Target user ID" required>
+            </div>
+            <div class="form-group">
+                <label>Notice Type</label>
+                <select id="tn-type" class="form-control">
+                    <option value="Tax Due">Tax Due</option>
+                    <option value="Assessment">Assessment</option>
+                    <option value="Audit">Audit</option>
+                    <option value="Penalty">Penalty</option>
+                    <option value="Reminder">Reminder</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Subject <span style="color:#f87171;">*</span></label>
+                <input type="text" id="tn-subject" class="form-control" placeholder="Notice subject" required>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Message <span style="color:#f87171;">*</span></label>
+                <textarea id="tn-message" class="form-control" rows="4" placeholder="Notice details..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Priority</label>
+                <select id="tn-priority" class="form-control">
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Due Date</label>
+                <input type="date" id="tn-due-date" class="form-control">
+            </div>
+            <div style="grid-column:1/-1;">
+                <button type="submit" class="btn-primary" style="background:linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-paper-plane"></i> Issue Notice</button>
+            </div>
+        </form>
+        <div id="taxNoticesListAdmin"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div></div>
+    `;
+
+    // Bind form
+    document.getElementById('taxNoticeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            user_id: document.getElementById('tn-user-id').value,
+            notice_type: document.getElementById('tn-type').value,
+            subject: document.getElementById('tn-subject').value,
+            message: document.getElementById('tn-message').value,
+            priority: document.getElementById('tn-priority').value,
+            due_date: document.getElementById('tn-due-date').value || null
+        };
+
+        try {
+            const res = await fetch('/api/admin/tax/notices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                Swal.fire({ icon: 'success', title: 'Notice Issued!', timer: 1500, showConfirmButton: false });
+                e.target.reset();
+                loadTaxNoticesList();
+            } else {
+                Swal.fire('Error', result.error, 'error');
+            }
+        } catch (err) { Swal.fire('Error', 'Network error', 'error'); }
+    });
+
+    loadTaxNoticesList();
+}
+
+async function loadTaxNoticesList() {
+    const container = document.getElementById('taxNoticesListAdmin');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/admin/tax/notices', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await res.json();
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#64748b;padding:2rem;">No notices issued yet.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <h4 style="color:#94a3b8; margin-bottom:1rem;">Issued Notices</h4>
+            <div class="table-responsive"><table class="report-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Subject</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Issued</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(n => `
+                        <tr>
+                            <td>#${n.id}</td>
+                            <td>${n.user_name || 'User #' + n.user_id}</td>
+                            <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;background:rgba(139,92,246,0.1);color:#a78bfa;">${n.notice_type}</span></td>
+                            <td>${n.subject}</td>
+                            <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;background:${n.priority === 'Urgent' ? 'rgba(239,68,68,0.1);color:#f87171' : n.priority === 'High' ? 'rgba(245,158,11,0.1);color:#fbbf24' : 'rgba(100,116,139,0.1);color:#94a3b8'};">${n.priority}</span></td>
+                            <td>${getStatusBadge(n.status)}</td>
+                            <td>${n.due_date ? formatDate(n.due_date) : '—'}</td>
+                            <td>${formatDate(n.created_at)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table></div>`;
+    } catch (e) {
+        container.innerHTML = '<p style="color:#ef4444;text-align:center;">Failed to load notices.</p>';
     }
 }
 

@@ -51,6 +51,11 @@ const AgriApp = {
     // ===================== API HELPERS =====================
     async fetchAPI(url) {
         const res = await fetch(url, { headers: { 'Authorization': `Bearer ${this.token}` } });
+        if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+            return;
+        }
         if (!res.ok) throw new Error(res.statusText);
         return res.json();
     },
@@ -183,6 +188,7 @@ const AgriApp = {
         if (!tbody) return;
         try {
             const data = await this.fetchAPI(`${this.API}/subsidy/my-history`);
+            if (!data) return;
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:2rem;">No subsidy applications yet.</td></tr>';
                 return;
@@ -208,6 +214,7 @@ const AgriApp = {
         if (!tbody) return;
         try {
             const data = await this.fetchAPI(`${this.API}/crop-report/my-reports`);
+            if (!data) return;
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:2rem;">No crop reports submitted yet.</td></tr>';
                 return;
@@ -227,26 +234,53 @@ const AgriApp = {
         }
     },
 
+    // ===================== TRAINING =====================
+    async loadMyTrainings() {
+        const tbody = document.getElementById('myTrainingBody');
+        if (!tbody) return;
+        try {
+            const data = await this.fetchAPI(`${this.API}/training/my-registrations`);
+            if (!data) return;
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b; padding:2rem;">Not registered for any training yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(r => `
+                <tr>
+                    <td>${r.title}</td>
+                    <td>${r.location || '—'}</td>
+                    <td>${new Date(r.start_date).toLocaleDateString()} - ${new Date(r.end_date).toLocaleDateString()}</td>
+                    <td>${r.trainer_name || '—'}</td>
+                    <td><span class="badge-approved">${r.status}</span></td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error('Training Error:', e);
+            tbody.innerHTML = `<tr><td colspan="5" style="color:#ef4444; text-align:center;">Failed to load: ${e.message}</td></tr>`;
+        }
+    },
+
     // ===================== EXPERT Q&A =====================
     async loadExpertQueries() {
         const container = document.getElementById('expertQueriesList');
         if (!container) return;
         try {
             const data = await this.fetchAPI(`${this.API}/expert/my-queries`);
+            if (!data) return;
             if (data.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
+                <div class="empty-state">
                         <i class="fas fa-comments"></i>
                         <p>You haven't asked any questions yet.</p>
                         <button class="btn-agri" style="margin-top: 1rem;" onclick="AgriApp.showAskExpertForm()">
                             <i class="fas fa-comment-medical"></i> Ask Your First Question
                         </button>
                     </div>
-                `;
+    `;
                 return;
             }
             container.innerHTML = data.map(q => `
-                <div class="query-card">
+    <div class="query-card">
                     <div class="query-header">
                         <span class="badge-${q.status === 'Replied' ? 'replied' : 'pending'}">${q.status}</span>
                         <span style="color: #64748b; font-size: 0.8rem;">${new Date(q.created_at).toLocaleDateString()}</span>
@@ -261,11 +295,13 @@ const AgriApp = {
                             <div class="expert-label"><i class="fas fa-user-check"></i> Expert Reply ${q.answered_by ? '— ' + q.answered_by : ''}</div>
                             <p>${q.answer}</p>
                         </div>
-                    ` : '<p style="color: #64748b; font-size: 0.85rem; margin-top: 0.5rem;"><i class="fas fa-hourglass-half"></i> Waiting for expert reply...</p>'}
+                    ` : '<p style="color: #64748b; font-size: 0.85rem; margin-top: 0.5rem;"><i class="fas fa-hourglass-half"></i> Waiting for expert reply...</p>'
+                }
                 </div>
-            `).join('');
+    `).join('');
         } catch (e) {
-            container.innerHTML = '<p style="color: #ef4444;">Failed to load queries.</p>';
+            console.error('Expert Q&A Error:', e);
+            container.innerHTML = `<p style="color:#ef4444;">Failed to load queries: ${e.message}</p>`;
         }
     },
 
@@ -273,7 +309,7 @@ const AgriApp = {
         const { value: formValues } = await Swal.fire({
             title: '🌿 Ask Agriculture Expert',
             html: `
-                <div style="text-align: left;">
+    <div style="text-align: left;">
                     <label style="color: #95d5b2; font-size: 0.85rem; display: block; margin-bottom: 0.3rem;">Category</label>
                     <select id="swal-category" class="swal2-input" style="width: 100%;">
                         <option value="Pest Control">কীটপতঙ্গ (Pest Control)</option>
@@ -292,7 +328,7 @@ const AgriApp = {
                     <label style="color: #95d5b2; font-size: 0.85rem; display: block; margin-top: 0.8rem; margin-bottom: 0.3rem;">Your Question *</label>
                     <textarea id="swal-question" class="swal2-textarea" placeholder="Describe your problem in detail..." rows="4" style="width: 100%;"></textarea>
                 </div>
-            `,
+`,
             background: '#0b1a0f',
             color: '#fff',
             showCancelButton: true,
@@ -326,20 +362,21 @@ const AgriApp = {
         if (!grid) return;
         try {
             const data = await this.fetchAPI(`${this.API}/market/browse`);
+            if (!data) return;
             if (data.length === 0) {
                 grid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
+    <div class="empty-state" style="grid-column: 1/-1;">
                         <i class="fas fa-store" style="font-size: 3rem; color: #64748b; margin-bottom: 1rem;"></i>
                         <p style="color: #94a3b8; font-size: 1.1rem;">No market listings available yet.</p>
                         <p style="color: #64748b; font-size: 0.85rem; margin-top: 0.5rem;">Be the first to post your produce for sale!</p>
                         <button class="btn-agri-gold" style="margin-top: 1rem;" onclick="AgriApp.showPostListingForm()">
                             <i class="fas fa-plus"></i> Post a Listing
                         </button>
-                    </div>`;
+                    </div> `;
                 return;
             }
             grid.innerHTML = data.map(m => `
-                <div class="market-card">
+    <div class="market-card">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
                             <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">${m.product_name}</div>
@@ -360,7 +397,7 @@ const AgriApp = {
                         <span><i class="fas fa-phone" style="width: 16px;"></i> ${m.phone}</span>
                     </div>
                 </div>
-            `).join('');
+    `).join('');
         } catch (e) {
             grid.innerHTML = '<p style="color:#ef4444; grid-column:1/-1;">Failed to load market.</p>';
         }
@@ -371,12 +408,13 @@ const AgriApp = {
         if (!tbody) return;
         try {
             const data = await this.fetchAPI(`${this.API}/market/my-listings`);
+            if (!data) return;
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:2rem;">No listings posted yet.</td></tr>';
                 return;
             }
             tbody.innerHTML = data.map(m => `
-                <tr>
+    <tr>
                     <td>${m.product_name}</td>
                     <td>${m.product_category}</td>
                     <td>${m.quantity} ${m.unit}</td>
@@ -384,9 +422,10 @@ const AgriApp = {
                     <td><span class="badge-${m.status === 'Approved' ? 'approved' : m.status === 'Rejected' ? 'rejected' : 'pending'}">${m.status}</span></td>
                     <td>${new Date(m.created_at).toLocaleDateString()}</td>
                 </tr>
-            `).join('');
+    `).join('');
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="6" style="color:#ef4444; text-align:center;">Failed to load.</td></tr>';
+            console.error('Listings Error:', e);
+            tbody.innerHTML = `<tr> <td colspan="6" style="color:#ef4444; text-align:center;">Failed to load: ${e.message}</td></tr> `;
         }
     },
 
@@ -401,7 +440,7 @@ const AgriApp = {
         const { value: html } = await Swal.fire({
             title: '🛒 Post Product for Sale',
             html: `
-                <div style="text-align: left; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+    <div style="text-align: left; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
                         <div>
                             <label style="color: #95d5b2; font-size: 0.82rem;">Farmer Name *</label>
@@ -460,7 +499,7 @@ const AgriApp = {
                         <textarea id="mkt-desc" class="swal2-textarea" placeholder="Describe your product quality, organic/non-organic, etc." style="width:100%;"></textarea>
                     </div>
                 </div>
-            `,
+    `,
             width: '680px',
             background: '#0b1a0f',
             color: '#fff',
@@ -508,13 +547,14 @@ const AgriApp = {
         if (!container) return;
         try {
             const data = await this.fetchAPI(`${this.API}/training/programs`);
+            if (!data) return;
             if (data.length === 0) {
                 container.innerHTML = '<div class="empty-state"><i class="fas fa-chalkboard"></i><p>No upcoming training programs at the moment.</p></div>';
                 return;
             }
             container.className = 'training-grid';
             container.innerHTML = data.map(t => `
-                <div class="training-card">
+    <div class="training-card">
                     <div class="training-header">
                         <div>
                             <div class="training-title">${t.title}</div>
@@ -536,17 +576,18 @@ const AgriApp = {
                         <i class="fas fa-clipboard-check"></i> Register Now
                     </button>
                 </div>
-            `).join('');
+    `).join('');
         } catch (e) {
-            container.innerHTML = '<p style="color:#ef4444;">Failed to load programs.</p>';
+            console.error('Training Programs Error:', e);
+            container.innerHTML = `<p style="color:#ef4444;">Failed to load programs: ${e.message}</p>`;
         }
     },
 
     async registerTraining(programId, title) {
         const { value: formValues } = await Swal.fire({
-            title: `Register for: ${title}`,
+            title: `Register for: ${title} `,
             html: `
-                <div class="swal-form-grid">
+    <div class="swal-form-grid">
                     <div class="swal-form-group" style="grid-column: 1/-1;">
                         <label>Your Name *</label>
                         <input id="reg-name" class="form-control" placeholder="Full name">
@@ -556,7 +597,7 @@ const AgriApp = {
                         <input id="reg-phone" class="form-control" placeholder="01XXXXXXXXX">
                     </div>
                 </div>
-            `,
+    `,
             background: '#0f172a',
             color: '#fff',
             showCancelButton: true,
@@ -590,6 +631,7 @@ const AgriApp = {
         if (!tbody) return;
         try {
             const data = await this.fetchAPI(`${this.API}/training/my-registrations`);
+            if (!data) return;
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b; padding:2rem;">Not registered for any training yet.</td></tr>';
                 return;
@@ -604,7 +646,8 @@ const AgriApp = {
                 </tr>
             `).join('');
         } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="5" style="color:#ef4444; text-align:center;">Failed to load.</td></tr>';
+            console.error('Training Error:', e);
+            tbody.innerHTML = `<tr><td colspan="5" style="color:#ef4444; text-align:center;">Failed to load: ${e.message}</td></tr>`;
         }
     },
 

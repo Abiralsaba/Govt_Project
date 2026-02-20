@@ -921,109 +921,83 @@ ORDER BY exam_year DESC, exam_type, board_name;
 
 
 -- ==========================================
--- VIEW: Agriculture Subsidy Overview
--- Aggregated subsidy analytics by type, status, and location
+-- VIEW: District Agriculture Summary
+-- Per-district, per-crop report combining crop reports & subsidies
+-- One row per district + crop with production metrics and district-level subsidy totals
 -- ==========================================
-CREATE OR REPLACE VIEW v_agri_subsidy_overview AS
+CREATE OR REPLACE VIEW v_agri_district_summary AS
 SELECT 
-    s.subsidy_type,
-    s.status,
-    
-    -- Location
+    di.id AS district_id,
     COALESCE(d.name, '—') AS division_name,
     COALESCE(di.name, '—') AS district_name,
-    
-    -- Counts
-    COUNT(*) AS total_applications,
-    SUM(CASE WHEN s.status = 'Approved' THEN 1 ELSE 0 END) AS approved_count,
-    SUM(CASE WHEN s.status = 'Pending' THEN 1 ELSE 0 END) AS pending_count,
-    SUM(CASE WHEN s.status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_count,
-    SUM(CASE WHEN s.status = 'Under Review' THEN 1 ELSE 0 END) AS under_review_count,
-    
-    -- Financial
-    COALESCE(SUM(s.amount_requested), 0) AS total_amount_requested,
-    COALESCE(SUM(CASE WHEN s.status = 'Approved' THEN s.amount_requested ELSE 0 END), 0) AS total_amount_approved,
-    ROUND(AVG(s.amount_requested), 2) AS avg_amount_per_application,
-    
-    -- Land
-    COALESCE(SUM(s.land_size_acres), 0) AS total_land_acres,
-    ROUND(AVG(s.land_size_acres), 2) AS avg_land_acres,
-    
-    -- Timeline
-    MIN(s.created_at) AS earliest_application,
-    MAX(s.created_at) AS latest_application,
-    
-    -- Approval Rate
+
+    -- Crop Details
+    COALESCE(cr.crop_name, '—') AS crop_name,
+    COALESCE(cr.season, '—') AS season,
+    COALESCE(cr.total_reports, 0) AS total_reports,
+    COALESCE(cr.total_yield_mt, 0) AS total_yield_mt,
+    COALESCE(cr.total_land_acres, 0) AS total_land_acres,
+    COALESCE(cr.avg_price_per_ton, 0) AS avg_price_per_ton,
+    COALESCE(cr.estimated_crop_value, 0) AS estimated_crop_value,
+    COALESCE(cr.irrigation_methods, '—') AS irrigation_methods,
+
+    -- Subsidy Metrics (district-level)
+    COALESCE(sub.total_subsidy_apps, 0) AS total_subsidy_apps,
+    COALESCE(sub.total_amount_requested, 0) AS total_amount_requested,
+    COALESCE(sub.total_amount_approved, 0) AS total_amount_approved,
     CASE 
-        WHEN COUNT(*) > 0 THEN ROUND(SUM(CASE WHEN s.status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2)
+        WHEN COALESCE(sub.total_subsidy_apps, 0) > 0 
+        THEN ROUND(COALESCE(sub.approved_count, 0) * 100.0 / sub.total_subsidy_apps, 1)
         ELSE 0
-    END AS approval_rate_pct
+    END AS subsidy_approval_rate,
 
-FROM agri_subsidies s
-LEFT JOIN divisions d ON s.division_id = d.id
-LEFT JOIN districts di ON s.district_id = di.id
-GROUP BY s.subsidy_type, s.status, d.name, di.name
-ORDER BY s.subsidy_type, total_applications DESC;
-
-
--- ==========================================
--- VIEW: Agriculture Crop Production Analytics
--- Aggregated crop production by crop, season, and district
--- ==========================================
-CREATE OR REPLACE VIEW v_agri_crop_production AS
-SELECT 
-    r.crop_name,
-    r.season,
-    
-    -- Location
-    COALESCE(d.name, '—') AS division_name,
-    COALESCE(di.name, '—') AS district_name,
-    
-    -- Production Stats
-    COUNT(*) AS total_reports,
-    COALESCE(SUM(r.yield_metric_ton), 0) AS total_yield_mt,
-    ROUND(AVG(r.yield_metric_ton), 2) AS avg_yield_mt,
-    MAX(r.yield_metric_ton) AS max_yield_mt,
-    
-    -- Land
-    COALESCE(SUM(r.land_area_acres), 0) AS total_land_acres,
-    ROUND(AVG(r.land_area_acres), 2) AS avg_land_acres,
-    
-    -- Yield per Acre
+    -- Productivity Rating (per crop, based on yield per acre)
     CASE 
-        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 
-        THEN ROUND(SUM(r.yield_metric_ton) / SUM(r.land_area_acres), 3)
-        ELSE 0
-    END AS yield_per_acre_mt,
-    
-    -- Market
-    ROUND(AVG(r.market_price_per_ton), 2) AS avg_price_per_ton,
-    COALESCE(SUM(r.yield_metric_ton * r.market_price_per_ton), 0) AS estimated_total_value,
-    
-    -- Irrigation
-    GROUP_CONCAT(DISTINCT r.irrigation_method SEPARATOR ', ') AS irrigation_methods_used,
-    
-    -- Timeline
-    MIN(r.harvest_date) AS earliest_harvest,
-    MAX(r.harvest_date) AS latest_harvest,
-    MIN(r.created_at) AS first_report_date,
-    MAX(r.created_at) AS last_report_date,
-    
-    -- Productivity Rating
-    CASE 
-        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 
-             AND ROUND(SUM(r.yield_metric_ton) / SUM(r.land_area_acres), 3) >= 3 THEN 'High Yield'
-        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 
-             AND ROUND(SUM(r.yield_metric_ton) / SUM(r.land_area_acres), 3) >= 1.5 THEN 'Medium Yield'
-        WHEN COALESCE(SUM(r.land_area_acres), 0) > 0 THEN 'Low Yield'
+        WHEN COALESCE(cr.total_land_acres, 0) > 0 
+             AND (cr.total_yield_mt / cr.total_land_acres) >= 3 THEN 'High Yield'
+        WHEN COALESCE(cr.total_land_acres, 0) > 0 
+             AND (cr.total_yield_mt / cr.total_land_acres) >= 1.5 THEN 'Medium Yield'
+        WHEN COALESCE(cr.total_land_acres, 0) > 0 THEN 'Low Yield'
         ELSE 'No Data'
     END AS productivity_rating
 
-FROM agri_crop_reports r
-LEFT JOIN divisions d ON r.division_id = d.id
-LEFT JOIN districts di ON r.district_id = di.id
-GROUP BY r.crop_name, r.season, d.name, di.name
-ORDER BY total_yield_mt DESC;
+FROM districts di
+JOIN divisions d ON di.division_id = d.id
+
+-- Crop Reports subquery grouped by district + crop
+LEFT JOIN (
+    SELECT 
+        r.district_id,
+        r.crop_name,
+        GROUP_CONCAT(DISTINCT r.season SEPARATOR ', ') AS season,
+        COUNT(*) AS total_reports,
+        ROUND(SUM(r.yield_metric_ton), 2) AS total_yield_mt,
+        ROUND(SUM(r.land_area_acres), 2) AS total_land_acres,
+        ROUND(AVG(r.market_price_per_ton), 2) AS avg_price_per_ton,
+        ROUND(SUM(r.yield_metric_ton * COALESCE(r.market_price_per_ton, 0)), 2) AS estimated_crop_value,
+        GROUP_CONCAT(DISTINCT r.irrigation_method SEPARATOR ', ') AS irrigation_methods
+    FROM agri_crop_reports r
+    WHERE r.district_id IS NOT NULL
+    GROUP BY r.district_id, r.crop_name
+) cr ON di.id = cr.district_id
+
+-- Subsidies subquery grouped by district
+LEFT JOIN (
+    SELECT 
+        s.district_id,
+        COUNT(*) AS total_subsidy_apps,
+        ROUND(SUM(s.amount_requested), 2) AS total_amount_requested,
+        ROUND(SUM(CASE WHEN s.status = 'Approved' THEN s.amount_requested ELSE 0 END), 2) AS total_amount_approved,
+        SUM(CASE WHEN s.status = 'Approved' THEN 1 ELSE 0 END) AS approved_count
+    FROM agri_subsidies s
+    WHERE s.district_id IS NOT NULL
+    GROUP BY s.district_id
+) sub ON di.id = sub.district_id
+
+-- Only show districts that have at least some agricultural data
+WHERE cr.district_id IS NOT NULL OR sub.district_id IS NOT NULL
+
+ORDER BY d.name, di.name, cr.crop_name;
 
 
 -- ==========================================

@@ -43,6 +43,16 @@
                 <a href="#" onclick="showTab('notices')"><i class="fas fa-bullhorn"></i> Notices</a>
                 <a href="#" onclick="showTab('agriculture')" style="border-top: 1px solid rgba(45,106,79,0.3);"><i
                         class="fas fa-leaf" style="color: #6ee7b7;"></i> Agriculture</a>
+                <a href="#" onclick="showTab('tax')" style="border-top: 1px solid rgba(16,185,129,0.3);"><i
+                        class="fas fa-landmark" style="color: #34d399;"></i> Tax / NBR</a>
+                <a href="admin-passport.html" style="border-top: 1px solid rgba(26,82,118,0.3);"><i
+                        class="fas fa-passport" style="color: #5dade2;"></i> Passport</a>
+                <a href="admin-nid.html" style="border-top: 1px solid rgba(22,163,74,0.3);"><i
+                        class="fas fa-id-card" style="color: #22c55e;"></i> NID Wing</a>
+                <a href="admin-health.html" style="border-top: 1px solid rgba(220,38,38,0.3);"><i
+                        class="fas fa-heartbeat" style="color: #f87171;"></i> Health</a>
+                <a href="admin-water.html" style="border-top: 1px solid rgba(14,165,233,0.3);"><i
+                        class="fas fa-water" style="color: #0ea5e9;"></i> Water Resources</a>
             </nav>
         </aside>
 
@@ -1134,60 +1144,35 @@
                 <!-- DB Views Panel -->
                 <div id="agriPanel-views" style="display:none;">
 
-                    <!-- Subsidy Overview View -->
+                    <!-- District Agriculture Summary View -->
                     <div class="report-table-container" style="margin-bottom: 1.5rem;">
-                        <h3><i class="fas fa-chart-pie" style="color: #34d399;"></i> Subsidy Overview
+                        <h3><i class="fas fa-map-marked-alt" style="color: #34d399;"></i> District Agriculture Summary
                             <span
-                                style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-left: 0.5rem;">v_agri_subsidy_overview</span>
+                                style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-left: 0.5rem;">v_agri_district_summary</span>
                         </h3>
                         <div class="table-responsive">
                             <table class="report-table">
                                 <thead>
                                     <tr>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Division</th>
                                         <th>District</th>
-                                        <th>Applications</th>
-                                        <th>Total Requested (৳)</th>
-                                        <th>Total Approved (৳)</th>
-                                        <th>Approval Rate</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="viewSubsidyBody">
-                                    <tr>
-                                        <td colspan="8">
-                                            <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Crop Production View -->
-                    <div class="report-table-container" style="margin-bottom: 1.5rem;">
-                        <h3><i class="fas fa-seedling" style="color: #22d3ee;"></i> Crop Production Analytics
-                            <span
-                                style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-left: 0.5rem;">v_agri_crop_production</span>
-                        </h3>
-                        <div class="table-responsive">
-                            <table class="report-table">
-                                <thead>
-                                    <tr>
-                                        <th>Crop</th>
+                                        <th>Division</th>
+                                        <th>Crop Name</th>
                                         <th>Season</th>
-                                        <th>Division</th>
-                                        <th>District</th>
                                         <th>Reports</th>
-                                        <th>Yield (MT)</th>
-                                        <th>Yield/Acre</th>
+                                        <th>Total Yield (MT)</th>
+                                        <th>Land (Acres)</th>
+                                        <th>Avg Price (৳/MT)</th>
+                                        <th>Crop Value (৳)</th>
+                                        <th>Irrigation</th>
+                                        <th>Subsidies</th>
+                                        <th>Requested (৳)</th>
+                                        <th>Approved (৳)</th>
                                         <th>Rating</th>
                                     </tr>
                                 </thead>
-                                <tbody id="viewCropBody">
+                                <tbody id="viewDistrictBody">
                                     <tr>
-                                        <td colspan="8">
+                                        <td colspan="14">
                                             <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
                                         </td>
                                     </tr>
@@ -1229,6 +1214,75 @@
 
                 </div>
 
+            </div>
+
+            <!-- Tax / NBR Admin Section -->
+            <div id="tax-section" style="display: none;">
+                <h1 style="color: white; margin-bottom: 0.5rem;"><i class="fas fa-landmark" style="color: #34d399;"></i>
+                    Tax / NBR Management</h1>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Manage tax returns, TIN applications, payments, and
+                    notices</p>
+
+                <!-- Stats Grid -->
+                <div class="report-grid" id="taxAdminStatsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-id-card"></i></div>
+                        <div class="stat-value" id="admin-tax-tin-total">0</div>
+                        <div class="stat-label">Total TIN Registrations</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                        <div class="stat-value" id="admin-tax-tin-pending">0</div>
+                        <div class="stat-label">Pending TIN Applications</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div>
+                        <div class="stat-value" id="admin-tax-returns-total">0</div>
+                        <div class="stat-label">Total Returns</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="stat-value" id="admin-tax-revenue">৳0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fas fa-tasks"></i></div>
+                        <div class="stat-value" id="admin-tax-returns-pending">0</div>
+                        <div class="stat-label">Pending Returns</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-percent"></i></div>
+                        <div class="stat-value" id="admin-tax-vat-active">0</div>
+                        <div class="stat-label">Active VAT Registrations</div>
+                    </div>
+                </div>
+
+                <!-- Sub Tabs -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="loadTaxAdminTab('returns')" id="taxTab-returns"
+                        style="font-size: 0.8rem;">
+                        <i class="fas fa-file-invoice"></i> Tax Returns
+                    </button>
+                    <button class="btn-primary" onclick="loadTaxAdminTab('tin')" id="taxTab-tin"
+                        style="font-size: 0.8rem; background: #334155;">
+                        <i class="fas fa-id-card"></i> TIN Applications
+                    </button>
+                    <button class="btn-primary" onclick="loadTaxAdminTab('payments')" id="taxTab-payments"
+                        style="font-size: 0.8rem; background: #334155;">
+                        <i class="fas fa-money-bill-wave"></i> Payments
+                    </button>
+                    <button class="btn-primary" onclick="loadTaxAdminTab('notices')" id="taxTab-notices"
+                        style="font-size: 0.8rem; background: #334155;">
+                        <i class="fas fa-bell"></i> Notices
+                    </button>
+                </div>
+
+                <!-- Tax Admin Content -->
+                <div class="data-card">
+                    <div id="taxAdminContent">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+                    </div>
+                </div>
             </div>
 
 

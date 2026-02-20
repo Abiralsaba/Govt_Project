@@ -394,36 +394,6 @@ router.get('/tax/history', async (req, res) => {
 });
 
 // =======================
-// PASSPORT OFFICE
-// =======================
-
-router.post('/passport/apply', async (req, res) => {
-    const { action, type, validity, prevPassport } = req.body;
-    let details = '';
-    if (action === 'new') details = `Type: ${type}, Validity: ${validity}`;
-    else details = `Renewal for: ${prevPassport}`;
-
-    try {
-        await db.query(
-            'INSERT INTO passport_applications (user_id, application_type, passport_details) VALUES (?, ?, ?)',
-            [req.user.id, action === 'new' ? 'New Application' : 'Renewal', details]
-        );
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-router.get('/passport/applications', async (req, res) => {
-    try {
-        const [apps] = await db.query('SELECT id, application_type, status, created_at FROM passport_applications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5', [req.user.id]);
-        res.json(apps);
-    } catch (error) {
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// =======================
 // NID WING
 // =======================
 

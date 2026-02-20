@@ -1594,4 +1594,291 @@ router.get('/admission-stats', async (req, res) => {
     }
 });
 
+// ==========================================
+// TAX / NBR MANAGEMENT
+// ==========================================
+
+/**
+ * GET /api/admin/tax/stats - Tax overview stats
+ */
+router.get('/tax/stats', async (req, res) => {
+    try {
+        const [tinStats] = await db.query(`
+            SELECT 
+                COUNT(*) as total_tin,
+                SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending_tin,
+                SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) as approved_tin,
+                SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) as rejected_tin
+            FROM nbr_tin_registrations
+        `);
+
+        const [returnStats] = await db.query(`
+            SELECT 
+                COUNT(*) as total_returns,
+                SUM(CASE WHEN status = 'Submitted' OR status = 'Under Review' THEN 1 ELSE 0 END) as pending_returns,
+                SUM(CASE WHEN status = 'Accepted' THEN 1 ELSE 0 END) as accepted_returns,
+                COALESCE(SUM(total_income), 0) as total_income_declared,
+                COALESCE(SUM(net_tax_liability), 0) as total_tax_liability,
+                COALESCE(SUM(tax_due), 0) as total_tax_due
+            FROM nbr_tax_returns
+        `);
+
+        const [paymentStats] = await db.query(`
+            SELECT 
+                COUNT(*) as total_payments,
+                COALESCE(SUM(CASE WHEN status = 'Verified' THEN amount ELSE 0 END), 0) as verified_revenue,
+                COALESCE(SUM(CASE WHEN status = 'Pending' THEN amount ELSE 0 END), 0) as pending_revenue,
+                COALESCE(SUM(amount), 0) as total_revenue
+            FROM nbr_tax_payments
+        `);
+
+        const [vatStats] = await db.query(`
+            SELECT 
+                COUNT(*) as total_vat,
+                SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending_vat,
+                SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) as active_vat
+            FROM nbr_vat_registrations
+        `);
+
+        const [noticeStats] = await db.query(`
+            SELECT COUNT(*) as total_notices FROM nbr_tax_notices
+        `);
+
+        res.json({
+            tin: tinStats[0],
+            returns: returnStats[0],
+            payments: paymentStats[0],
+            vat: vatStats[0],
+            notices: noticeStats[0]
+        });
+    } catch (error) {
+        console.error('Error fetching tax stats:', error);
+        res.status(500).json({ error: 'Failed to fetch tax stats' });
+    }
+});
+
+/**
+ * GET /api/admin/tax/returns - Get all tax returns
+ */
+router.get('/tax/returns', async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = `
+            SELECT r.*, u.name as user_name, u.email as user_email, u.nid as user_nid,
+                   t.tin_number
+            FROM nbr_tax_returns r
+            LEFT JOIN reg_info u ON r.user_id = u.id
+            LEFT JOIN nbr_tin_registrations t ON r.tin_id = t.id
+        `;
+        const params = [];
+        if (status) {
+            query += ' WHERE r.status = ?';
+            params.push(status);
+        }
+        query += ' ORDER BY r.created_at DESC';
+
+        const [rows] = await db.query(query, params);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching tax returns:', error);
+        res.status(500).json({ error: 'Failed to fetch returns' });
+    }
+});
+
+/**
+ * PUT /api/admin/tax/returns/:id/status - Update tax return status
+ */
+router.put('/tax/returns/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, remarks } = req.body;
+
+        await db.query(
+            `UPDATE nbr_tax_returns SET status = ?, admin_remarks = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?`,
+            [status, remarks || null, req.admin.id, id]
+        );
+
+        // Notify user
+        const [ret] = await db.query('SELECT user_id, submission_ref FROM nbr_tax_returns WHERE id = ?', [id]);
+        if (ret.length > 0) {
+            await db.query(
+                `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'Tax', ?, false)`,
+                [ret[0].user_id, `Your tax return (${ret[0].submission_ref}) status updated to: ${status}`]
+            );
+        }
+
+        res.json({ success: true, message: 'Return status updated' });
+    } catch (error) {
+        console.error('Error updating return:', error);
+        res.status(500).json({ error: 'Failed to update return' });
+    }
+});
+
+/**
+ * GET /api/admin/tax/tin-applications - Get all TIN applications
+ */
+router.get('/tax/tin-applications', async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = `
+            SELECT t.*, u.name as user_name, u.email as user_email, 
+                   z.zone_name, z.zone_code
+            FROM nbr_tin_registrations t
+            LEFT JOIN reg_info u ON t.user_id = u.id
+            LEFT JOIN nbr_tax_zones z ON t.zone_id = z.id
+        `;
+        const params = [];
+        if (status) {
+            query += ' WHERE t.status = ?';
+            params.push(status);
+        }
+        query += ' ORDER BY t.created_at DESC';
+
+        const [rows] = await db.query(query, params);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching TIN apps:', error);
+        res.status(500).json({ error: 'Failed to fetch TIN applications' });
+    }
+});
+
+/**
+ * PUT /api/admin/tax/tin/:id/approve - Approve or reject TIN
+ */
+router.put('/tax/tin/:id/approve', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, remarks } = req.body; // action: 'approve' or 'reject'
+
+        if (action === 'approve') {
+            // Generate TIN number: 12-digit
+            const tinNumber = `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+
+            await db.query(
+                `UPDATE nbr_tin_registrations SET status = 'Approved', tin_number = ?, remarks = ?, 
+                 approved_by = ?, approved_at = NOW() WHERE id = ?`,
+                [tinNumber, remarks || null, req.admin.id, id]
+            );
+
+            // Notify user
+            const [tin] = await db.query('SELECT user_id, taxpayer_name FROM nbr_tin_registrations WHERE id = ?', [id]);
+            if (tin.length > 0) {
+                await db.query(
+                    `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'Tax', ?, false)`,
+                    [tin[0].user_id, `Your TIN has been approved! TIN: ${tinNumber}`]
+                );
+            }
+
+            res.json({ success: true, message: 'TIN approved', tin_number: tinNumber });
+        } else {
+            await db.query(
+                `UPDATE nbr_tin_registrations SET status = 'Rejected', remarks = ?, 
+                 approved_by = ?, approved_at = NOW() WHERE id = ?`,
+                [remarks || 'Application rejected', req.admin.id, id]
+            );
+
+            const [tin] = await db.query('SELECT user_id FROM nbr_tin_registrations WHERE id = ?', [id]);
+            if (tin.length > 0) {
+                await db.query(
+                    `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'Tax', ?, false)`,
+                    [tin[0].user_id, `Your TIN application was rejected. Reason: ${remarks || 'Not specified'}`]
+                );
+            }
+
+            res.json({ success: true, message: 'TIN rejected' });
+        }
+    } catch (error) {
+        console.error('Error processing TIN:', error);
+        res.status(500).json({ error: 'Failed to process TIN application' });
+    }
+});
+
+/**
+ * GET /api/admin/tax/payments - Get all tax payments
+ */
+router.get('/tax/payments', async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT p.*, u.name as user_name, u.email as user_email,
+                   t.tin_number
+            FROM nbr_tax_payments p
+            LEFT JOIN reg_info u ON p.user_id = u.id
+            LEFT JOIN nbr_tin_registrations t ON p.tin_id = t.id
+            ORDER BY p.created_at DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching payments:', error);
+        res.status(500).json({ error: 'Failed to fetch payments' });
+    }
+});
+
+/**
+ * PUT /api/admin/tax/payments/:id/verify - Verify payment
+ */
+router.put('/tax/payments/:id/verify', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        await db.query(
+            'UPDATE nbr_tax_payments SET status = ? WHERE id = ?',
+            [status || 'Verified', id]
+        );
+
+        res.json({ success: true, message: 'Payment status updated' });
+    } catch (error) {
+        console.error('Error verifying payment:', error);
+        res.status(500).json({ error: 'Failed to verify payment' });
+    }
+});
+
+/**
+ * POST /api/admin/tax/notices - Issue a tax notice
+ */
+router.post('/tax/notices', async (req, res) => {
+    try {
+        const { user_id, tin_id, notice_type, subject, message, due_date, priority } = req.body;
+
+        await db.query(
+            `INSERT INTO nbr_tax_notices 
+             (user_id, tin_id, notice_type, subject, message, due_date, priority, issued_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, tin_id || null, notice_type || 'Information', subject, message,
+                due_date || null, priority || 'Medium', req.admin.id]
+        );
+
+        // Notify user
+        await db.query(
+            `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'Tax Notice', ?, false)`,
+            [user_id, `New tax notice: ${subject}`]
+        );
+
+        res.json({ success: true, message: 'Notice issued successfully' });
+    } catch (error) {
+        console.error('Error issuing notice:', error);
+        res.status(500).json({ error: 'Failed to issue notice' });
+    }
+});
+
+/**
+ * GET /api/admin/tax/notices - Get all tax notices
+ */
+router.get('/tax/notices', async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT n.*, u.name as user_name, u.email as user_email,
+                   t.tin_number
+            FROM nbr_tax_notices n
+            LEFT JOIN reg_info u ON n.user_id = u.id
+            LEFT JOIN nbr_tin_registrations t ON n.tin_id = t.id
+            ORDER BY n.created_at DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching notices:', error);
+        res.status(500).json({ error: 'Failed to fetch notices' });
+    }
+});
+
 module.exports = router;
