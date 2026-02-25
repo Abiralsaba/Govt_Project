@@ -10,6 +10,8 @@
 -- - Pivot tables
 -- - Recursive CTEs
 -- - Correlated subqueries
+
+-- - THIS SECTION MADE BY """" ABIR AL SABA """"
 -- ==========================================
 
 
