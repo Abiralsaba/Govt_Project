@@ -52,6 +52,57 @@ async function loadDashboard() {
     }
 }
 
+// =====================================
+// CALENDAR & TODO LOGIC
+// =====================================
+let calendar;
+
+function initCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl || calendar) return; // Prevent double init
+
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        editable: false, // Set true if you want drag-drop date changing
+        events: [],
+        eventClick: function (info) {
+            viewTask(info.event.id);
+        }
+    });
+    calendar.render();
+}
+
+function updateCalendarEvents() {
+    if (!calendar) return;
+
+    // Clear old events
+    calendar.removeAllEvents();
+
+    // Add new events
+    const events = window.todos
+        .filter(t => t.due_date) // Only tasks with dates
+        .map(t => {
+            // Apply different colors based on status
+            const statusClass = 'fc-event-' + t.status;
+            return {
+                id: t.id,
+                title: t.title,
+                start: t.due_date, // FullCalendar uses ISO strings YYYY-MM-DDTHH:mm
+                classNames: [statusClass],
+                extendedProps: {
+                    description: t.description
+                }
+            };
+        });
+
+    calendar.addEventSource(events);
+}
+
 // Kanban Logic
 // Kanban Logic
 let sortablesInitialized = false;
@@ -90,6 +141,10 @@ async function loadTodos() {
         initSortable();
         sortablesInitialized = true;
     }
+
+    // Initialize & Update Calendar
+    initCalendar();
+    updateCalendarEvents();
 }
 
 function initSortable() {
@@ -116,15 +171,22 @@ async function createTask() {
         html: `
             <input id="swal-input1" class="swal2-input" placeholder="Task Title">
             <textarea id="swal-input2" class="swal2-textarea" placeholder="Description (Optional)"></textarea>
+            <div style="text-align: left; margin-top: 15px;">
+                <label style="color: #94a3b8; font-size: 0.85rem; padding-left: 5px;">Due Date & Time (Optional)</label>
+                <input id="swal-input3" type="datetime-local" class="swal2-input" style="max-width: 100%;">
+            </div>
         `,
         focusConfirm: false,
         background: '#0f172a',
         color: '#fff',
         showCancelButton: true,
         preConfirm: () => {
+            const dateVal = document.getElementById('swal-input3').value;
+            // Convert to format backend expects if necessary, or just send ISO
             return {
                 title: document.getElementById('swal-input1').value,
-                description: document.getElementById('swal-input2').value
+                description: document.getElementById('swal-input2').value,
+                due_date: dateVal ? new Date(dateVal).toISOString().slice(0, 19).replace('T', ' ') : null
             }
         }
     });

@@ -11,6 +11,14 @@ if (!token) {
 let allPrices = [];
 let currentCategory = 'All';
 
+// Utility
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 // =====================
 // SECTION NAVIGATION
 // =====================

@@ -267,11 +267,15 @@ exports.getTodos = async (req, res) => {
 // Kanban: Create Todo
 exports.createTodo = async (req, res) => {
     console.log('createTodo Body:', req.body);
-    const { title, description } = req.body;
+    const { title, description, due_date } = req.body;
     try {
-        const [result] = await db.query('INSERT INTO todos (user_id, title, description) VALUES (?, ?, ?)', [req.user.id, title, description || null]);
-        res.json({ id: result.insertId, title, description, status: 'todo' });
+        const [result] = await db.query(
+            'INSERT INTO todos (user_id, title, description, due_date) VALUES (?, ?, ?, ?)',
+            [req.user.id, title, description || null, due_date || null]
+        );
+        res.json({ id: result.insertId, title, description, due_date, status: 'todo' });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Failed to create task' });
     }
 };
