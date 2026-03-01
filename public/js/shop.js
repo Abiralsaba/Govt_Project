@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadShopItems();
     updateCartCount();
 
-    // Check for payment status in URL
+    // check for payment status in URL
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status');
     const orderId = urlParams.get('order_id');
@@ -84,9 +84,9 @@ async function addToCart(itemId) {
 
     // Visual Feedback: Find the button and change text temporarily (hacky but works without passing context)
     // Ideally pass 'this' or event, but for now let's use the ID to find if we can or just use Swal
-    // Actually, Swal is enough, but user said "maybe its not a button". Click feedback is important.
+    // actually, Swal is enough, but user said "maybe its not a button". Click feedback is important
 
-    // Let's try to find the button by traversing from event if passed, or just global feedback.
+    // let's try to find the button by traversing from event if passed, or just global feedback
     // Use Swal with loading spinner
     Swal.fire({
         title: 'Adding to Cart...',

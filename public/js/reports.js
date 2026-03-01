@@ -1818,7 +1818,7 @@ async function loadEducation() {
         document.getElementById('hscCount').textContent = stats.hsc || 0;
     }
 
-    // Render subject fields and load results
+    // render subject fields and load results
     renderSubjectFields();
     loadEducationResults();
 
@@ -2264,7 +2264,7 @@ async function addUniversity(e) {
             document.getElementById('universitiesCount').textContent = count;
         } else {
             console.error('Add University Error:', res);
-            // Show the specific error message from the backend if available
+            // show the specific error message from the backend if available
             Swal.fire('Error', res.error || res.message || 'Failed to add university', 'error');
         }
     } catch (error) {
@@ -3055,7 +3055,7 @@ function editNotice(id) {
     document.getElementById('editNoticeStatus').value = notice.status || 'Published';
     document.getElementById('editNoticeAttachment').value = notice.attachment_url || '';
 
-    // Handle dates — format as YYYY-MM-DD for date inputs
+    // handle dates — format as YYYY-MM-DD for date inputs
     if (notice.publish_date) {
         document.getElementById('editNoticePublishDate').value = new Date(notice.publish_date).toISOString().split('T')[0];
     }

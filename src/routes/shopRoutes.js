@@ -94,7 +94,7 @@ router.get('/market-prices/categories', async (req, res) => {
 
 router.use(verifyToken);
 
-// Middleware to get user info
+// get user info
 const getUserInfo = async (req, res, next) => {
     try {
         const [users] = await db.query('SELECT id, nid, name FROM reg_info WHERE id = ?', [req.user.id]);
@@ -168,7 +168,7 @@ router.post('/cart', async (req, res) => {
 
         const productName = items[0].name;
 
-        // Check if already in cart
+        // check if already in cart
         const [existing] = await db.query(
             'SELECT id, quantity FROM cart_item WHERE user_id = ? AND product_id = ?',
             [req.user.dbId, item_id]
@@ -220,7 +220,7 @@ router.post('/order', async (req, res) => {
     }
 
     try {
-        // Get cart items with full details
+        // get cart items with full details
         const [cartItems] = await db.query(`
             SELECT c.quantity, c.product_id, c.product_name, i.price
             FROM cart_item c
@@ -246,7 +246,7 @@ router.post('/order', async (req, res) => {
             };
         });
 
-        // Create Order with product_details JSON
+        // create Order with product_details JSON
         const [orderResult] = await db.query(`
             INSERT INTO Ordered_item (user_id, user_nid, total_amount, payment_method, payment_status, delivery_address, contact_number, product_details)
             VALUES (?, ?, ?, ?, 'PENDING', ?, ?, ?)

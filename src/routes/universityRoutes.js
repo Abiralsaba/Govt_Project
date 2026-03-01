@@ -220,7 +220,7 @@ router.post('/apply', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Verify HSC result exists and get data
+        // verify HSC result exists and get data
         const [hscResults] = await db.query(`
             SELECT h.*, b.name AS board_name
             FROM hsc_results h
@@ -248,7 +248,7 @@ router.post('/apply', async (req, res) => {
 
         const admission = admissions[0];
 
-        // Check if admission is active
+        // check if admission is active
         if (admission.status !== 'Active') {
             return res.status(400).json({ error: 'This admission is not currently accepting applications' });
         }
@@ -440,9 +440,8 @@ router.post('/payment/fail', async (req, res) => {
     }
 });
 
-/**
- * POST /api/university/payment/cancel - Payment cancelled
- */
+// POST /api/university/payment/cancel - Payment cancelled
+ 
 router.post('/payment/cancel', (req, res) => {
     const { value_a } = req.body;
     res.redirect(`/apply.html?cancelled=true&applicationId=${value_a}`);

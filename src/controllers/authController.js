@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
     const { username, email, password, nid, mobile, dob, address, gender } = req.body;
 
     try {
-        // Check if NID or Email exists in reg_info
+        // check if NID or Email exists in reg_info
         const [existing] = await db.query(
             'SELECT id FROM reg_info WHERE email = ? OR nid = ?',
             [email, nid]
@@ -230,7 +230,7 @@ exports.verifyResetOTP = async (req, res) => {
         // Hash New Password
         const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
-        // Update Password and Clear OTP
+        // update Password and Clear OTP
         await db.query(
             'UPDATE reg_info SET password = ?, reset_otp = NULL, reset_otp_expires = NULL WHERE id = ?',
             [passwordHash, user.id]

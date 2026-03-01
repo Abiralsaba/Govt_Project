@@ -118,7 +118,7 @@ app.use((err, req, res, next) => {
         return res.status(400).json({ error: 'File too large. Max 5MB allowed.' });
     }
     if (err) {
-        // Handle Multer string errors if any remain
+        // handle Multer string errors if any remain
         const msg = (typeof err === 'string') ? err : (err.message || 'Something went wrong!');
         return res.status(500).json({ error: msg });
     }

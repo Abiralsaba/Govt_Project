@@ -123,7 +123,7 @@ router.post('/health-card/apply', async (req, res) => {
     } = req.body;
 
     try {
-        // Check if user already has a card
+        // check if user already has a card
         const [existing] = await db.query('SELECT id FROM health_cards WHERE user_id = ? AND status != "Rejected"', [req.user.id]);
         if (existing.length > 0) {
             return res.status(400).json({ error: 'You already have a health card application.' });

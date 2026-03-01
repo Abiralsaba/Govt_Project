@@ -185,7 +185,7 @@ const WeatherManager = {
                 <div class="bar-chart">
         `;
 
-        // Render last 7 available days
+        // render last 7 available days
         const recentDates = dates.slice(-7);
         const maxRainInPeriod = Math.max(...recentDates.map(d => params.PRECTOTCORR[d]), 5); // Avoid div by zero
 

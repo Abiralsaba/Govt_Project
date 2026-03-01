@@ -411,7 +411,7 @@ const AdminPassport = {
             }
         }
 
-        // Show/hide date field based on status
+        // show/hide date field based on status
         const dateMap = {
             'Biometric Scheduled': 'Biometric Date',
             'Biometric Enrolled': 'Biometric Date',

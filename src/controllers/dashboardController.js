@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-// Get Dashboard Summary (Stats & User Info)
+// get Dashboard Summary (Stats & User Info)
 exports.getSummary = async (req, res) => {
     const userId = req.user.id;
     try {
@@ -71,7 +71,7 @@ exports.updateRequestStatus = async (req, res) => {
 
         if (request.service_type === 'Land Mutation') {
             if (uniqueId) {
-                // Update mutation status in land_mutations_v2
+                // update mutation status in land_mutations_v2
                 await db.query('UPDATE land_mutations_v2 SET status = ? WHERE tracking_number = ?', [status, uniqueId]);
 
                 // If Approved, Remove from Seller's Record
@@ -344,7 +344,7 @@ exports.submitServiceRequest = async (req, res) => {
 
 // Departments List (Static or DB)
 exports.getDepartments = (req, res) => {
-    // Returning a rich list of departments for the frontend grid
+    // returning a rich list of departments for the frontend grid
     const departments = [
         { id: 'agri', name: 'Agriculture', icon: 'fa-seedling', desc: 'Subsidies, Crop Reports', link: 'agriculture.html' },
         { id: 'land', name: 'Land Ministry', icon: 'fa-landmark', desc: 'Mutations, Records', link: 'land.html' },

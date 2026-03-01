@@ -642,7 +642,7 @@ async function openNotificationPopup(id) {
             el.querySelector('i').style.color = '#64748b';
             el.querySelectorAll('p')[0].style.color = '#94a3b8';
 
-            // Update Count (reload dashboard safely)
+            // update Count (reload dashboard safely)
             loadDashboard();
         } catch (e) {
             console.error(e);

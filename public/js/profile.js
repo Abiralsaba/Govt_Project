@@ -30,7 +30,7 @@ async function loadProfile() {
             const el = document.getElementById(field);
             if (el) {
                 el.value = user[field] || '';
-                // Handle Date format if needed
+                // handle Date format if needed
                 if (field === 'dob' && user.dob) {
                     el.value = user.dob.split('T')[0]; // Simple formatting
                 }

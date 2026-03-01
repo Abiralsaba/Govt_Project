@@ -1,4 +1,4 @@
-// Admin Authentication Middleware - Verifies JWT token and ensures...
+// admin Authentication Middleware - Verifies JWT token and ensures..
 
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -14,7 +14,7 @@ const adminMiddleware = (req, res, next) => {
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
 
-        // Check if this is an admin token
+        // check if this is an admin token
         if (!decoded.isAdmin) {
             return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
         }

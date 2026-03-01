@@ -1,4 +1,4 @@
-// Education Routes - Public API endpoints for checking exam result...
+// education Routes - Public API endpoints for checking exam result..
 
 const express = require('express');
 const router = express.Router();
@@ -19,7 +19,7 @@ router.get('/boards', async (req, res) => {
     }
 });
 
-// GET /results/:examType/:year/:roll - Check result by exam type, ...
+// check result by exam type, ..
 router.get('/results/:examType/:year/:roll', async (req, res) => {
     try {
         const { examType, year, roll } = req.params;
@@ -32,7 +32,7 @@ router.get('/results/:examType/:year/:roll', async (req, res) => {
 
         const tableName = `${examType.toLowerCase()}_results`;
 
-        // Get result with board name
+        // get result with board name
         const [results] = await db.query(`
             SELECT r.*, b.name as board_name, b.code as board_code
             FROM ${tableName} r
@@ -135,7 +135,7 @@ router.get('/results/:examType/:year/:roll', async (req, res) => {
 // GET /years
 router.get('/years', async (req, res) => {
     try {
-        // Get unique years from all result tables
+        // get unique years from all result tables
         const [jscYears] = await db.query('SELECT DISTINCT exam_year FROM jsc_results ORDER BY exam_year DESC');
         const [sscYears] = await db.query('SELECT DISTINCT exam_year FROM ssc_results ORDER BY exam_year DESC');
         const [hscYears] = await db.query('SELECT DISTINCT exam_year FROM hsc_results ORDER BY exam_year DESC');

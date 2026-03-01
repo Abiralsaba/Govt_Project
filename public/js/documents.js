@@ -27,7 +27,7 @@ async function loadDocuments() {
         container.innerHTML = '';
 
         // If API returns "message" it implies no profile found, but we fixed controller to return structure. 
-        // However, defensively check keys.
+        // however, defensively check keys
 
         // NID
         if (data.nid) {
@@ -275,8 +275,8 @@ async function handleUpload(e) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Processing...';
 
-        // Strict token cleaning: remove anything that is NOT alphanumeric, dot, underscore, or dash.
-        // JWTs only contain these characters. This strips newlines, spaces, quotes, and invisible control chars.
+        // strict token cleaning: remove anything that is NOT alphanumeric, dot, underscore, or dash
+        // jWTs only contain these characters. This strips newlines, spaces, quotes, and invisible control chars
         const cleanToken = token.replace(/[^a-zA-Z0-9\._\-]/g, '');
 
         if (!cleanToken) {
@@ -402,7 +402,7 @@ async function handleOfficialUpload(e) {
 
     } catch (err) {
         let msg = err.message;
-        // Handle invalid token / header errors specifically
+        // handle invalid token / header errors specifically
         if (msg.includes('expected pattern') || msg.includes('header') || msg.includes('Invalid session token')) {
             msg = 'Browser security blocked the request due to invalid session data. Please Logout and Login cleanly.';
         }

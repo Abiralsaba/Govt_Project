@@ -33,7 +33,7 @@ router.get('/groups', async (req, res) => {
     }
 });
 
-// GET /my-groups
+// groups
 router.get('/my-groups', async (req, res) => {
     try {
         const [groups] = await db.query(`
@@ -55,11 +55,11 @@ router.get('/my-groups', async (req, res) => {
     }
 });
 
-// POST /groups - Supports file upload for cover_image
+// supports file upload for cover_image
 router.post('/groups', upload.single('cover_image'), async (req, res) => {
     const { name, description } = req.body;
 
-    // Handle cover image - either from file upload or URL
+    // handle cover image - either from file upload or URL
     let cover_image = null;
     if (req.file) {
         cover_image = '/uploads/' + req.file.filename;
@@ -117,7 +117,7 @@ router.get('/groups/:id', async (req, res) => {
 
         const group = groups[0];
 
-        // Check if user is member
+        // check if user is member
         const [membership] = await db.query(`
             SELECT role FROM community_members 
             WHERE group_id = ? AND user_id = ?
@@ -126,7 +126,7 @@ router.get('/groups/:id', async (req, res) => {
         group.is_member = membership.length > 0;
         group.my_role = membership[0]?.role || null;
 
-        // Get approved posts with author info
+        // get approved posts with author info
         const [posts] = await db.query(`
             SELECT 
                 p.*,
@@ -157,7 +157,7 @@ router.put('/groups/:id', upload.single('cover_image'), async (req, res) => {
     }
 
     try {
-        // Check if group exists and user is admin/creator
+        // check if group exists and user is admin/creator
         const [groups] = await db.query(
             'SELECT id, created_by, cover_image FROM community_groups WHERE id = ?',
             [req.params.id]
@@ -167,7 +167,7 @@ router.put('/groups/:id', upload.single('cover_image'), async (req, res) => {
             return res.status(404).json({ error: 'Group not found' });
         }
 
-        // Check if user is creator or admin member
+        // check if user is creator or admin member
         const [membership] = await db.query(
             'SELECT role FROM community_members WHERE group_id = ? AND user_id = ?',
             [req.params.id, req.user.id]
@@ -191,7 +191,7 @@ router.put('/groups/:id', upload.single('cover_image'), async (req, res) => {
         }
         // If neither, cover_image stays null (image removed)
 
-        // Update group and set status back to pending
+        // update group and set status back to pending
         await db.query(`
             UPDATE community_groups 
             SET name = ?, description = ?, cover_image = ?, status = 'pending'
@@ -217,7 +217,7 @@ router.put('/groups/:id', upload.single('cover_image'), async (req, res) => {
 // POST /groups/:id/join
 router.post('/groups/:id/join', async (req, res) => {
     try {
-        // Check if group exists and is approved
+        // check if group exists and is approved
         const [groups] = await db.query(
             'SELECT id FROM community_groups WHERE id = ? AND status = "approved"',
             [req.params.id]
@@ -250,7 +250,7 @@ router.post('/groups/:id/join', async (req, res) => {
 // POST /groups/:id/leave
 router.post('/groups/:id/leave', async (req, res) => {
     try {
-        // Check if user is the creator (admin can't leave)
+        // check if user is the creator (admin can't leave)
         const [groups] = await db.query(
             'SELECT created_by FROM community_groups WHERE id = ?',
             [req.params.id]
@@ -275,11 +275,11 @@ router.post('/groups/:id/leave', async (req, res) => {
 // POST ENDPOINTS
 // ==========================================
 
-// POST /groups/:id/posts - Supports file upload for post_image
+// supports file upload for post_image
 router.post('/groups/:id/posts', upload.single('post_image'), async (req, res) => {
     const { content } = req.body;
 
-    // Handle post image - from file upload
+    // handle post image - from file upload
     let image_url = null;
     if (req.file) {
         image_url = '/uploads/' + req.file.filename;
@@ -290,7 +290,7 @@ router.post('/groups/:id/posts', upload.single('post_image'), async (req, res) =
     }
 
     try {
-        // Check if user is member
+        // check if user is member
         const [membership] = await db.query(
             'SELECT id FROM community_members WHERE group_id = ? AND user_id = ?',
             [req.params.id, req.user.id]
@@ -330,7 +330,7 @@ router.put('/posts/:id', upload.single('post_image'), async (req, res) => {
     }
 
     try {
-        // Check if post exists and user is the author
+        // check if post exists and user is the author
         const [posts] = await db.query(
             'SELECT id, user_id, image_url FROM community_posts WHERE id = ?',
             [req.params.id]
@@ -355,7 +355,7 @@ router.put('/posts/:id', upload.single('post_image'), async (req, res) => {
         }
         // If neither, image_url stays null (image removed)
 
-        // Update post and set status back to pending
+        // update post and set status back to pending
         await db.query(`
             UPDATE community_posts 
             SET content = ?, image_url = ?, status = 'pending', updated_at = NOW()
@@ -456,7 +456,7 @@ router.post('/posts/:id/comments', async (req, res) => {
             [req.params.id]
         );
 
-        // Get the new comment with author info
+        // get the new comment with author info
         const [comments] = await db.query(`
             SELECT 
                 c.*,
@@ -483,7 +483,7 @@ router.put('/comments/:id', async (req, res) => {
     }
 
     try {
-        // Check if comment exists and user is the author
+        // check if comment exists and user is the author
         const [comments] = await db.query(
             'SELECT id, user_id FROM post_comments WHERE id = ?',
             [req.params.id]
@@ -512,7 +512,7 @@ router.put('/comments/:id', async (req, res) => {
 // DELETE /comments/:id
 router.delete('/comments/:id', async (req, res) => {
     try {
-        // Check if comment exists and user is the author
+        // check if comment exists and user is the author
         const [comments] = await db.query(
             'SELECT id, user_id, post_id FROM post_comments WHERE id = ?',
             [req.params.id]
@@ -531,7 +531,7 @@ router.delete('/comments/:id', async (req, res) => {
         // Delete the comment
         await db.query('DELETE FROM post_comments WHERE id = ?', [req.params.id]);
 
-        // Update comment count on the post
+        // update comment count on the post
         await db.query(
             'UPDATE community_posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = ?',
             [postId]

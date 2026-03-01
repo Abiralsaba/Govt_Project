@@ -60,7 +60,7 @@ exports.updateProfile = async (req, res) => {
         );
 
         // 3.5 Update user_info (Mirroring)
-        // Check if user_info record exists first or just update
+        // check if user_info record exists first or just update
         await db.query(
             'UPDATE user_info SET name = ?, mobile = ?, address = ?, gender = ? WHERE user_id = ?',
             [name, mobile, address, gender, userId]

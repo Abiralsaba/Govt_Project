@@ -185,7 +185,7 @@ function switchToTab(tabName) {
         badgeText.textContent = 'Secure Government Login';
     }
 
-    // Hide pending notice when switching
+    // hide pending notice when switching
     const pendingNotice = document.getElementById('adminPendingNotice');
     if (pendingNotice) pendingNotice.style.display = 'none';
 }
@@ -197,7 +197,7 @@ if (adminTab) {
     adminTab.addEventListener('click', () => switchToTab('admin'));
 }
 
-// Handle #admin hash in URL (for backward compatibility)
+// handle #admin hash in URL (for backward compatibility)
 if (window.location.hash === '#admin') {
     switchToTab('admin');
 }

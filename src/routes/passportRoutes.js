@@ -235,7 +235,7 @@ router.post('/apply', async (req, res) => {
             return res.status(400).json({ error: 'Mobile number is required.' });
         }
 
-        // Check for duplicate active application
+        // check for duplicate active application
         const [existing] = await db.query(
             `SELECT id FROM passport_applications 
              WHERE user_id = ? AND status NOT IN ('Delivered','Rejected','Cancelled')`,
@@ -569,7 +569,7 @@ router.post('/payment/init', async (req, res) => {
 
         const tran_id = 'PASS_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
-        // Update DB with transaction ID
+        // update DB with transaction ID
         await db.query(
             'UPDATE passport_applications SET transaction_id = ? WHERE id = ?',
             [tran_id, applicationId]

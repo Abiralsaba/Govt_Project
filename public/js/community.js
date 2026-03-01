@@ -272,7 +272,7 @@ async function deleteComment(commentId, postId) {
             if (res.ok) {
                 Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false, background: '#1e293b', color: '#fff' });
                 loadComments(postId);
-                // Update comment count in UI
+                // update comment count in UI
                 const btn = document.querySelector(`#post-${postId} .post-action-btn:nth-child(2) span`);
                 if (btn) btn.textContent = Math.max(0, parseInt(btn.textContent) - 1);
             } else {

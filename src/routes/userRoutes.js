@@ -4,7 +4,7 @@ const userController = require('../controllers/userController');
 const upload = require('../middleware/uploadMiddleware');
 const jwt = require('jsonwebtoken');
 
-// Middleware to verify token 
+// verify token
 const verifyToken = require('../middleware/authMiddleware');
 
 router.use(verifyToken);

@@ -29,7 +29,7 @@ router.get('/citizen-profile/:userId', async (req, res) => {
     }
 });
 
-// GET logged-in user profile
+// in user profile
 router.get('/my-profile', async (req, res) => {
     try {
         const [profile] = await db.query(`

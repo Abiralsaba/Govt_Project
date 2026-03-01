@@ -1,4 +1,4 @@
-// NID Wing Routes - Election Commission of Bangla... - জাতীয় পরিচ...
+// nID Wing Routes - Election Commission of Bangla... - জাতীয় পরিচ..
 
 const express = require('express');
 const router = express.Router();
@@ -958,7 +958,7 @@ router.post('/family', async (req, res) => {
     const finalRelation = relation || relationship;
 
     try {
-        // Get user's NID profile ID
+        // get user's NID profile ID
         const [profile] = await db.query('SELECT id FROM nid_profiles WHERE user_id = ?', [req.user.id]);
 
         if (profile.length === 0) {

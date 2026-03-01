@@ -1,4 +1,4 @@
-// Admin Authentication Controller - Handles admin registration and...
+// admin Authentication Controller - Handles admin registration and..
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -17,7 +17,7 @@ const register = async (req, res) => {
     const { name, email, password, mobile, nid } = req.body;
 
     try {
-        // Check if email already exists
+        // check if email already exists
         const [existing] = await db.query('SELECT id FROM admins WHERE email = ?', [email]);
         if (existing.length > 0) {
             return res.status(400).json({ error: 'Email already registered' });

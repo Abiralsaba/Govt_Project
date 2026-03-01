@@ -7,7 +7,7 @@ const verifyToken = require('../middleware/authMiddleware');
 // PUBLIC ROUTES (No auth needed)
 // ==============================
 
-// Get active market listings (public browsing)
+// get active market listings (public browsing)
 router.get('/market/browse', async (req, res) => {
     try {
         const [rows] = await db.query(`
@@ -26,7 +26,7 @@ router.get('/market/browse', async (req, res) => {
     }
 });
 
-// Get upcoming training programs (public)
+// get upcoming training programs (public)
 router.get('/training/programs', async (req, res) => {
     try {
         const [rows] = await db.query(`

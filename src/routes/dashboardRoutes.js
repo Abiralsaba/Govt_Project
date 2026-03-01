@@ -3,7 +3,7 @@ const router = express.Router();
 const dashboardController = require('../controllers/dashboardController');
 
 
-// Middleware to verify token
+// verify token
 const verifyToken = require('../middleware/authMiddleware');
 
 router.use(verifyToken); // Protect all dashboard routes

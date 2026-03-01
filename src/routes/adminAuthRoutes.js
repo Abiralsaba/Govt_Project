@@ -1,4 +1,4 @@
-// Admin Authentication Routes - Public routes for admin login and ...
+// admin Authentication Routes - Public routes for admin login and ..
 
 const express = require('express');
 const { body } = require('express-validator');
@@ -30,7 +30,7 @@ router.post(
     adminAuthController.login
 );
 
-// Get current admin info (protected)
+// get current admin info (protected)
 router.get('/me', adminMiddleware, adminAuthController.getMe);
 
 module.exports = router;

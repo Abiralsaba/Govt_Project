@@ -80,7 +80,7 @@ router.get('/agriculture/expert/my-queries', async (req, res) => {
     }
 });
 
-// Get Applications (Unified for demo)
+// get Applications (Unified for demo)
 router.get('/agriculture/applications', async (req, res) => {
     try {
         const [subsidies] = await db.query('SELECT id, subsidy_type as type, status, created_at FROM agri_subsidies WHERE user_id = ? ORDER BY created_at DESC LIMIT 5', [req.user.id]);
@@ -155,7 +155,7 @@ router.post('/land/mutation_v2', async (req, res) => {
         // 4. Generate tracking number
         const trackingNum = `LMT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-        // 5. Insert mutation (3NF — FKs only, no name cols)
+        // 5. Insert mutation 
         await db.query(`
             INSERT INTO land_mutations_v2 
             (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, land_amount, land_price, deed_no, ownership_type, buyer_nid, buyer_id, tracking_number)
@@ -248,10 +248,9 @@ router.get('/land/applications', async (req, res) => {
 });
 
 // Get My Records
-// Get My Records (Merged with Approved Mutations)
+// get My Records (Merged with Approved Mutations)
 router.get('/land/records', async (req, res) => {
     try {
-        // 1. Fetch manually added records (JOIN for display names)
         const [manualRecords] = await db.query(
             `SELECT lr.*, 
                 d.name as division, dist.name as district, u.name as upazila,
@@ -333,7 +332,7 @@ router.post('/land/records', async (req, res) => {
             verificationStatus = 'Approved';
         }
 
-        // 2. Insert (3NF — FKs only, no name/geo text cols)
+        // 2. Insert
         await db.query(
             `INSERT INTO my_land_record 
             (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, mouza, land_size, deed_no, land_price, ownership_description, status) 

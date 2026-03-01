@@ -4,7 +4,7 @@ const db = require('../config/db');
 const verifyToken = require('../middleware/authMiddleware');
 
 // Optional: verify token to link to user, but allow public submissions if needed?
-// For this app, let's assume users are logged in as per current flow (token in localStorage).
+// for this app, let's assume users are logged in as per current flow (token in localStorage)
 router.use(verifyToken);
 
 router.post('/', async (req, res) => {

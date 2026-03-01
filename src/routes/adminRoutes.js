@@ -29,7 +29,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// GET /new-users
+// users
 router.get('/new-users', async (req, res) => {
     try {
         const [users] = await db.query(`
@@ -51,7 +51,7 @@ router.get('/new-users', async (req, res) => {
 // SERVICE REQUESTS MANAGEMENT
 // ==========================================
 
-// GET /service-requests
+// requests
 router.get('/service-requests', async (req, res) => {
     try {
         const status = req.query.status; // Optional filter
@@ -79,7 +79,7 @@ router.get('/service-requests', async (req, res) => {
     }
 });
 
-// PUT /service-requests/:id/approve
+// requests/:id/approve
 router.put('/service-requests/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -137,7 +137,7 @@ router.put('/service-requests/:id/approve', async (req, res) => {
     }
 });
 
-// PUT /service-requests/:id/reject
+// requests/:id/reject
 router.put('/service-requests/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -196,7 +196,7 @@ router.put('/service-requests/:id/reject', async (req, res) => {
 // LAND MUTATIONS MANAGEMENT
 // ==========================================
 
-// GET /land-mutations
+// mutations
 router.get('/land-mutations', async (req, res) => {
     try {
         const status = req.query.status;
@@ -234,7 +234,7 @@ router.get('/land-mutations', async (req, res) => {
     }
 });
 
-// PUT /land-mutations/:id/approve - This includes transferring lan...
+// mutations/:id/approve - This includes transferring lan..
 router.put('/land-mutations/:id/approve', async (req, res) => {
     const connection = await db.getConnection();
     console.log(`[Admin] Starting approval for mutation ID: ${req.params.id}`);
@@ -337,7 +337,7 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
     } catch (error) {
         await connection.rollback();
         console.error('Error approving land mutation:', error);
-        // Return the exact SQL error message to the frontend for debugging
+        // return the exact SQL error message to the frontend for debugging
         res.status(500).json({
             error: error.sqlMessage || error.message || 'Failed to approve mutation',
             details: error.code // e.g., ER_BAD_FIELD_ERROR
@@ -347,7 +347,7 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
     }
 });
 
-// PUT /land-mutations/:id/reject
+// mutations/:id/reject
 router.put('/land-mutations/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -407,7 +407,7 @@ router.put('/land-mutations/:id/reject', async (req, res) => {
 // COMMUNITY GROUPS MANAGEMENT
 // ==========================================
 
-// GET /community-groups
+// groups
 router.get('/community-groups', async (req, res) => {
     try {
         const status = req.query.status;
@@ -438,7 +438,7 @@ router.get('/community-groups', async (req, res) => {
     }
 });
 
-// PUT /community-groups/:id/approve
+// groups/:id/approve
 router.put('/community-groups/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -475,7 +475,7 @@ router.put('/community-groups/:id/approve', async (req, res) => {
     }
 });
 
-// PUT /community-groups/:id/reject
+// groups/:id/reject
 router.put('/community-groups/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -521,7 +521,7 @@ router.put('/community-groups/:id/reject', async (req, res) => {
 // COMMUNITY POSTS MANAGEMENT
 // ==========================================
 
-// GET /community-posts
+// posts
 router.get('/community-posts', async (req, res) => {
     try {
         const status = req.query.status;
@@ -554,7 +554,7 @@ router.get('/community-posts', async (req, res) => {
     }
 });
 
-// PUT /community-posts/:id/approve
+// posts/:id/approve
 router.put('/community-posts/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -594,7 +594,7 @@ router.put('/community-posts/:id/approve', async (req, res) => {
     }
 });
 
-// PUT /community-posts/:id/reject
+// posts/:id/reject
 router.put('/community-posts/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -671,7 +671,7 @@ const productUpload = multer({
     }
 });
 
-// GET /shop-items
+// items
 router.get('/shop-items', async (req, res) => {
     try {
         const [items] = await db.query('SELECT * FROM shop_items ORDER BY created_at DESC');
@@ -682,7 +682,7 @@ router.get('/shop-items', async (req, res) => {
     }
 });
 
-// POST /shop-items
+// items
 router.post('/shop-items', productUpload.single('image'), async (req, res) => {
     try {
         const { name, description, price, stock_quantity } = req.body;
@@ -709,7 +709,7 @@ router.post('/shop-items', productUpload.single('image'), async (req, res) => {
     }
 });
 
-// PUT /shop-items/:id
+// items/:id
 router.put('/shop-items/:id', productUpload.single('image'), async (req, res) => {
     try {
         const { id } = req.params;
@@ -740,7 +740,7 @@ router.put('/shop-items/:id', productUpload.single('image'), async (req, res) =>
 
 
 
-// DELETE /shop-items/:id
+// items/:id
 router.delete('/shop-items/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -752,7 +752,7 @@ router.delete('/shop-items/:id', async (req, res) => {
     }
 });
 
-// GET /orders - (Existing Code)
+// (Existing Code)
 
 // ==========================================
 // STIPEND MANAGEMENT
@@ -787,7 +787,7 @@ router.post('/stipends', async (req, res) => {
     }
 });
 
-// GET /stipend-applications
+// applications
 router.get('/stipend-applications', async (req, res) => {
     try {
         const [apps] = await db.query(`
@@ -808,7 +808,7 @@ router.get('/stipend-applications', async (req, res) => {
     }
 });
 
-// PUT /stipend-applications/:id/status
+// applications/:id/status
 router.put('/stipend-applications/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
@@ -867,7 +867,7 @@ router.put('/orders/:id/status', async (req, res) => {
 // MARKET PRICE MANAGEMENT
 // ==========================================
 
-// GET /market-prices
+// prices
 router.get('/market-prices', async (req, res) => {
     try {
         const [prices] = await db.query('SELECT * FROM market_prices ORDER BY category, item_name');
@@ -878,7 +878,7 @@ router.get('/market-prices', async (req, res) => {
     }
 });
 
-// POST /market-prices
+// prices
 router.post('/market-prices', async (req, res) => {
     try {
         const { item_name, item_name_bn, category, unit, price } = req.body;
@@ -900,7 +900,7 @@ router.post('/market-prices', async (req, res) => {
     }
 });
 
-// PUT /market-prices/:id
+// prices/:id
 router.put('/market-prices/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -919,7 +919,7 @@ router.put('/market-prices/:id', async (req, res) => {
     }
 });
 
-// DELETE /market-prices/:id
+// prices/:id
 router.delete('/market-prices/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1018,7 +1018,7 @@ router.get('/education/institutions/:boardId', async (req, res) => {
     }
 });
 
-// GET /education/results/:examType - examType: jsc, ssc, hsc
+// examType: jsc, ssc, hsc
 router.get('/education/results/:examType', async (req, res) => {
     try {
         const { examType } = req.params;
@@ -1267,7 +1267,7 @@ router.put('/universities/:id', async (req, res) => {
     }
 });
 
-// GET /admission-posts
+// posts
 router.get('/admission-posts', async (req, res) => {
     try {
         const [posts] = await db.query(`
@@ -1289,7 +1289,7 @@ router.get('/admission-posts', async (req, res) => {
     }
 });
 
-// POST /admission-posts
+// posts
 router.post('/admission-posts', async (req, res) => {
     try {
         const {
@@ -1337,7 +1337,7 @@ router.post('/admission-posts', async (req, res) => {
     }
 });
 
-// PUT /admission-posts/:id
+// posts/:id
 router.put('/admission-posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1380,12 +1380,12 @@ router.put('/admission-posts/:id', async (req, res) => {
     }
 });
 
-// DELETE /admission-posts/:id
+// posts/:id
 router.delete('/admission-posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Check if there are any applications
+        // check if there are any applications
         const [apps] = await db.query('SELECT COUNT(*) AS count FROM university_applications WHERE admission_post_id = ?', [id]);
         if (apps[0].count > 0) {
             return res.status(400).json({ error: 'Cannot delete admission post with existing applications' });
@@ -1399,7 +1399,7 @@ router.delete('/admission-posts/:id', async (req, res) => {
     }
 });
 
-// GET /university-applications
+// applications
 router.get('/university-applications', async (req, res) => {
     try {
         const { status, admission_id } = req.query;
@@ -1439,7 +1439,7 @@ router.get('/university-applications', async (req, res) => {
     }
 });
 
-// PUT /university-applications/:id/verify
+// applications/:id/verify
 router.put('/university-applications/:id/verify', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1460,7 +1460,7 @@ router.put('/university-applications/:id/verify', async (req, res) => {
     }
 });
 
-// GET /admission-stats
+// stats
 router.get('/admission-stats', async (req, res) => {
     try {
         const [universities] = await db.query('SELECT COUNT(*) AS count FROM universities WHERE is_active = TRUE');
@@ -1604,7 +1604,7 @@ router.put('/tax/returns/:id/status', async (req, res) => {
     }
 });
 
-// GET /tax/tin-applications
+// applications
 router.get('/tax/tin-applications', async (req, res) => {
     try {
         const { status } = req.query;

@@ -26,7 +26,7 @@ function adminAuth(req, res, next) {
 // PUBLIC ROUTES
 // =====================
 
-// GET /api/notices - List notices with search, filter, pagination
+// list notices with search, filter, pagination
 router.get('/', async (req, res) => {
     try {
         const { search, department, category, priority, status, page = 1, limit = 20 } = req.query;
@@ -72,7 +72,7 @@ router.get('/', async (req, res) => {
             params
         );
 
-        // Get notices with creator name
+        // get notices with creator name
         const [notices] = await db.query(
             `SELECT n.*, a.name AS created_by_name 
              FROM govt_notices n
@@ -85,7 +85,7 @@ router.get('/', async (req, res) => {
             [...params, parseInt(limit), parseInt(offset)]
         );
 
-        // Get distinct departments for filter
+        // get distinct departments for filter
         const [departments] = await db.query(
             'SELECT DISTINCT department FROM govt_notices ORDER BY department'
         );
@@ -103,7 +103,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /admin/all - Admin: list all notices including drafts
+// admin: list all notices including drafts
 router.get('/admin/all', adminAuth, async (req, res) => {
     try {
         const [notices] = await db.query(
@@ -119,7 +119,7 @@ router.get('/admin/all', adminAuth, async (req, res) => {
     }
 });
 
-// GET /:id - Single notice detail
+// single notice detail
 router.get('/:id', async (req, res) => {
     try {
         const [notices] = await db.query(
@@ -137,7 +137,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST /api/notices - Admin: create notice
+// admin: create notice
 router.post('/', adminAuth, async (req, res) => {
     try {
         const {
@@ -171,7 +171,7 @@ router.post('/', adminAuth, async (req, res) => {
     }
 });
 
-// DELETE /:id - Admin: delete notice
+// admin: delete notice
 router.delete('/:id', adminAuth, async (req, res) => {
     try {
         const [result] = await db.query('DELETE FROM govt_notices WHERE id = ?', [req.params.id]);
@@ -185,7 +185,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
     }
 });
 
-// PUT /:id - Admin: update/edit notice
+// admin: update/edit notice
 router.put('/:id', adminAuth, async (req, res) => {
     try {
         const {

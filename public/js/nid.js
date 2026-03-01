@@ -329,7 +329,7 @@ const NID = {
 
             const result = await response.json();
 
-            // Handle the wrapper response: {exists: true, profile: {...}} or {exists: false, based_on_registration: {...}}
+            // handle the wrapper response: {exists: true, profile: {...}} or {exists: false, based_on_registration: {...}}
             let profile;
             if (result.exists && result.profile) {
                 profile = result.profile;
