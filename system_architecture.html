@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NATIONX - System Architecture</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .page {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8555 100%);
+            color: #fff;
+            padding: 40px 50px;
+            text-align: center;
+        }
+        .header h1 { font-size: 3em; letter-spacing: 4px; text-transform: uppercase; }
+        .header p { font-size: 1.3em; opacity: .9; margin-top: 8px; }
+        .header .meta { font-size: .95em; opacity: .75; margin-top: 12px; }
+        
+        .body-wrap { padding: 40px 50px; }
+
+        /* ── SECTION TITLES ── */
+        .section-title {
+            font-size: 1.6em;
+            color: #ff6b35;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffe0d0;
+        }
+        .section-title:first-child { margin-top: 0; }
+
+        /* ── INFO BOX ── */
+        .info-box {
+            background: #fff8f4;
+            border-left: 5px solid #ff6b35;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+
+        /* ── ARCHITECTURE DIAGRAM ── */
+        .arch-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        /* Arrow connectors */
+        .arrow-down {
+            width: 4px;
+            height: 40px;
+            background: #ff6b35;
+            position: relative;
+            margin: 0 auto;
+        }
+        .arrow-down::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 12px solid #ff6b35;
+        }
+        .arrow-label {
+            font-size: .8em;
+            color: #ff6b35;
+            font-weight: 600;
+            text-align: center;
+            margin: 2px 0;
+        }
+
+        /* Tier boxes */
+        .tier {
+            width: 100%;
+            border: 3px solid;
+            border-radius: 16px;
+            padding: 25px 30px;
+            position: relative;
+        }
+        .tier-label {
+            position: absolute;
+            top: -14px;
+            left: 30px;
+            background: #fff;
+            padding: 0 12px;
+            font-weight: 700;
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+
+        /* Tier colors */
+        .tier-client  { border-color: #2196F3; }
+        .tier-client .tier-label { color: #2196F3; }
+        
+        .tier-server  { border-color: #ff6b35; }
+        .tier-server .tier-label { color: #ff6b35; }
+        
+        .tier-data    { border-color: #4caf50; }
+        .tier-data .tier-label { color: #4caf50; }
+        
+        .tier-infra   { border-color: #9c27b0; }
+        .tier-infra .tier-label { color: #9c27b0; }
+
+        /* Chips inside tiers */
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: .85em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .chip-blue   { background: #e3f2fd; color: #1565c0; }
+        .chip-orange { background: #fff3e0; color: #e65100; }
+        .chip-green  { background: #e8f5e9; color: #2e7d32; }
+        .chip-purple { background: #f3e5f5; color: #7b1fa2; }
+        .chip-red    { background: #ffebee; color: #c62828; }
+        .chip-teal   { background: #e0f2f1; color: #00695c; }
+
+        /* Sub-section inside tier */
+        .tier-section {
+            margin-top: 15px;
+        }
+        .tier-section-title {
+            font-size: .9em;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        /* ── MODULE GRID ── */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .module-card {
+            border: 2px solid #ffe0d0;
+            border-radius: 12px;
+            padding: 18px;
+            background: #fffaf7;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .module-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,107,53,.15);
+        }
+        .module-card h4 {
+            color: #ff6b35;
+            margin-bottom: 6px;
+            font-size: 1em;
+        }
+        .module-card p {
+            font-size: .85em;
+            color: #666;
+            line-height: 1.5;
+        }
+        .module-card .route {
+            display: inline-block;
+            background: #fff3e0;
+            color: #e65100;
+            font-family: 'Courier New', monospace;
+            font-size: .78em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+
+        /* ── TECH STACK TABLE ── */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .tech-table th {
+            background: #ff6b35;
+            color: #fff;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: .95em;
+        }
+        .tech-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: .9em;
+        }
+        .tech-table tr:nth-child(even) td { background: #fafafa; }
+        .tech-table tr:hover td { background: #fff8f4; }
+
+        /* ── FLOW DIAGRAM ── */
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .flow-box {
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .9em;
+            text-align: center;
+            min-width: 120px;
+        }
+        .flow-arrow {
+            font-size: 1.4em;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+        .fb-blue   { background: #e3f2fd; color: #1565c0; border: 2px solid #90caf9; }
+        .fb-orange { background: #fff3e0; color: #e65100; border: 2px solid #ffcc80; }
+        .fb-green  { background: #e8f5e9; color: #2e7d32; border: 2px solid #a5d6a7; }
+        .fb-red    { background: #ffebee; color: #c62828; border: 2px solid #ef9a9a; }
+        .fb-purple { background: #f3e5f5; color: #7b1fa2; border: 2px solid #ce93d8; }
+        .fb-teal   { background: #e0f2f1; color: #00695c; border: 2px solid #80cbc4; }
+
+        /* ── DIRECTORY TREE ── */
+        .dir-tree {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 25px 30px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: .85em;
+            line-height: 1.8;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .dir-tree .folder { color: #dcdcaa; }
+        .dir-tree .file   { color: #9cdcfe; }
+        .dir-tree .comment { color: #6a9955; }
+
+        /* ── DOWNLOAD CONTROLS ── */
+        .controls {
+            text-align: center;
+            margin: 30px 0 10px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8555 100%);
+            color: #fff;
+            border: none;
+            padding: 14px 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all .3s;
+            box-shadow: 0 4px 15px rgba(255,107,53,.3);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(255,107,53,.5); }
+        .btn-green { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); box-shadow: 0 4px 15px rgba(76,175,80,.3); }
+        .btn-green:hover { box-shadow: 0 6px 25px rgba(76,175,80,.5); }
+
+        @media (max-width: 768px) {
+            .body-wrap { padding: 20px; }
+            .header { padding: 25px 20px; }
+            .header h1 { font-size: 2em; }
+            .module-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="page" id="architecture">
+    <!-- ════════════ HEADER ════════════ -->
+    <div class="header">
+        <h1>🇧🇩 NATIONX</h1>
+        <p>Full System Architecture</p>
+        <div class="meta">Node.js + Express + MySQL &middot; 3-Tier Architecture &middot; 117 Tables &middot; 20 Modules &middot; REST API</div>
+    </div>
+
+    <div class="body-wrap">
+
+        <!-- ════════════ OVERVIEW ════════════ -->
+        <div class="section-title">1. Architecture Overview</div>
+        <div class="info-box">
+            <strong>NATIONX</strong> is a full-stack web application implementing a <strong>3-Tier Client-Server Architecture</strong> for Bangladesh's central government digital services. 
+            The system follows a <strong>monolithic MVC pattern</strong> with a <strong>RESTful API</strong> backend, 
+            <strong>static HTML/CSS/JS</strong> frontend, and a <strong>MySQL</strong> relational database with <strong>117 normalized (3NF) tables</strong>, 
+            stored procedures, triggers, and views.
+        </div>
+
+        <!-- ════════════ 3-TIER DIAGRAM ════════════ -->
+        <div class="section-title">2. 3-Tier Architecture Diagram</div>
+
+        <div class="arch-diagram">
+            <!-- TIER 1: CLIENT / PRESENTATION -->
+            <div class="tier tier-client">
+                <div class="tier-label">TIER 1 — PRESENTATION LAYER (Client)</div>
+                <div class="tier-section">
+                    <div class="tier-section-title">Frontend UI (Static HTML Pages)</div>
+                    <div class="chips">
+                        <span class="chip chip-blue">index.html</span>
+                        <span class="chip chip-blue">dashboard.html</span>
+                        <span class="chip chip-blue">nid.html</span>
+                        <span class="chip chip-blue">passport.html</span>
+                        <span class="chip chip-blue">health.html</span>
+                        <span class="chip chip-blue">water.html</span>
+                        <span class="chip chip-blue">tax.html</span>
+                        <span class="chip chip-blue">land.html</span>
+                        <span class="chip chip-blue">education.html</span>
+                        <span class="chip chip-blue">agriculture.html</span>
+                        <span class="chip chip-blue">community.html</span>
+                        <span class="chip chip-blue">shop.html</span>
+                        <span class="chip chip-blue">profile.html</span>
+                        <span class="chip chip-blue">admin-*.html</span>
+                        <span class="chip chip-blue">+ 15 more pages</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">Client Technologies</div>
+                    <div class="chips">
+                        <span class="chip chip-teal">HTML5</span>
+                        <span class="chip chip-teal">CSS3</span>
+                        <span class="chip chip-teal">Vanilla JavaScript</span>
+                        <span class="chip chip-teal">Fetch API (AJAX)</span>
+                        <span class="chip chip-teal">Font Awesome</span>
+                        <span class="chip chip-teal">Google Fonts</span>
+                        <span class="chip chip-teal">Chart.js</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARROW -->
+            <div style="text-align:center;">
+                <div class="arrow-down"></div>
+                <div class="arrow-label">HTTP / HTTPS &middot; REST API &middot; JSON &middot; JWT Token</div>
+            </div>
+
+            <!-- TIER 2: APPLICATION / LOGIC -->
+            <div class="tier tier-server">
+                <div class="tier-label">TIER 2 — APPLICATION LAYER (Server)</div>
+                <div class="tier-section">
+                    <div class="tier-section-title">Express.js Server (app.js)</div>
+                    <div class="chips">
+                        <span class="chip chip-orange">Node.js Runtime</span>
+                        <span class="chip chip-orange">Express.js v5</span>
+                        <span class="chip chip-orange">Port 3000</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">Security & Middleware</div>
+                    <div class="chips">
+                        <span class="chip chip-red">Helmet (CSP/XSS)</span>
+                        <span class="chip chip-red">CORS</span>
+                        <span class="chip chip-red">Rate Limiter (100 req/15m)</span>
+                        <span class="chip chip-red">JWT Auth Middleware</span>
+                        <span class="chip chip-red">Admin Auth Middleware</span>
+                        <span class="chip chip-red">Bcrypt Hashing</span>
+                        <span class="chip chip-red">express-validator</span>
+                        <span class="chip chip-red">Multer (File Upload)</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">API Route Modules (21 Route Files)</div>
+                    <div class="chips">
+                        <span class="chip chip-orange">authRoutes</span>
+                        <span class="chip chip-orange">dashboardRoutes</span>
+                        <span class="chip chip-orange">userRoutes</span>
+                        <span class="chip chip-orange">nidRoutes</span>
+                        <span class="chip chip-orange">passportRoutes</span>
+                        <span class="chip chip-orange">healthRoutes</span>
+                        <span class="chip chip-orange">waterRoutes</span>
+                        <span class="chip chip-orange">taxRoutes</span>
+                        <span class="chip chip-orange">educationRoutes</span>
+                        <span class="chip chip-orange">universityRoutes</span>
+                        <span class="chip chip-orange">agricultureRoutes</span>
+                        <span class="chip chip-orange">communityRoutes</span>
+                        <span class="chip chip-orange">shopRoutes</span>
+                        <span class="chip chip-orange">stipendRoutes</span>
+                        <span class="chip chip-orange">departmentRoutes</span>
+                        <span class="chip chip-orange">paymentRoutes</span>
+                        <span class="chip chip-orange">contactRoutes</span>
+                        <span class="chip chip-orange">noticeRoutes</span>
+                        <span class="chip chip-orange">reportsRoutes</span>
+                        <span class="chip chip-orange">adminAuthRoutes</span>
+                        <span class="chip chip-orange">adminRoutes</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">Controllers</div>
+                    <div class="chips">
+                        <span class="chip chip-purple">authController</span>
+                        <span class="chip chip-purple">adminAuthController</span>
+                        <span class="chip chip-purple">dashboardController</span>
+                        <span class="chip chip-purple">userController</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">External Services</div>
+                    <div class="chips">
+                        <span class="chip chip-teal">SSLCommerz (Payment)</span>
+                        <span class="chip chip-teal">Nodemailer (Email/OTP)</span>
+                        <span class="chip chip-teal">Open-Meteo (Weather API)</span>
+                        <span class="chip chip-teal">NASA POWER (Agriculture)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARROW -->
+            <div style="text-align:center;">
+                <div class="arrow-down"></div>
+                <div class="arrow-label">mysql2/promise &middot; Connection Pool (10) &middot; Prepared Statements</div>
+            </div>
+
+            <!-- TIER 3: DATA -->
+            <div class="tier tier-data">
+                <div class="tier-label">TIER 3 — DATA LAYER (Database)</div>
+                <div class="tier-section">
+                    <div class="tier-section-title">MySQL Database (XAMPP)</div>
+                    <div class="chips">
+                        <span class="chip chip-green">central_govt_db</span>
+                        <span class="chip chip-green">117 Tables</span>
+                        <span class="chip chip-green">All 3NF Normalized</span>
+                        <span class="chip chip-green">1000+ Columns</span>
+                        <span class="chip chip-green">180+ Relationships</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">Advanced DB Features</div>
+                    <div class="chips">
+                        <span class="chip chip-green">Stored Procedures</span>
+                        <span class="chip chip-green">Triggers (Audit)</span>
+                        <span class="chip chip-green">Views</span>
+                        <span class="chip chip-green">Complex Queries (JOINs, Subqueries)</span>
+                        <span class="chip chip-green">Indexes (PK, UK, FK)</span>
+                        <span class="chip chip-green">Transaction Support</span>
+                    </div>
+                </div>
+                <div class="tier-section">
+                    <div class="tier-section-title">20 Database Modules</div>
+                    <div class="chips">
+                        <span class="chip chip-green">Core & Auth (9)</span>
+                        <span class="chip chip-green">Geography (3)</span>
+                        <span class="chip chip-green">Lookups (5)</span>
+                        <span class="chip chip-green">NID Wing (14)</span>
+                        <span class="chip chip-green">Passport (5)</span>
+                        <span class="chip chip-green">Health (6)</span>
+                        <span class="chip chip-green">Water (5)</span>
+                        <span class="chip chip-green">Land (3)</span>
+                        <span class="chip chip-green">Tax/NBR (8)</span>
+                        <span class="chip chip-green">Education (5)</span>
+                        <span class="chip chip-green">University (3)</span>
+                        <span class="chip chip-green">Stipends (2)</span>
+                        <span class="chip chip-green">Agriculture (6)</span>
+                        <span class="chip chip-green">Community (5)</span>
+                        <span class="chip chip-green">E-Commerce (4)</span>
+                        <span class="chip chip-green">Market (2)</span>
+                        <span class="chip chip-green">Notices (1)</span>
+                        <span class="chip chip-green">Docs/Services (5)</span>
+                        <span class="chip chip-green">Service Forms (25)</span>
+                        <span class="chip chip-green">Misc (1)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARROW -->
+            <div style="text-align:center;">
+                <div class="arrow-down"></div>
+                <div class="arrow-label">File System I/O</div>
+            </div>
+
+            <!-- TIER: INFRASTRUCTURE -->
+            <div class="tier tier-infra">
+                <div class="tier-label">INFRASTRUCTURE</div>
+                <div class="chips">
+                    <span class="chip chip-purple">XAMPP (Apache + MySQL)</span>
+                    <span class="chip chip-purple">localhost:3000</span>
+                    <span class="chip chip-purple">File Storage (uploads/)</span>
+                    <span class="chip chip-purple">dotenv (.env config)</span>
+                    <span class="chip chip-purple">Crash Logging (server_crash.log)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════ REQUEST FLOW ════════════ -->
+        <div class="section-title">3. Request Flow (User &rarr; DB &rarr; Response)</div>
+        
+        <div class="flow-row">
+            <div class="flow-box fb-blue">👤 Browser<br><small>HTML/CSS/JS</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-orange">🛡️ Middleware<br><small>Helmet, CORS, Rate Limit</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-red">🔐 Auth Check<br><small>JWT Verify</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-orange">📡 Route<br><small>/api/module/*</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-purple">⚙️ Controller<br><small>Business Logic</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-green">🗄️ MySQL<br><small>Query / Procedure</small></div>
+        </div>
+        <div class="flow-row">
+            <div class="flow-box fb-green">🗄️ MySQL<br><small>Result Set</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-purple">⚙️ Controller<br><small>Format Response</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-orange">📤 Express<br><small>res.json()</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-blue">👤 Browser<br><small>Render Data</small></div>
+        </div>
+
+        <!-- ════════════ AUTH FLOW ════════════ -->
+        <div class="section-title">4. Authentication Flow</div>
+
+        <div class="flow-row">
+            <div class="flow-box fb-blue">📝 Register<br><small>name, email, nid, pass</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-red">🔒 Bcrypt Hash<br><small>Salt rounds</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-green">💾 reg_info<br><small>INSERT user</small></div>
+        </div>
+        <div class="flow-row" style="margin-top:5px;">
+            <div class="flow-box fb-blue">🔑 Login<br><small>email + password</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-red">✅ Bcrypt Compare<br><small>Verify hash</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-purple">🎫 JWT Sign<br><small>{ id, email, nid }</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-blue">🍪 localStorage<br><small>Store token</small></div>
+        </div>
+        <div class="flow-row" style="margin-top:5px;">
+            <div class="flow-box fb-blue">📨 API Request<br><small>Authorization: Bearer</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-red">🛡️ authMiddleware<br><small>jwt.verify()</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-orange">✅ req.user<br><small>ID injected</small></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-box fb-purple">⚙️ Controller<br><small>Process request</small></div>
+        </div>
+
+        <!-- ════════════ API MODULES ════════════ -->
+        <div class="section-title">5. API Module Map (21 Route Files)</div>
+
+        <div class="module-grid">
+            <div class="module-card">
+                <h4>🔐 Auth</h4>
+                <p>Registration, Login, Logout, Password Reset (OTP via email), Profile Update</p>
+                <span class="route">/api/auth/*</span>
+            </div>
+            <div class="module-card">
+                <h4>📊 Dashboard</h4>
+                <p>User statistics, activity summary, recent actions, quick links</p>
+                <span class="route">/api/dashboard/*</span>
+            </div>
+            <div class="module-card">
+                <h4>👤 User</h4>
+                <p>Profile management, edit requests, address management, document uploads</p>
+                <span class="route">/api/user/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🪪 NID Wing</h4>
+                <p>NID applications, corrections, reissue, smart card, biometric appointments, verification, address change, family members</p>
+                <span class="route">/api/nid/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🛂 Passport</h4>
+                <p>New/renewal/reissue applications, fee schedule, office selection, status tracking, book management</p>
+                <span class="route">/api/passport/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🏥 Health</h4>
+                <p>Health cards, vaccinations, hospital appointments, ambulance requests, complaints</p>
+                <span class="route">/api/health/*</span>
+            </div>
+            <div class="module-card">
+                <h4>💧 Water</h4>
+                <p>Connections, bill payments, quality reports, complaints, infrastructure projects</p>
+                <span class="route">/api/water/*</span>
+            </div>
+            <div class="module-card">
+                <h4>💰 Tax / NBR</h4>
+                <p>TIN registration, e-Returns, tax payments, VAT, notices, challan management</p>
+                <span class="route">/api/tax/*</span>
+            </div>
+            <div class="module-card">
+                <h4>📚 Education</h4>
+                <p>Board results (JSC/SSC/HSC), institution lookup, result verification</p>
+                <span class="route">/api/education/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🎓 University</h4>
+                <p>Admission posts, applications, seat management, exam scheduling</p>
+                <span class="route">/api/university/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🌾 Agriculture</h4>
+                <p>Subsidies, crop reports, expert queries, farmer market, training programs</p>
+                <span class="route">/api/agriculture/*</span>
+            </div>
+            <div class="module-card">
+                <h4>👥 Community</h4>
+                <p>Groups, membership, posts, comments, likes — social networking features</p>
+                <span class="route">/api/community/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🛒 E-Commerce</h4>
+                <p>Shop items, cart management, order placement, payment processing</p>
+                <span class="route">/api/shop/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🎓 Stipends</h4>
+                <p>Available stipend listing, student applications, eligibility checking</p>
+                <span class="route">/api/stipends/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🏛️ Departments</h4>
+                <p>25+ service request forms (birth cert, death cert, trade license, visa, GD, etc.)</p>
+                <span class="route">/api/departments/*</span>
+            </div>
+            <div class="module-card">
+                <h4>💳 Payments</h4>
+                <p>SSLCommerz integration, transaction tracking, payment verification</p>
+                <span class="route">/api/payment/*</span>
+            </div>
+            <div class="module-card">
+                <h4>📢 Notices</h4>
+                <p>Government notices, category filtering, priority management</p>
+                <span class="route">/api/notices/*</span>
+            </div>
+            <div class="module-card">
+                <h4>📋 Reports</h4>
+                <p>System-wide reporting, analytics, data export</p>
+                <span class="route">/api/reports/*</span>
+            </div>
+            <div class="module-card">
+                <h4>📧 Contact</h4>
+                <p>Contact messages, department routing, status tracking</p>
+                <span class="route">/api/contact/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🏬 Market</h4>
+                <p>Market price monitoring, price complaint filing</p>
+                <span class="route">/api/departments/*</span>
+            </div>
+            <div class="module-card">
+                <h4>🔑 Admin Panel</h4>
+                <p>Admin auth, NID/passport/health/water management, user management, action logging</p>
+                <span class="route">/api/admin/*</span>
+            </div>
+        </div>
+
+        <!-- ════════════ TECH STACK ════════════ -->
+        <div class="section-title">6. Technology Stack</div>
+
+        <table class="tech-table">
+            <thead>
+                <tr><th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Runtime</strong></td><td>Node.js</td><td>18+</td><td>Server-side JavaScript runtime</td></tr>
+                <tr><td><strong>Framework</strong></td><td>Express.js</td><td>5.2</td><td>Web application framework, routing, middleware</td></tr>
+                <tr><td><strong>Database</strong></td><td>MySQL</td><td>8.0</td><td>Relational database (via XAMPP)</td></tr>
+                <tr><td><strong>DB Driver</strong></td><td>mysql2/promise</td><td>3.16</td><td>Async MySQL connection pooling</td></tr>
+                <tr><td><strong>Auth</strong></td><td>jsonwebtoken</td><td>9.0</td><td>JWT token generation & verification</td></tr>
+                <tr><td><strong>Hashing</strong></td><td>bcrypt / bcryptjs</td><td>6.0 / 3.0</td><td>Password hashing with salt</td></tr>
+                <tr><td><strong>Security</strong></td><td>Helmet</td><td>8.1</td><td>HTTP security headers, CSP, XSS protection</td></tr>
+                <tr><td><strong>CORS</strong></td><td>cors</td><td>2.8</td><td>Cross-origin resource sharing</td></tr>
+                <tr><td><strong>Rate Limit</strong></td><td>express-rate-limit</td><td>8.2</td><td>API abuse prevention (100 req / 15 min)</td></tr>
+                <tr><td><strong>Validation</strong></td><td>express-validator</td><td>7.3</td><td>Input sanitization and validation</td></tr>
+                <tr><td><strong>File Upload</strong></td><td>Multer</td><td>2.0</td><td>Multipart form data (NID, passport, docs)</td></tr>
+                <tr><td><strong>Payment</strong></td><td>SSLCommerz</td><td>1.2</td><td>Bangladesh payment gateway integration</td></tr>
+                <tr><td><strong>Email</strong></td><td>Nodemailer</td><td>7.0</td><td>OTP delivery, notifications</td></tr>
+                <tr><td><strong>HTTP Client</strong></td><td>Axios</td><td>1.13</td><td>External API calls (weather, NASA)</td></tr>
+                <tr><td><strong>Config</strong></td><td>dotenv</td><td>17.2</td><td>Environment variable management</td></tr>
+                <tr><td><strong>Frontend</strong></td><td>HTML/CSS/JS</td><td>—</td><td>Static pages served via Express</td></tr>
+            </tbody>
+        </table>
+
+        <!-- ════════════ DIRECTORY STRUCTURE ════════════ -->
+        <div class="section-title">7. Project Directory Structure</div>
+
+        <div class="dir-tree">
+<span class="folder">central-govt/</span>
+├── <span class="file">package.json</span>          <span class="comment">// Dependencies & scripts</span>
+├── <span class="file">.env</span>                   <span class="comment">// DB_HOST, DB_USER, DB_PASSWORD, JWT_SECRET</span>
+├── <span class="file">erdiagram.dbml</span>         <span class="comment">// Full ER diagram (117 tables)</span>
+│
+├── <span class="folder">public/</span>                <span class="comment">// Static files (served by Express)</span>
+│   ├── <span class="file">index.html</span>         <span class="comment">// Landing page</span>
+│   ├── <span class="file">dashboard.html</span>     <span class="comment">// User dashboard</span>
+│   ├── <span class="file">nid.html</span>           <span class="comment">// NID services</span>
+│   ├── <span class="file">passport.html</span>      <span class="comment">// Passport services</span>
+│   ├── <span class="file">health.html</span>        <span class="comment">// Health module</span>
+│   ├── <span class="file">admin-*.html</span>       <span class="comment">// Admin panels</span>
+│   ├── ... <span class="comment">(30+ HTML pages)</span>
+│   ├── <span class="folder">css/</span>              <span class="comment">// 21 stylesheets</span>
+│   ├── <span class="folder">js/</span>               <span class="comment">// 22 client-side JS files</span>
+│   ├── <span class="folder">images/</span>           <span class="comment">// Static assets</span>
+│   └── <span class="folder">uploads/</span>          <span class="comment">// User uploads (nid/, passport/, products/)</span>
+│
+└── <span class="folder">src/</span>                   <span class="comment">// Server-side source code</span>
+    ├── <span class="file">app.js</span>             <span class="comment">// Entry point — Express server setup</span>
+    ├── <span class="folder">config/</span>
+    │   └── <span class="file">db.js</span>          <span class="comment">// MySQL connection pool (mysql2/promise)</span>
+    ├── <span class="folder">controllers/</span>       <span class="comment">// Business logic (4 controllers)</span>
+    │   ├── <span class="file">authController.js</span>
+    │   ├── <span class="file">adminAuthController.js</span>
+    │   ├── <span class="file">dashboardController.js</span>
+    │   └── <span class="file">userController.js</span>
+    ├── <span class="folder">middleware/</span>        <span class="comment">// Auth & upload guards</span>
+    │   ├── <span class="file">authMiddleware.js</span>      <span class="comment">// JWT verification</span>
+    │   ├── <span class="file">adminMiddleware.js</span>     <span class="comment">// Admin role check</span>
+    │   └── <span class="file">uploadMiddleware.js</span>    <span class="comment">// Multer config</span>
+    ├── <span class="folder">routes/</span>            <span class="comment">// API endpoints (21 route files)</span>
+    │   ├── <span class="file">authRoutes.js</span>
+    │   ├── <span class="file">nidRoutes.js</span>
+    │   ├── <span class="file">passportRoutes.js</span>
+    │   ├── <span class="file">healthRoutes.js</span>
+    │   ├── <span class="file">waterRoutes.js</span>
+    │   ├── <span class="file">taxRoutes.js</span>
+    │   ├── ... <span class="comment">(15 more route files)</span>
+    │   ├── <span class="file">adminAuthRoutes.js</span>
+    │   └── <span class="file">adminRoutes.js</span>
+    └── <span class="folder">database/</span>          <span class="comment">// SQL schema files (25+ files)</span>
+        ├── <span class="file">schema_full.sql</span>        <span class="comment">// Complete schema</span>
+        ├── <span class="file">schema_normalized.sql</span>  <span class="comment">// 3NF normalized</span>
+        ├── <span class="file">stored_procedures.sql</span>  <span class="comment">// Reusable procedures</span>
+        ├── <span class="file">triggers.sql</span>           <span class="comment">// Audit triggers</span>
+        ├── <span class="file">views.sql</span>              <span class="comment">// Database views</span>
+        ├── <span class="file">complex_queries.sql</span>    <span class="comment">// JOINs, subqueries</span>
+        └── <span class="file">*_schema.sql</span>           <span class="comment">// Per-module schemas</span>
+        </div>
+
+        <!-- ════════════ SECURITY ════════════ -->
+        <div class="section-title">8. Security Architecture</div>
+
+        <div class="module-grid">
+            <div class="module-card">
+                <h4>🔐 Authentication</h4>
+                <p>JWT tokens with expiration. Bcrypt password hashing. Separate admin auth system with approval workflow.</p>
+            </div>
+            <div class="module-card">
+                <h4>🛡️ HTTP Security</h4>
+                <p>Helmet middleware: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, XSS-Filter.</p>
+            </div>
+            <div class="module-card">
+                <h4>⏱️ Rate Limiting</h4>
+                <p>100 requests per 15 minutes per IP on all /api/* endpoints. Prevents brute-force and DDoS.</p>
+            </div>
+            <div class="module-card">
+                <h4>✅ Input Validation</h4>
+                <p>express-validator on all form inputs. Parameterized SQL queries (prepared statements) prevent SQL injection.</p>
+            </div>
+            <div class="module-card">
+                <h4>📁 File Upload Security</h4>
+                <p>Multer with 5MB limit. File type restrictions. Separate upload directories per module (nid/, passport/, etc.)</p>
+            </div>
+            <div class="module-card">
+                <h4>📝 Audit Trail</h4>
+                <p>audit_log table tracks all CRUD operations. admin_actions_log tracks admin changes. login_logs for access monitoring.</p>
+            </div>
+        </div>
+
+        <!-- ════════════ DB ARCHITECTURE ════════════ -->
+        <div class="section-title">9. Database Architecture</div>
+
+        <div class="info-box">
+            <strong>Design Pattern:</strong> Star schema centered on <code>reg_info</code> (user hub). All modules FK-reference <code>reg_info.id</code>.
+            Geography normalized into <code>divisions → districts → upazilas</code> lookup chain. 
+            Payment and status lookups are shared across modules for consistency.<br><br>
+            <strong>Normalization:</strong> All 117 tables are in <strong>3rd Normal Form (3NF)</strong>. 
+            No transitive dependencies. Junction tables for M:N relationships. 
+            Proper FK constraints with cascading rules.<br><br>
+            <strong>Advanced Features:</strong> Stored procedures for complex operations. 
+            Triggers for automatic audit logging. Views for reporting aggregation. 
+            Indexes on all PK, UK, and FK columns for query performance.
+        </div>
+
+        <!-- ════════════ DOWNLOAD ════════════ -->
+        <div class="controls">
+            <button class="btn btn-green" onclick="downloadSVG()">📥 Print / Save as PDF</button>
+        </div>
+
+    </div><!-- /body-wrap -->
+</div><!-- /page -->
+
+<script>
+    function downloadSVG() {
+        window.print();
+    }
+</script>
+</body>
+</html>
