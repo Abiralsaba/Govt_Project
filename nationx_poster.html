@@ -6,464 +6,433 @@
 <title>NATIONX - Project Poster</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800;900&family=Bangers&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-
 :root {
-    --bd-green: #006a4e;
-    --bd-green-light: #00a878;
-    --bd-green-dark: #004d38;
-    --bd-red: #f42a41;
-    --bd-red-glow: #ff4d63;
-    --bd-red-dark: #c7001e;
-    --gold: #ffd700;
-    --gold-light: #ffe44d;
-    --dark: #050a0e;
-    --dark2: #0a1a14;
-    --card-bg: rgba(0,106,78,.12);
-    --text: #e8f5e9;
-    --text-dim: #80cbc4;
+    --px-green: #00ff88;
+    --px-green-dim: #00cc66;
+    --px-green-dark: #006a4e;
+    --px-red: #ff2244;
+    --px-red-bright: #ff4466;
+    --px-red-dark: #cc0022;
+    --px-gold: #ffdd00;
+    --px-gold-dim: #ccaa00;
+    --px-cyan: #00ddff;
+    --px-magenta: #ff44cc;
+    --px-bg: #0a0a1a;
+    --px-bg2: #0d1117;
+    --px-card: #111122;
+    --px-card-border: #00ff88;
+    --px-text: #c0f0d0;
+    --px-text-dim: #669988;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
+* { margin:0; padding:0; box-sizing:border-box; image-rendering: pixelated; }
 
 body {
-    background: #020806;
-    font-family: 'Rajdhani', sans-serif;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 20px;
+    background: #050510;
+    font-family: 'VT323', monospace;
+    display:flex; flex-direction:column; align-items:center;
+    padding:20px;
 }
 
-/* Download bar */
+/* ═══ DOWNLOAD BAR ═══ */
 .dl-bar {
     position:sticky; top:0; z-index:999;
-    background: rgba(0,40,30,.98);
-    padding:12px 30px; border-radius:14px;
-    margin-bottom:18px;
+    background: var(--px-bg);
+    padding:10px 24px;
+    margin-bottom:16px;
     display:flex; gap:14px; align-items:center;
-    border:1.5px solid var(--bd-green);
-    box-shadow: 0 0 30px rgba(0,106,78,.3);
+    border: 3px solid var(--px-green);
+    box-shadow: 6px 6px 0 #003322, 0 0 20px rgba(0,255,136,.15);
 }
-.dl-bar span { color: var(--gold); font-weight:700; font-size:.95em; letter-spacing:1px; }
+.dl-bar span { color: var(--px-gold); font-family:'Press Start 2P',monospace; font-size:.55em; letter-spacing:1px; }
 .dl-btn {
-    padding:10px 28px; border:none; border-radius:10px;
-    font-weight:800; font-size:.85em; cursor:pointer;
-    background: linear-gradient(135deg, var(--bd-red), var(--bd-red-dark));
-    color:#fff; letter-spacing:1px;
-    transition: all .3s; box-shadow: 0 4px 20px rgba(244,42,65,.3);
+    padding:10px 24px; border:3px solid #fff; background: var(--px-red);
+    color:#fff; font-family:'Press Start 2P',monospace; font-size:.5em;
+    cursor:pointer; letter-spacing:1px;
+    box-shadow: 4px 4px 0 var(--px-red-dark);
+    transition: all .1s;
 }
-.dl-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 30px rgba(244,42,65,.5); }
-.dl-status { color: var(--text-dim); font-size:.8em; }
+.dl-btn:hover { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--px-red-dark); }
+.dl-btn:active { transform:translate(4px,4px); box-shadow:none; }
+.dl-status { color: var(--px-cyan); font-family:'VT323',monospace; font-size:.85em; }
 
-/* ═══════ POSTER ═══════ */
+/* ═══ POSTER ═══ */
 #poster {
     width: 1600px;
-    background: linear-gradient(170deg, #020e08 0%, #041a12 15%, #052a1c 35%, #04200f 55%, #031208 75%, #020a06 100%);
-    position: relative;
-    overflow: hidden;
-    color: var(--text);
+    background: var(--px-bg);
+    position:relative; overflow:hidden;
+    color: var(--px-text);
+    border: 4px solid var(--px-green);
+    box-shadow: 8px 8px 0 #003322, -2px -2px 0 #003322;
 }
 
-/* ── Anime Speed Lines ── */
-.speed-lines {
-    position:absolute; inset:0; z-index:0; pointer-events:none;
-    overflow: hidden;
-}
-.speed-lines::before {
-    content:''; position:absolute;
-    top:-50%; left:60%; width:200%; height:200%;
+/* Scanlines overlay */
+.scanlines {
+    position:absolute; inset:0; z-index:2; pointer-events:none;
     background: repeating-linear-gradient(
-        -25deg,
-        transparent 0px, transparent 40px,
-        rgba(0,106,78,.04) 40px, rgba(0,106,78,.04) 42px
-    );
-    transform: rotate(0deg);
-}
-.speed-lines::after {
-    content:''; position:absolute;
-    top:-50%; right:60%; width:200%; height:200%;
-    background: repeating-linear-gradient(
-        25deg,
-        transparent 0px, transparent 60px,
-        rgba(244,42,65,.025) 60px, rgba(244,42,65,.025) 62px
+        0deg,
+        transparent 0px, transparent 2px,
+        rgba(0,0,0,.12) 2px, rgba(0,0,0,.12) 4px
     );
 }
 
-/* BD Flag Circle (giant semi-transparent) */
-.bd-circle {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    width: 700px; height: 700px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(244,42,65,.08) 0%, rgba(244,42,65,.03) 50%, transparent 70%);
-    z-index:0; pointer-events:none;
-    box-shadow: 0 0 200px rgba(244,42,65,.08);
-}
-
-/* Corner glow accents */
-.glow-tl { position:absolute; top:-80px; left:-80px; width:400px; height:400px; border-radius:50%; background: radial-gradient(circle, rgba(0,168,120,.12) 0%, transparent 60%); z-index:0; pointer-events:none; }
-.glow-br { position:absolute; bottom:-60px; right:-60px; width:350px; height:350px; border-radius:50%; background: radial-gradient(circle, rgba(244,42,65,.08) 0%, transparent 60%); z-index:0; pointer-events:none; }
-
-/* Hexagon grid pattern */
-.hex-grid {
-    position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.03;
+/* Pixel grid dots */
+.pixel-grid {
+    position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.04;
     background:
-        linear-gradient(60deg, transparent 47%, rgba(0,168,120,.5) 47.5%, rgba(0,168,120,.5) 48.5%, transparent 49%) 0 0 / 56px 100px,
-        linear-gradient(-60deg, transparent 47%, rgba(0,168,120,.5) 47.5%, rgba(0,168,120,.5) 48.5%, transparent 49%) 0 0 / 56px 100px;
+        repeating-linear-gradient(0deg, var(--px-green) 0px, var(--px-green) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, var(--px-green) 0px, var(--px-green) 1px, transparent 1px, transparent 20px);
 }
 
-.poster-inner { position:relative; z-index:1; padding:26px 30px 20px; }
+/* Corner decorations - pixel stars */
+.px-corner-tl, .px-corner-br {
+    position:absolute; z-index:1; pointer-events:none;
+    font-size:80px; line-height:1; opacity:.06;
+}
+.px-corner-tl { top:10px; left:15px; color:var(--px-green); }
+.px-corner-br { bottom:10px; right:15px; color:var(--px-red); }
 
-/* ─── HEADER ─── */
+.poster-inner { position:relative; z-index:3; padding:22px 26px 18px; }
+
+/* ═══ HEADER ═══ */
 .poster-header {
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:14px; padding-bottom:14px;
-    border-bottom: 3px solid;
-    border-image: linear-gradient(90deg, var(--bd-red), var(--bd-green), var(--bd-red)) 1;
-    position: relative;
+    margin-bottom:12px; padding-bottom:12px;
+    border-bottom: 4px double var(--px-green);
 }
 
-.header-left { flex: 0 0 auto; position: relative; }
+.header-left { flex:0 0 auto; }
 .header-left h1 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3.2em; font-weight: 900;
-    letter-spacing: 10px;
-    background: linear-gradient(135deg, var(--bd-red) 0%, var(--bd-red-glow) 30%, var(--gold) 50%, var(--bd-green-light) 70%, var(--bd-green) 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 25px rgba(244,42,65,.4)) drop-shadow(0 0 50px rgba(0,106,78,.2));
-    line-height: 1;
-    animation: shimmer 4s ease-in-out infinite;
+    font-family:'Press Start 2P', monospace;
+    font-size:2em; color: var(--px-gold);
+    letter-spacing:6px; line-height:1.2;
+    text-shadow:
+        4px 4px 0 var(--px-red-dark),
+        -1px -1px 0 var(--px-green),
+        0 0 20px rgba(255,221,0,.3);
 }
-@keyframes shimmer { 0%,100% { background-position: 0% center; } 50% { background-position: 200% center; } }
-
 .header-left .flag-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 52px; height: 52px;
-    background: var(--bd-green);
-    border-radius: 8px; margin-right: 10px;
-    vertical-align: middle;
-    box-shadow: 0 4px 15px rgba(0,106,78,.5), inset 0 0 0 2px rgba(255,255,255,.1);
-    position: relative;
-    transform: perspective(400px) rotateY(-5deg);
+    display:inline-block; width:40px; height:28px;
+    background: var(--px-green-dark);
+    border:2px solid #fff;
+    vertical-align:middle; margin-right:8px;
+    position:relative;
+    box-shadow: 3px 3px 0 #003322;
 }
 .flag-icon .red-dot {
-    width: 20px; height: 20px;
-    background: radial-gradient(circle at 35% 35%, #ff6b7a, var(--bd-red), var(--bd-red-dark));
-    border-radius: 50%;
-    box-shadow: 0 0 12px rgba(244,42,65,.6);
+    position:absolute; top:50%; left:45%;
+    transform:translate(-50%,-50%);
+    width:14px; height:14px;
+    background: var(--px-red);
+    border-radius:0;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
-
 .header-left .tagline {
-    font-size: .78em; color: var(--text-dim);
-    margin-top: 3px; font-weight: 500; letter-spacing: 2px;
-    text-transform: uppercase;
+    font-family:'VT323', monospace;
+    font-size:1em; color:var(--px-cyan);
+    margin-top:4px; letter-spacing:2px;
 }
 
 .header-center { text-align:center; flex:1; padding:0 16px; }
 .header-center .course-badge {
-    background: linear-gradient(135deg, var(--bd-red), var(--bd-red-dark));
-    color:#fff; padding:6px 22px; border-radius:25px;
-    font-size:.78em; font-weight:700; display:inline-block;
-    box-shadow: 0 4px 20px rgba(244,42,65,.35);
-    letter-spacing: 1px;
-    transform: perspective(600px) rotateX(2deg);
-    border: 1px solid rgba(255,255,255,.15);
+    background: var(--px-red);
+    color:#fff; padding:8px 20px;
+    font-family:'Press Start 2P',monospace; font-size:.42em;
+    display:inline-block; letter-spacing:1px;
+    border:2px solid #fff;
+    box-shadow: 4px 4px 0 var(--px-red-dark);
 }
-.header-center .uni { color: #5f9ea0; font-size:.68em; margin-top:3px; letter-spacing:.5px; }
+.header-center .uni {
+    font-family:'VT323',monospace;
+    color: var(--px-text-dim); font-size:.9em; margin-top:5px; letter-spacing:1px;
+}
 
-/* Team Box - 3D card */
+/* Team Box - pixel card */
 .team-box {
-    background: linear-gradient(145deg, rgba(0,106,78,.2), rgba(0,106,78,.08));
-    border: 2px solid rgba(0,168,120,.35);
-    border-radius: 14px; padding: 12px 18px;
-    min-width: 290px; flex-shrink:0;
-    box-shadow:
-        0 8px 30px rgba(0,0,0,.4),
-        0 0 20px rgba(0,106,78,.15),
-        inset 0 1px 0 rgba(255,255,255,.05);
-    transform: perspective(800px) rotateY(-2deg);
-    position: relative;
+    background: var(--px-card);
+    border: 3px solid var(--px-gold);
+    padding:10px 14px; min-width:290px;
+    box-shadow: 6px 6px 0 var(--px-gold-dim), inset 0 0 30px rgba(255,221,0,.03);
+    position:relative;
 }
 .team-box::before {
-    content:''; position:absolute; top:0; left:0; right:0; height:2px;
-    background: linear-gradient(90deg, transparent, var(--bd-green-light), transparent);
+    content:''; position:absolute; top:-3px; left:-3px; right:-3px;
+    height:3px; background: repeating-linear-gradient(90deg, var(--px-gold) 0 8px, transparent 8px 12px);
 }
 .team-box .team-title {
-    font-family:'Orbitron', sans-serif;
-    font-size:.76em; font-weight:800; color: var(--gold);
-    letter-spacing: 4px; margin-bottom:6px; text-align:center;
-    text-shadow: 0 0 10px rgba(255,215,0,.3);
+    font-family:'Press Start 2P',monospace;
+    font-size:.42em; color: var(--px-gold);
+    letter-spacing:2px; margin-bottom:8px; text-align:center;
+    text-shadow: 2px 2px 0 rgba(0,0,0,.5);
 }
 .team-member {
     display:flex; justify-content:space-between; align-items:center;
-    padding:2.5px 0; font-size:.7em;
-    border-bottom: 1px solid rgba(0,168,120,.12);
+    padding:3px 0; font-size:.95em;
+    border-bottom: 1px dashed rgba(255,221,0,.2);
 }
 .team-member:last-child { border:none; }
-.tm-name { color: #c8e6c9; font-weight:600; }
+.tm-name { color:#aaffcc; font-family:'VT323',monospace; font-weight:400; }
 .tm-id {
-    background: rgba(244,42,65,.15);
-    color: var(--bd-red-glow);
-    padding:1px 8px; border-radius:4px;
-    font-family:'Courier New', monospace; font-size:.88em;
-    border: 1px solid rgba(244,42,65,.2);
+    background: var(--px-red-dark);
+    color: var(--px-red-bright);
+    padding:1px 8px;
+    font-family:'Press Start 2P',monospace; font-size:.55em;
+    border:1px solid var(--px-red);
+    box-shadow: 2px 2px 0 rgba(0,0,0,.5);
 }
 
-/* ─── MAIN GRID ─── */
-.main-grid { display:grid; grid-template-columns: 275px 1fr 295px; gap:12px; align-items:start; }
+/* ═══ MAIN GRID ═══ */
+.main-grid { display:grid; grid-template-columns:275px 1fr 295px; gap:10px; align-items:start; }
 
-/* ─── SECTION BOX (3D card) ─── */
+/* ═══ SECTION BOX (pixel card) ═══ */
 .section-box {
-    background: linear-gradient(145deg, rgba(0,106,78,.1), rgba(0,50,35,.15));
-    border: 1px solid rgba(0,168,120,.2);
-    border-radius: 10px; padding: 12px 13px;
-    box-shadow:
-        0 6px 20px rgba(0,0,0,.3),
-        inset 0 1px 0 rgba(255,255,255,.03);
-    position: relative;
-    transition: transform .2s;
+    background: var(--px-card);
+    border: 2px solid var(--px-green);
+    padding:10px 11px;
+    box-shadow: 4px 4px 0 #003322;
+    position:relative;
+}
+.section-box::before {
+    content:''; position:absolute;
+    top:0; left:0; width:8px; height:8px;
+    background: var(--px-red);
+    box-shadow: 0 0 6px var(--px-red);
 }
 .section-box::after {
-    content:''; position:absolute; top:0; left:0; right:0; height:1.5px;
-    background: linear-gradient(90deg, transparent, var(--bd-green-light), transparent);
-    opacity:.5;
+    content:''; position:absolute;
+    bottom:0; right:0; width:8px; height:8px;
+    background: var(--px-green);
+    box-shadow: 0 0 6px var(--px-green);
 }
 
 .section-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: .62em; font-weight: 700;
-    color: var(--bd-green-light);
-    text-transform: uppercase; letter-spacing: 3px;
-    margin-bottom: 7px; padding-bottom: 4px;
-    border-bottom: 2px solid rgba(0,168,120,.2);
+    font-family:'Press Start 2P',monospace;
+    font-size:.42em; color: var(--px-green);
+    text-transform:uppercase; letter-spacing:2px;
+    margin-bottom:7px; padding-bottom:5px;
+    border-bottom: 2px dashed rgba(0,255,136,.25);
     display:flex; align-items:center; gap:6px;
-    text-shadow: 0 0 8px rgba(0,168,120,.3);
+    text-shadow: 0 0 8px rgba(0,255,136,.3);
 }
 
-/* ─── LEFT COL ─── */
+/* ═══ LEFT COL ═══ */
 .left-col { display:flex; flex-direction:column; gap:8px; }
 
-.motivation p { font-size:.68em; color:#80cbc4; line-height:1.6; }
-.motivation p strong { color: var(--gold-light); font-weight:700; }
+.motivation p { font-size:1em; color:var(--px-text); line-height:1.5; font-family:'VT323',monospace; }
+.motivation p strong { color: var(--px-gold); }
 
 .features-list { list-style:none; display:flex; flex-direction:column; gap:1px; }
 .features-list li {
-    font-size:.63em; color:#a5d6a7; padding:2.5px 7px;
-    background: linear-gradient(90deg, rgba(0,168,120,.12), transparent);
-    border-left: 2.5px solid var(--bd-red);
-    border-radius: 0 4px 4px 0;
-    transition: background .2s;
+    font-family:'VT323',monospace;
+    font-size:.95em; color:#88ddaa; padding:2px 6px;
+    background: rgba(0,255,136,.04);
+    border-left: 3px solid var(--px-red);
 }
-.features-list li::before { content:'\25B8 '; color: var(--bd-red-glow); font-weight:700; }
+.features-list li::before {
+    content:'> '; color: var(--px-green); font-weight:700;
+}
 
-/* ─── CENTER COL ─── */
+/* ═══ CENTER COL ═══ */
 .center-col { display:flex; flex-direction:column; gap:8px; }
-
-/* Bottom row - 3 boxes under tech stack */
 .bottom-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 
-.overview-text { font-size:.72em; color:#80cbc4; line-height:1.6; }
-.overview-text strong { color: var(--gold-light); }
+.overview-text {
+    font-family:'VT323',monospace;
+    font-size:1.05em; color:var(--px-text); line-height:1.5;
+}
+.overview-text strong { color: var(--px-gold); }
 
-/* Module Preview Cards - 3D */
-.screenshots-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+/* Module cards - pixel style */
+.screenshots-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
 .screenshot-card {
-    background: linear-gradient(145deg, rgba(0,106,78,.15), rgba(0,40,28,.25));
-    border-radius: 8px; overflow:hidden;
-    border: 1px solid rgba(0,168,120,.2);
-    box-shadow: 0 4px 15px rgba(0,0,0,.3);
-    transform: perspective(800px) rotateX(1deg);
-    transition: transform .2s, box-shadow .2s;
+    background: #0a0a1e;
+    border: 2px solid var(--px-green-dim);
+    overflow:hidden;
+    box-shadow: 3px 3px 0 #003322;
 }
 .ss-header {
-    background: linear-gradient(135deg, var(--bd-green), var(--bd-green-dark));
-    padding:4px 6px; font-size:.62em; font-weight:700;
+    background: var(--px-green-dark);
+    padding:4px 6px;
+    font-family:'Press Start 2P',monospace; font-size:.32em;
     color:#fff; text-align:center; letter-spacing:.5px;
-    text-shadow: 0 1px 3px rgba(0,0,0,.3);
-    border-bottom: 2px solid var(--bd-red);
+    border-bottom: 2px solid var(--px-red);
+    text-shadow: 1px 1px 0 rgba(0,0,0,.5);
 }
 .ss-body {
-    padding:6px 5px; display:flex; align-items:center;
+    padding:6px 4px; display:flex; align-items:center;
     justify-content:center; flex-direction:column; gap:2px;
 }
-.ss-body .ss-icon { font-size:1.3em; line-height:1; filter: drop-shadow(0 0 6px rgba(0,168,120,.3)); }
-.ss-body .ss-desc { font-size:.53em; color:#5f9ea0; text-align:center; line-height:1.35; }
+.ss-body .ss-icon { font-size:1.3em; line-height:1; }
+.ss-body .ss-desc { font-family:'VT323',monospace; font-size:.8em; color:var(--px-text-dim); text-align:center; line-height:1.3; }
 
-/* Tech badges */
-.tech-bar { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:3px; }
+/* Tech badges - pixel buttons */
+.tech-bar { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
 .tech-badge {
-    padding:4px 12px; border-radius:6px;
-    font-size:.66em; font-weight:700; color:#fff; letter-spacing:.5px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.35);
-    transform: perspective(500px) rotateX(3deg);
-    border: 1px solid rgba(255,255,255,.1);
+    padding:5px 12px;
+    font-family:'Press Start 2P',monospace; font-size:.35em;
+    color:#fff; letter-spacing:.5px;
+    border:2px solid #fff;
 }
-.tb-node    { background: linear-gradient(135deg, #2e7d32, #43a047); }
-.tb-express { background: linear-gradient(135deg, #37474f, #546e7a); }
-.tb-mysql   { background: linear-gradient(135deg, #00695c, #00897b); }
-.tb-html    { background: linear-gradient(135deg, #d84315, #f4511e); }
-.tb-css     { background: linear-gradient(135deg, #1565c0, #1e88e5); }
-.tb-js      { background: linear-gradient(135deg, #f57f17, #fdd835); color:#333; }
-.tb-jwt     { background: linear-gradient(135deg, #7b1fa2, #ab47bc); }
-.tb-ssl     { background: linear-gradient(135deg, var(--bd-red-dark), var(--bd-red)); }
+.tb-node    { background:#2e7d32; box-shadow:3px 3px 0 #1b5e20; }
+.tb-express { background:#37474f; box-shadow:3px 3px 0 #263238; }
+.tb-mysql   { background:#00695c; box-shadow:3px 3px 0 #004d40; }
+.tb-html    { background:#d84315; box-shadow:3px 3px 0 #bf360c; }
+.tb-css     { background:#1565c0; box-shadow:3px 3px 0 #0d47a1; }
+.tb-js      { background:#f57f17; box-shadow:3px 3px 0 #e65100; color:#000; }
+.tb-jwt     { background:#7b1fa2; box-shadow:3px 3px 0 #4a148c; }
+.tb-ssl     { background:var(--px-red-dark); box-shadow:3px 3px 0 #880011; }
 
-/* ─── RIGHT COL ─── */
+/* ═══ RIGHT COL ═══ */
 .right-col { display:flex; flex-direction:column; gap:8px; }
 
 /* Workflow */
-.wf-role { display:flex; align-items:flex-start; margin-bottom:7px; }
+.wf-role { display:flex; align-items:flex-start; margin-bottom:6px; }
 .wf-role:last-child { margin-bottom:0; }
 .wf-role-badge {
-    min-width:68px; padding:5px 6px; border-radius:7px;
-    font-size:.62em; font-weight:700; text-align:center; flex-shrink:0;
-    box-shadow: 0 4px 15px rgba(0,0,0,.35);
-    transform: perspective(400px) rotateY(3deg);
-    border: 1px solid rgba(255,255,255,.1);
+    min-width:68px; padding:5px 6px;
+    font-family:'Press Start 2P',monospace; font-size:.32em;
+    text-align:center; flex-shrink:0; color:#fff;
+    border:2px solid #fff;
 }
-.wf-citizen { background: linear-gradient(135deg, var(--bd-green), var(--bd-green-dark)); }
-.wf-admin   { background: linear-gradient(135deg, var(--bd-red), var(--bd-red-dark)); }
-.wf-system  { background: linear-gradient(135deg, #bf360c, #e65100); }
-.wf-connector { padding:0 4px; color: var(--gold); font-size:.72em; display:flex; align-items:center; text-shadow: 0 0 8px rgba(255,215,0,.3); }
+.wf-citizen { background:var(--px-green-dark); box-shadow:3px 3px 0 #003322; }
+.wf-admin   { background:var(--px-red-dark); box-shadow:3px 3px 0 #880011; }
+.wf-system  { background:#bf360c; box-shadow:3px 3px 0 #7f2400; }
+.wf-connector { padding:0 4px; color: var(--px-gold); font-size:.9em; display:flex; align-items:center; text-shadow:0 0 6px rgba(255,221,0,.4); }
 .wf-actions { display:flex; flex-wrap:wrap; gap:2px; }
 .wf-action {
-    background: rgba(0,106,78,.15);
-    border: 1px solid rgba(0,168,120,.2);
-    padding:2px 6px; border-radius:4px;
-    font-size:.55em; color:#80cbc4; white-space:nowrap;
+    background: rgba(0,255,136,.06);
+    border: 1px solid rgba(0,255,136,.2);
+    padding:2px 6px;
+    font-family:'VT323',monospace; font-size:.82em; color:#66ddaa; white-space:nowrap;
 }
 
-/* DB Stats - 3D tiles */
+/* DB Stats - pixel tiles */
 .db-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
 .db-stat {
-    background: linear-gradient(145deg, rgba(0,106,78,.18), rgba(0,50,35,.15));
-    border: 1px solid rgba(0,168,120,.25);
-    border-radius:7px; padding:6px 3px; text-align:center;
-    box-shadow: 0 3px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
-    transform: perspective(400px) rotateX(2deg);
+    background: #0a0a1e;
+    border: 2px solid var(--px-cyan);
+    padding:6px 3px; text-align:center;
+    box-shadow: 3px 3px 0 #005566;
 }
 .db-stat .num {
-    font-family:'Orbitron', sans-serif;
-    font-size:1.1em; font-weight:800;
-    background: linear-gradient(135deg, var(--bd-red-glow), var(--gold));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 4px rgba(244,42,65,.3));
-    line-height:1;
+    font-family:'Press Start 2P',monospace;
+    font-size:.6em; color: var(--px-gold);
+    text-shadow: 2px 2px 0 rgba(0,0,0,.5);
+    line-height:1.4;
 }
-.db-stat .lbl { font-size:.52em; color:#5f9ea0; margin-top:1px; }
+.db-stat .lbl { font-family:'VT323',monospace; font-size:.8em; color:var(--px-cyan); margin-top:1px; }
 
-/* Normalization Banner - Anime glowing */
+/* Normalization - pixel banner */
 .norm-banner {
-    background: linear-gradient(135deg, rgba(0,106,78,.2), rgba(0,60,42,.15));
-    border: 2px solid rgba(0,168,120,.4);
-    border-radius:10px; padding:10px 12px; text-align:center;
-    position:relative; overflow:hidden;
-    box-shadow: 0 0 25px rgba(0,168,120,.15), 0 6px 20px rgba(0,0,0,.3);
+    background: var(--px-card);
+    border: 3px solid var(--px-green);
+    padding:10px 10px; text-align:center;
+    position:relative;
+    box-shadow: 4px 4px 0 #003322;
 }
 .norm-banner::before {
-    content:''; position:absolute; inset:0;
-    background: linear-gradient(90deg, transparent 20%, rgba(0,168,120,.06) 50%, transparent 80%);
+    content:''; position:absolute; top:3px; left:3px; right:3px; bottom:3px;
+    border: 1px dashed rgba(0,255,136,.2);
+    pointer-events:none;
 }
-.norm-banner::after {
-    content:''; position:absolute;
-    top:-2px; left:-2px; right:-2px; bottom:-2px;
-    border-radius:12px; z-index:-1;
-    background: linear-gradient(135deg, var(--bd-green-light), var(--bd-red), var(--bd-green));
-    background-size: 300% 300%;
-    animation: borderGlow 3s ease infinite;
-    opacity:.3;
-}
-@keyframes borderGlow { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
-
 .norm-title {
-    font-family:'Orbitron', sans-serif;
-    font-size:.92em; font-weight:900; letter-spacing:2px;
-    background: linear-gradient(135deg, var(--bd-green-light), var(--gold));
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    margin-bottom:5px; position:relative;
-    filter: drop-shadow(0 0 6px rgba(0,168,120,.3));
+    font-family:'Press Start 2P',monospace;
+    font-size:.38em; color: var(--px-green);
+    letter-spacing:1px; margin-bottom:6px;
+    text-shadow: 0 0 10px rgba(0,255,136,.4);
 }
-.norm-badges { display:flex; gap:8px; justify-content:center; position:relative; }
+.norm-badges { display:flex; gap:8px; justify-content:center; }
 .norm-badge {
-    padding:4px 16px; border-radius:6px;
-    font-size:.7em; font-weight:800; letter-spacing:1.5px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.3);
+    padding:4px 14px;
+    font-family:'Press Start 2P',monospace; font-size:.35em;
+    color:#fff; border:2px solid #fff;
 }
-.nb-3nf { background: linear-gradient(135deg, var(--bd-green), var(--bd-green-light)); color:#fff; }
-.nb-bcnf { background: linear-gradient(135deg, var(--bd-red), var(--bd-red-glow)); color:#fff; }
-.norm-sub { font-size:.55em; color:#4db6ac; margin-top:4px; font-weight:500; position:relative; }
+.nb-3nf { background:var(--px-green-dark); box-shadow:3px 3px 0 #003322; }
+.nb-bcnf { background:var(--px-red); box-shadow:3px 3px 0 var(--px-red-dark); }
+.norm-sub { font-family:'VT323',monospace; font-size:.82em; color:var(--px-text-dim); margin-top:5px; }
 
-/* Security */
+/* Security chips */
 .sec-chips { display:flex; flex-wrap:wrap; gap:3px; }
 .sec-chip {
-    background: rgba(244,42,65,.08);
-    border: 1px solid rgba(244,42,65,.2);
-    color: var(--bd-red-glow);
-    padding:2px 7px; border-radius:4px;
-    font-size:.55em; font-weight:600;
+    background: rgba(255,34,68,.08);
+    border: 1px solid rgba(255,34,68,.3);
+    color: var(--px-red-bright);
+    padding:2px 7px;
+    font-family:'VT323',monospace; font-size:.82em;
 }
 
 /* Architecture */
-.arch-row { display:flex; gap:5px; align-items:center; margin-bottom:3px; font-size:.64em; }
+.arch-row { display:flex; gap:5px; align-items:center; margin-bottom:3px; font-family:'VT323',monospace; font-size:.95em; }
 .arch-row:last-child { margin-bottom:0; }
 .arch-badge {
-    padding:2px 8px; border-radius:4px;
-    font-weight:700; font-size:.88em; color:#fff;
+    padding:2px 8px; font-size:.85em; color:#fff;
     min-width:50px; text-align:center; flex-shrink:0;
-    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    border:2px solid #fff;
+    font-family:'Press Start 2P',monospace; font-size:.4em;
 }
-.ab-client { background: linear-gradient(135deg, var(--bd-green), var(--bd-green-dark)); }
-.ab-server { background: linear-gradient(135deg, var(--bd-red), var(--bd-red-dark)); }
-.ab-data   { background: linear-gradient(135deg, #bf360c, #e65100); }
-.arch-arrow { color: var(--gold); font-weight:700; }
-.arch-desc { color: #5f9ea0; }
+.ab-client { background:var(--px-green-dark); box-shadow:2px 2px 0 #003322; }
+.ab-server { background:var(--px-red-dark); box-shadow:2px 2px 0 #880011; }
+.ab-data   { background:#bf360c; box-shadow:2px 2px 0 #7f2400; }
+.arch-arrow { color: var(--px-gold); font-weight:700; }
+.arch-desc { color: var(--px-text-dim); }
 
-/* ─── FOOTER ─── */
+/* ═══ FOOTER ═══ */
 .poster-footer {
-    margin-top:14px; padding-top:10px;
-    border-top: 3px solid;
-    border-image: linear-gradient(90deg, var(--bd-green), var(--bd-red), var(--bd-green)) 1;
+    margin-top:12px; padding-top:10px;
+    border-top: 4px double var(--px-green);
     display:flex; justify-content:space-between; align-items:center;
 }
-.footer-left { font-size:.62em; color:#2e7d32; }
+.footer-left { font-family:'VT323',monospace; font-size:.9em; color:var(--px-green-dim); }
 .footer-center { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; }
 .footer-tag {
-    background: rgba(0,106,78,.15);
-    border: 1px solid rgba(0,168,120,.2);
-    color: var(--bd-green-light);
-    padding:2px 8px; border-radius:10px;
-    font-size:.56em; font-weight:600;
+    background: rgba(0,255,136,.06);
+    border: 1px solid rgba(0,255,136,.2);
+    color: var(--px-green);
+    padding:2px 8px;
+    font-family:'VT323',monospace; font-size:.82em;
 }
-.footer-right { font-size:.62em; color:#2e7d32; }
+.footer-right { font-family:'VT323',monospace; font-size:.9em; color:var(--px-green-dim); }
+
+/* ═══ HP BAR decoration ═══ */
+.hp-bar {
+    display:flex; align-items:center; gap:6px;
+    margin-top:6px; padding:4px 8px;
+    background: rgba(0,0,0,.3);
+    border: 1px solid rgba(0,255,136,.15);
+}
+.hp-label { font-family:'Press Start 2P',monospace; font-size:.3em; color:var(--px-red); min-width:24px; }
+.hp-track { flex:1; height:10px; background:#1a1a2e; border:1px solid #333; position:relative; }
+.hp-fill { height:100%; background:var(--px-green); position:relative; }
+.hp-fill::after { content:''; position:absolute; top:0; left:0; right:0; height:40%; background:rgba(255,255,255,.15); }
+.hp-val { font-family:'Press Start 2P',monospace; font-size:.28em; color:var(--px-text); min-width:50px; text-align:right; }
 </style>
 </head>
 <body>
 <div class="dl-bar">
     <span>NATIONX POSTER</span>
-    <button class="dl-btn" onclick="downloadPNG()">&#x1F4E5; Download HD PNG</button>
+    <button class="dl-btn" onclick="downloadPNG()">&#x1F4E5; DOWNLOAD PNG</button>
     <span class="dl-status" id="dlStatus"></span>
 </div>
 
 <div id="poster">
-    <div class="speed-lines"></div>
-    <div class="bd-circle"></div>
-    <div class="glow-tl"></div>
-    <div class="glow-br"></div>
-    <div class="hex-grid"></div>
+    <div class="scanlines"></div>
+    <div class="pixel-grid"></div>
+    <div class="px-corner-tl">&#x2726;</div>
+    <div class="px-corner-br">&#x2726;</div>
 
 <div class="poster-inner">
     <!-- HEADER -->
     <div class="poster-header">
         <div class="header-left">
             <h1><span class="flag-icon"><span class="red-dot"></span></span> NATIONX</h1>
-            <div class="tagline">Unified Digital Government Services Platform for Bangladesh</div>
+            <div class="tagline">// UNIFIED DIGITAL GOVERNMENT SERVICES PLATFORM FOR BANGLADESH</div>
         </div>
         <div class="header-center">
-            <div class="course-badge">DBMS PROJECT &#8212; DATABASE MANAGEMENT SYSTEM</div>
-            <div class="uni">United International University &#183; CSE Department &#183; 2025</div>
+            <div class="course-badge">DBMS PROJECT - DATABASE MANAGEMENT SYSTEM</div>
+            <div class="uni">United International University // CSE Department // 2025</div>
         </div>
         <div class="team-box">
             <div class="team-title">&#x2605; SELECT * FROM WINNERS &#x2605;</div>
@@ -510,6 +479,12 @@ body {
                     <li>Stored Procedures &amp; Views</li>
                     <li>Password Reset via OTP</li>
                 </ul>
+                <!-- HP BAR decoration -->
+                <div class="hp-bar">
+                    <span class="hp-label">FEAT</span>
+                    <div class="hp-track"><div class="hp-fill" style="width:100%"></div></div>
+                    <span class="hp-val">30+ / 30+</span>
+                </div>
             </div>
         </div>
 
@@ -539,7 +514,7 @@ body {
                 <div class="section-label" style="justify-content:center;">&#x26A1; TECHNOLOGY STACK</div>
                 <div class="tech-bar">
                     <span class="tech-badge tb-node">Node.js</span>
-                    <span class="tech-badge tb-express">Express.js v5</span>
+                    <span class="tech-badge tb-express">Express v5</span>
                     <span class="tech-badge tb-mysql">MySQL</span>
                     <span class="tech-badge tb-html">HTML5</span>
                     <span class="tech-badge tb-css">CSS3</span>
@@ -555,7 +530,7 @@ body {
                         <span class="norm-badge nb-3nf">3NF &#x2713;</span>
                         <span class="norm-badge nb-bcnf">BCNF &#x2713;</span>
                     </div>
-                    <div class="norm-sub">All 134+ tables &#8212; 3NF &amp; BCNF &#8212; zero redundancy</div>
+                    <div class="norm-sub">All 134+ tables - 3NF &amp; BCNF - zero redundancy</div>
                 </div>
                 <div class="section-box">
                     <div class="section-label">&#x1F510; SECURITY</div>
@@ -644,6 +619,12 @@ body {
                         </div>
                     </div>
                 </div>
+                <!-- Workflow HP bar -->
+                <div class="hp-bar">
+                    <span class="hp-label">WRK</span>
+                    <div class="hp-track"><div class="hp-fill" style="width:100%; background:var(--px-cyan);"></div></div>
+                    <span class="hp-val">40 / 40</span>
+                </div>
             </div>
             <div class="section-box">
                 <div class="section-label">&#x1F5C4;&#xFE0F; DATABASE</div>
@@ -655,13 +636,19 @@ body {
                     <div class="db-stat"><div class="num">25+</div><div class="lbl">SQL Files</div></div>
                     <div class="db-stat"><div class="num">21</div><div class="lbl">API Routes</div></div>
                 </div>
+                <!-- DB HP bar -->
+                <div class="hp-bar">
+                    <span class="hp-label">DB</span>
+                    <div class="hp-track"><div class="hp-fill" style="width:100%; background:var(--px-gold);"></div></div>
+                    <span class="hp-val">134+ TBL</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- FOOTER -->
     <div class="poster-footer">
-        <div class="footer-left">&#x1F1E7;&#x1F1E9; Central Government of Bangladesh &#8212; Digital Services</div>
+        <div class="footer-left">&#x1F1E7;&#x1F1E9; Central Government of Bangladesh - Digital Services</div>
         <div class="footer-center">
             <span class="footer-tag">Full-Stack</span>
             <span class="footer-tag">REST API</span>
@@ -681,19 +668,15 @@ function downloadPNG() {
     var status = document.getElementById('dlStatus');
     var btn = document.querySelector('.dl-btn');
     btn.disabled = true;
-    btn.textContent = 'Generating HD PNG...';
+    btn.textContent = 'GENERATING...';
     status.textContent = 'Capturing at 4x resolution...';
     setTimeout(function() {
         html2canvas(poster, {
             scale: 4, useCORS: true, allowTaint: false,
-            backgroundColor: '#020e08', logging: true,
+            backgroundColor: '#0a0a1a', logging: false,
             width: poster.scrollWidth, height: poster.scrollHeight,
             windowWidth: poster.scrollWidth + 50, windowHeight: poster.scrollHeight + 50,
-            scrollX: 0, scrollY: 0, x: 0, y: 0,
-            onclone: function(doc) {
-                var hexEl = doc.querySelector('.hex-grid');
-                if(hexEl) hexEl.style.display = 'none';
-            }
+            scrollX: 0, scrollY: 0, x: 0, y: 0
         }).then(function(canvas) {
             status.textContent = 'Creating PNG (' + canvas.width + 'x' + canvas.height + ')...';
             canvas.toBlob(function(blob) {
@@ -705,7 +688,7 @@ function downloadPNG() {
                         document.body.appendChild(a); a.click(); document.body.removeChild(a);
                         status.textContent = 'Downloaded!';
                     } catch(e) { status.textContent = 'Failed: ' + e.message; }
-                    btn.disabled = false; btn.textContent = 'Download HD PNG'; return;
+                    btn.disabled = false; btn.textContent = 'DOWNLOAD PNG'; return;
                 }
                 var mb = (blob.size / 1024 / 1024).toFixed(1);
                 status.textContent = 'Done! ' + canvas.width + 'x' + canvas.height + ' (' + mb + ' MB)';
@@ -714,12 +697,12 @@ function downloadPNG() {
                 a.href = url; a.download = 'NATIONX_Poster_HD.png';
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-                btn.disabled = false; btn.textContent = 'Download HD PNG';
+                btn.disabled = false; btn.textContent = 'DOWNLOAD PNG';
             }, 'image/png', 1.0);
         }).catch(function(err) {
             console.error(err);
             status.textContent = 'Failed: ' + err.message;
-            btn.disabled = false; btn.textContent = 'Download HD PNG';
+            btn.disabled = false; btn.textContent = 'DOWNLOAD PNG';
         });
     }, 200);
 }
