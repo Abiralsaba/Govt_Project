@@ -43,7 +43,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 
 body {
-    background: #0a0a20;
+    background: #000d08;
     font-family: 'VT323', monospace;
     display:flex; flex-direction:column; align-items:center;
     padding:20px;
@@ -52,13 +52,13 @@ body {
 /* ═══ DOWNLOAD BAR ═══ */
 .dl-bar {
     position:sticky; top:0; z-index:999;
-    background: linear-gradient(180deg, #222250 0%, #181840 100%);
+    background: linear-gradient(180deg, #003d2e 0%, #002a1f 100%);
     padding:12px 28px;
     margin-bottom:18px;
     display:flex; gap:16px; align-items:center;
     border: 3px solid var(--px-green);
     border-radius:14px;
-    box-shadow: 0 6px 0 #003322, 0 0 30px rgba(0,255,136,.1);
+    box-shadow: 0 6px 0 #001a10, 0 0 30px rgba(0,255,136,.12);
 }
 .dl-bar span { color: var(--px-gold); font-family:'Press Start 2P',monospace; font-size:.6em; letter-spacing:1px; }
 .dl-btn {
@@ -79,39 +79,44 @@ body {
 /* ═══ POSTER ═══ */
 #poster {
     width: 2400px;
-    background: linear-gradient(170deg, #181845 0%, #141438 30%, #101030 60%, #0c0c25 100%);
+    background: linear-gradient(160deg, #003d2e 0%, #002a1f 20%, #00221a 40%, #001a14 60%, #001510 80%, #000f0b 100%);
     position:relative; overflow:hidden;
     color: var(--px-text);
-    border: 4px solid var(--px-green);
-    border-radius:18px;
-    box-shadow: 0 8px 0 #003322, 0 0 50px rgba(0,255,136,.06);
+    border: 5px solid;
+    border-image: linear-gradient(180deg, #00ff88, #006a4e, #cc0022, #006a4e, #00ff88) 1;
+    border-radius:0;
+    box-shadow: 0 0 60px rgba(0,255,136,.1), 0 0 120px rgba(204,0,34,.05);
 }
 
-/* Scanlines overlay — very subtle */
+/* Anime speed lines — radiating from center */
 .scanlines {
-    position:absolute; inset:0; z-index:2; pointer-events:none;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent 0px, transparent 3px,
-        rgba(0,0,0,.05) 3px, rgba(0,0,0,.05) 6px
-    );
-}
-
-/* Pixel grid — barely visible for texture */
-.pixel-grid {
-    position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.02;
+    position:absolute; inset:0; z-index:1; pointer-events:none;
     background:
-        repeating-linear-gradient(0deg, var(--px-green) 0px, var(--px-green) 1px, transparent 1px, transparent 24px),
-        repeating-linear-gradient(90deg, var(--px-green) 0px, var(--px-green) 1px, transparent 1px, transparent 24px);
+        repeating-conic-gradient(
+            from 0deg at 50% 50%,
+            transparent 0deg, transparent 3deg,
+            rgba(0,255,136,.015) 3deg, rgba(0,255,136,.015) 4deg
+        );
 }
 
-/* Corner decorations */
+/* BD flag red circle glow — center of poster */
+.pixel-grid {
+    position:absolute; z-index:0; pointer-events:none;
+    top:50%; left:45%; transform:translate(-50%,-50%);
+    width:600px; height:600px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(204,0,34,.12) 0%, rgba(204,0,34,.05) 40%, transparent 70%);
+    filter: blur(40px);
+}
+
+/* Corner decorations — BD flag inspired */
 .px-corner-tl, .px-corner-br {
     position:absolute; z-index:1; pointer-events:none;
-    font-size:60px; line-height:1; opacity:.04;
+    font-size:80px; line-height:1; opacity:.06;
+    text-shadow: 0 0 30px currentColor;
 }
-.px-corner-tl { top:10px; left:15px; color:var(--px-green); }
-.px-corner-br { bottom:10px; right:15px; color:var(--px-red); }
+.px-corner-tl { top:15px; left:20px; color:#00ff88; }
+.px-corner-br { bottom:15px; right:20px; color:#cc0022; }
 
 .poster-inner { position:relative; z-index:3; padding:26px 30px 22px; }
 
@@ -174,12 +179,12 @@ body {
 
 /* Team Box */
 .team-box {
-    background: linear-gradient(180deg, #252550 0%, #1c1c42 50%, #161636 100%);
+    background: linear-gradient(180deg, #0a3528 0%, #082a20 50%, #061f18 100%);
     border: 3px solid;
-    border-color: #555580 #2a2a55 #1a1a40 #444470;
+    border-color: #1a6b4a #0a4030 #083025 #146040;
     border-radius:14px;
     padding:14px 18px; min-width:300px;
-    box-shadow: 0 6px 0 rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08), 0 0 20px rgba(255,221,0,.05);
+    box-shadow: 0 6px 0 rgba(0,0,0,.4), inset 0 1px 0 rgba(0,255,136,.06), 0 0 20px rgba(255,221,0,.05);
     position:relative;
 }
 .team-box::before {
@@ -217,15 +222,15 @@ body {
 
 /* ═══ SECTION BOX ═══ */
 .section-box {
-    background: linear-gradient(180deg, #1e1e48 0%, #181840 50%, #141434 100%);
+    background: linear-gradient(180deg, #0a3528 0%, #082a20 50%, #061f18 100%);
     border: 3px solid;
-    border-color: #444478 #282850 #1e1e40 #383868;
+    border-color: #1a6b4a #0a4030 #083025 #146040;
     border-radius:14px;
     padding:16px 18px;
     box-shadow:
-        0 6px 0 rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.08),
-        0 0 15px rgba(0,255,136,.04);
+        0 6px 0 rgba(0,0,0,.4),
+        inset 0 1px 0 rgba(0,255,136,.06),
+        0 0 15px rgba(0,255,136,.05);
     position:relative;
 }
 .section-box::before {
@@ -348,7 +353,7 @@ body {
 .wf-connector { padding:0 6px; color: var(--px-gold); font-size:1em; display:flex; align-items:center; text-shadow:0 0 6px rgba(255,221,0,.4); }
 .wf-actions { display:flex; flex-wrap:wrap; gap:4px; }
 .wf-action {
-    background: linear-gradient(180deg, rgba(30,30,65,.9), rgba(22,22,50,.95));
+    background: linear-gradient(180deg, rgba(10,50,38,.9), rgba(8,35,28,.95));
     border: 1px solid rgba(0,255,136,.25);
     border-radius:6px;
     padding:4px 9px;
@@ -359,9 +364,9 @@ body {
 /* DB Stats */
 .db-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .db-stat {
-    background: linear-gradient(180deg, #252558 0%, #1c1c45 50%, #161636 100%);
+    background: linear-gradient(180deg, #0c3d2e 0%, #0a3025 50%, #08251e 100%);
     border: 2px solid;
-    border-color: #444480 #252250 #1c1c3a #383870;
+    border-color: #1a6b4a #0c4535 #0a3528 #146040;
     border-radius:10px;
     padding:10px 6px; text-align:center;
     box-shadow: 0 4px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
@@ -376,13 +381,13 @@ body {
 
 /* Normalization banner */
 .norm-banner {
-    background: linear-gradient(180deg, #1e1e48 0%, #181840 50%, #141434 100%);
+    background: linear-gradient(180deg, #0a3528 0%, #082a20 50%, #061f18 100%);
     border: 3px solid;
-    border-color: #444478 #282850 #1e1e40 #383868;
+    border-color: #1a6b4a #0a4030 #083025 #146040;
     border-radius:14px;
     padding:14px 12px; text-align:center;
     position:relative;
-    box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08), 0 0 20px rgba(0,255,136,.05);
+    box-shadow: 0 6px 0 rgba(0,0,0,.4), inset 0 1px 0 rgba(0,255,136,.06), 0 0 20px rgba(0,255,136,.06);
 }
 .norm-banner::before {
     content:''; position:absolute; top:4px; left:4px; right:4px; bottom:4px;
@@ -410,9 +415,9 @@ body {
 /* Security chips */
 .sec-chips { display:flex; flex-wrap:wrap; gap:6px; }
 .sec-chip {
-    background: linear-gradient(180deg, #332248 0%, #251538 100%);
+    background: linear-gradient(180deg, #1a0a0a 0%, #120808 100%);
     border: 2px solid;
-    border-color: #556070 #352040 #250e30 #454060;
+    border-color: #4a2020 #2a0e0e #1a0808 #3a1818;
     border-radius:8px;
     color: var(--px-red-bright);
     padding:5px 10px;
@@ -447,9 +452,9 @@ body {
 .footer-left { font-family:'VT323',monospace; font-size:1em; color:var(--px-green-dim); }
 .footer-center { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
 .footer-tag {
-    background: linear-gradient(180deg, #1e1e48 0%, #161636 100%);
+    background: linear-gradient(180deg, #0a3528 0%, #061f18 100%);
     border: 2px solid;
-    border-color: #3a4a5a #1e2838 #141e2a #2e3e4e;
+    border-color: #1a6b4a #0a4030 #083025 #146040;
     border-radius:8px;
     color: var(--px-green);
     padding:5px 14px;
@@ -468,7 +473,7 @@ body {
     border-radius:6px;
 }
 .hp-label { font-family:'Press Start 2P',monospace; font-size:.35em; color:var(--px-red); min-width:28px; }
-.hp-track { flex:1; height:10px; background:#141430; border:2px solid #333358; border-radius:4px; position:relative; overflow:hidden; }
+.hp-track { flex:1; height:10px; background:#0a1f18; border:2px solid #1a4a35; border-radius:4px; position:relative; overflow:hidden; }
 .hp-fill { height:100%; background:var(--px-green); position:relative; }
 .hp-fill::after { content:''; position:absolute; top:0; left:0; right:0; height:40%; background:rgba(255,255,255,.15); }
 .hp-val { font-family:'Press Start 2P',monospace; font-size:.32em; color:var(--px-text); min-width:55px; text-align:right; }
@@ -736,7 +741,7 @@ function downloadPNG() {
     setTimeout(function() {
         html2canvas(poster, {
             scale: 6, useCORS: true, allowTaint: false,
-            backgroundColor: '#0c0c25', logging: false,
+            backgroundColor: '#000f0b', logging: false,
             width: poster.scrollWidth, height: poster.scrollHeight,
             windowWidth: poster.scrollWidth + 50, windowHeight: poster.scrollHeight + 50,
             scrollX: 0, scrollY: 0, x: 0, y: 0
