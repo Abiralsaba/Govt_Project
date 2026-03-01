@@ -263,6 +263,9 @@ body {
 /* ─── CENTER COL ─── */
 .center-col { display:flex; flex-direction:column; gap:8px; }
 
+/* Bottom row - 3 boxes under tech stack */
+.bottom-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+
 .overview-text { font-size:.72em; color:#80cbc4; line-height:1.6; }
 .overview-text strong { color: var(--gold-light); }
 
@@ -545,6 +548,36 @@ body {
                     <span class="tech-badge tb-ssl">SSLCommerz</span>
                 </div>
             </div>
+            <div class="bottom-row">
+                <div class="norm-banner">
+                    <div class="norm-title">&#x2705; NORMALIZATION ACHIEVED</div>
+                    <div class="norm-badges">
+                        <span class="norm-badge nb-3nf">3NF &#x2713;</span>
+                        <span class="norm-badge nb-bcnf">BCNF &#x2713;</span>
+                    </div>
+                    <div class="norm-sub">All 134+ tables &#8212; 3NF &amp; BCNF &#8212; zero redundancy</div>
+                </div>
+                <div class="section-box">
+                    <div class="section-label">&#x1F510; SECURITY</div>
+                    <div class="sec-chips">
+                        <span class="sec-chip">JWT Auth</span>
+                        <span class="sec-chip">Bcrypt</span>
+                        <span class="sec-chip">Helmet CSP</span>
+                        <span class="sec-chip">Rate Limit</span>
+                        <span class="sec-chip">Validation</span>
+                        <span class="sec-chip">CORS</span>
+                        <span class="sec-chip">Prepared Stmt</span>
+                        <span class="sec-chip">Audit Trail</span>
+                        <span class="sec-chip">OTP</span>
+                    </div>
+                </div>
+                <div class="section-box">
+                    <div class="section-label">&#x1F3D7;&#xFE0F; ARCHITECTURE</div>
+                    <div class="arch-row"><span class="arch-badge ab-client">Client</span><span class="arch-arrow">&#x27A4;</span><span class="arch-desc">HTML/CSS/JS (30+ pages)</span></div>
+                    <div class="arch-row"><span class="arch-badge ab-server">Server</span><span class="arch-arrow">&#x27A4;</span><span class="arch-desc">Express.js + 21 Routes + 4 Controllers</span></div>
+                    <div class="arch-row"><span class="arch-badge ab-data">Data</span><span class="arch-arrow">&#x27A4;</span><span class="arch-desc">MySQL 134+ Tables + Procs + Triggers</span></div>
+                </div>
+            </div>
         </div>
 
         <!-- RIGHT -->
@@ -622,34 +655,6 @@ body {
                     <div class="db-stat"><div class="num">25+</div><div class="lbl">SQL Files</div></div>
                     <div class="db-stat"><div class="num">21</div><div class="lbl">API Routes</div></div>
                 </div>
-            </div>
-            <div class="norm-banner">
-                <div class="norm-title">&#x2705; NORMALIZATION ACHIEVED</div>
-                <div class="norm-badges">
-                    <span class="norm-badge nb-3nf">3NF &#x2713;</span>
-                    <span class="norm-badge nb-bcnf">BCNF &#x2713;</span>
-                </div>
-                <div class="norm-sub">All 134+ tables &#8212; Third Normal Form &amp; Boyce-Codd Normal Form &#8212; zero redundancy</div>
-            </div>
-            <div class="section-box">
-                <div class="section-label">&#x1F510; SECURITY</div>
-                <div class="sec-chips">
-                    <span class="sec-chip">JWT Auth</span>
-                    <span class="sec-chip">Bcrypt</span>
-                    <span class="sec-chip">Helmet CSP</span>
-                    <span class="sec-chip">Rate Limit</span>
-                    <span class="sec-chip">Validation</span>
-                    <span class="sec-chip">CORS</span>
-                    <span class="sec-chip">Prepared Stmt</span>
-                    <span class="sec-chip">Audit Trail</span>
-                    <span class="sec-chip">OTP</span>
-                </div>
-            </div>
-            <div class="section-box">
-                <div class="section-label">&#x1F3D7;&#xFE0F; ARCHITECTURE</div>
-                <div class="arch-row"><span class="arch-badge ab-client">Client</span><span class="arch-arrow">&#x27A4;</span><span class="arch-desc">HTML/CSS/JS (30+ pages)</span></div>
-                <div class="arch-row"><span class="arch-badge ab-server">Server</span><span class="arch-arrow">&#x27A4;</span><span class="arch-desc">Express.js + 21 Routes + 4 Controllers</span></div>
-                <div class="arch-row"><span class="arch-badge ab-data">Data</span><span class="arch-arrow">&#x27A4;</span><span class="arch-desc">MySQL 134+ Tables + Procs + Triggers</span></div>
             </div>
         </div>
     </div>
