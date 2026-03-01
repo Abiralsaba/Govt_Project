@@ -6,419 +6,123 @@
     <title>NATIONX - Project Poster</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Orbitron:wght@700;800;900&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #1a1a2e;
-            font-family: 'Poppins', 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .download-bar {
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            background: rgba(26,26,46,.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
-            border-radius: 14px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            box-shadow: 0 8px 30px rgba(0,0,0,.4);
-        }
-        .download-bar span { color: #fff; font-weight: 600; font-size: .95em; }
-        .dl-btn {
-            padding: 10px 28px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: .9em;
-            cursor: pointer;
-            transition: all .2s;
-        }
-        .dl-btn:hover { transform: translateY(-2px); }
-        .dl-png { background: #ff6b35; color: #fff; }
-        .dl-png:hover { background: #e05a28; }
-        .dl-status { color: #aaa; font-size: .85em; font-style: italic; }
-
-        /* ═══════ POSTER ═══════ */
-        #poster {
-            width: 1600px;
-            min-height: 1000px;
-            background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 30%, #162447 60%, #1a1a2e 100%);
-            border-radius: 0;
-            overflow: hidden;
-            position: relative;
-            color: #fff;
-        }
-
-        /* Decorative circles */
-        #poster::before {
-            content: '';
-            position: absolute;
-            top: -100px; right: -100px;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(255,107,53,.15) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-        #poster::after {
-            content: '';
-            position: absolute;
-            bottom: -80px; left: -80px;
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(0,200,83,.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-
-        .poster-inner {
-            position: relative;
-            z-index: 1;
-            padding: 35px 40px;
-        }
-
-        /* ─── HEADER ROW ─── */
-        .poster-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid rgba(255,107,53,.4);
-        }
-        .header-left { flex: 1; }
-        .header-left h1 {
-            font-size: 3.2em;
-            font-weight: 900;
-            letter-spacing: 6px;
-            color: #ff6b35;
-            text-shadow: 0 0 30px rgba(255,107,53,.3);
-            line-height: 1;
-        }
-        .header-left .tagline {
-            font-size: 1.1em;
-            color: #b0bec5;
-            margin-top: 6px;
-            font-weight: 400;
-        }
-        .header-center {
-            text-align: center;
-            flex: 1.5;
-        }
-        .header-center .course {
-            background: linear-gradient(135deg, #ff6b35, #ff8f65);
-            color: #fff;
-            padding: 6px 22px;
-            border-radius: 20px;
-            font-size: .85em;
-            font-weight: 700;
-            display: inline-block;
-            margin-bottom: 4px;
-        }
-        .header-center .uni {
-            color: #78909c;
-            font-size: .8em;
-        }
-
-        /* Team box */
-        .team-box {
-            background: rgba(255,255,255,.06);
-            border: 2px solid rgba(255,107,53,.3);
-            border-radius: 14px;
-            padding: 14px 20px;
-            text-align: center;
-            min-width: 280px;
-        }
-        .team-box .team-title {
-            font-size: 1em;
-            font-weight: 800;
-            color: #ff6b35;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-        }
-        .team-member {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 3px 0;
-            font-size: .78em;
-            border-bottom: 1px solid rgba(255,255,255,.06);
-        }
+        body { background: #0a0a1a; font-family: 'Poppins', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .download-bar { position: sticky; top: 0; z-index: 999; background: rgba(10,10,26,.96); backdrop-filter: blur(12px); padding: 14px 32px; border-radius: 14px; margin-bottom: 20px; display: flex; gap: 16px; align-items: center; box-shadow: 0 8px 40px rgba(0,0,0,.5); border: 1px solid rgba(255,107,53,.2); }
+        .download-bar span { color: #fff; font-weight: 700; font-size: .95em; }
+        .dl-btn { padding: 10px 30px; border: none; border-radius: 10px; font-weight: 800; font-size: .88em; cursor: pointer; transition: all .25s; letter-spacing: .5px; }
+        .dl-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,53,.4); }
+        .dl-png { background: linear-gradient(135deg, #ff6b35, #ff8f65); color: #fff; }
+        .dl-status { color: #78909c; font-size: .82em; font-style: italic; }
+        #poster { width: 1600px; background: linear-gradient(160deg, #0b0e1a 0%, #0f1628 20%, #111d35 50%, #0d1525 80%, #0a0e18 100%); overflow: hidden; position: relative; color: #fff; }
+        .bg-glow { position: absolute; border-radius: 50%; pointer-events: none; z-index: 0; }
+        .bg-glow-1 { top: -120px; right: -80px; width: 420px; height: 420px; background: radial-gradient(circle, rgba(255,107,53,.12) 0%, transparent 65%); }
+        .bg-glow-2 { bottom: -100px; left: -60px; width: 350px; height: 350px; background: radial-gradient(circle, rgba(0,200,83,.08) 0%, transparent 65%); }
+        .bg-glow-3 { top: 40%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(33,150,243,.04) 0%, transparent 60%); }
+        .grid-overlay { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px); background-size: 80px 80px; }
+        .poster-inner { position: relative; z-index: 1; padding: 28px 32px 22px; }
+        .poster-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid; border-image: linear-gradient(90deg, #ff6b35, rgba(255,107,53,.15)) 1; }
+        .header-left { flex: 0 0 auto; }
+        .header-left h1 { font-family: 'Orbitron', sans-serif; font-size: 2.8em; font-weight: 900; letter-spacing: 8px; background: linear-gradient(135deg, #ff6b35 0%, #ffab76 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 20px rgba(255,107,53,.35)); line-height: 1; }
+        .header-left .flag-emoji { font-size: 2em; vertical-align: middle; margin-right: 6px; -webkit-text-fill-color: initial; }
+        .header-left .tagline { font-size: .82em; color: #78909c; margin-top: 3px; font-weight: 400; letter-spacing: .5px; }
+        .header-center { text-align: center; flex: 1; padding: 0 20px; }
+        .header-center .course { background: linear-gradient(135deg, #ff6b35, #e05a28); color: #fff; padding: 5px 20px; border-radius: 20px; font-size: .78em; font-weight: 700; display: inline-block; box-shadow: 0 3px 15px rgba(255,107,53,.3); margin-bottom: 3px; }
+        .header-center .uni { color: #546e7a; font-size: .7em; letter-spacing: .3px; }
+        .team-box { background: linear-gradient(135deg, rgba(255,107,53,.08), rgba(255,107,53,.03)); border: 1.5px solid rgba(255,107,53,.25); border-radius: 12px; padding: 10px 16px; min-width: 285px; flex-shrink: 0; }
+        .team-box .team-title { font-family: 'Orbitron', sans-serif; font-size: .78em; font-weight: 800; color: #ff6b35; letter-spacing: 3px; margin-bottom: 6px; text-align: center; }
+        .team-member { display: flex; justify-content: space-between; align-items: center; padding: 2.5px 0; font-size: .72em; border-bottom: 1px solid rgba(255,255,255,.04); }
         .team-member:last-child { border: none; }
-        .tm-name { color: #e0e0e0; font-weight: 600; }
-        .tm-id {
-            background: rgba(255,107,53,.15);
-            color: #ff8f65;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: .9em;
-        }
-
-        /* ─── MAIN GRID ─── */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 280px 1fr 300px;
-            gap: 20px;
-        }
-
-        /* ─── SECTION BOXES ─── */
-        .section-box {
-            background: rgba(255,255,255,.04);
-            border: 1.5px solid rgba(255,255,255,.08);
-            border-radius: 14px;
-            padding: 18px;
-            backdrop-filter: blur(5px);
-        }
-        .section-label {
-            font-size: .8em;
-            font-weight: 800;
-            color: #ff6b35;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid rgba(255,107,53,.25);
-        }
-
-        /* ─── LEFT COLUMN ─── */
-        .left-col { display: flex; flex-direction: column; gap: 14px; }
-
-        /* Motivation */
-        .motivation p {
-            font-size: .76em;
-            color: #b0bec5;
-            line-height: 1.6;
-        }
-
-        /* Features list */
-        .features-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .features-list li {
-            font-size: .73em;
-            color: #cfd8dc;
-            padding: 4px 8px;
-            background: rgba(255,107,53,.06);
-            border-left: 3px solid #ff6b35;
-            border-radius: 0 6px 6px 0;
-            transition: background .2s;
-        }
-        .features-list li::before {
-            content: '✦ ';
-            color: #ff6b35;
-            font-weight: 700;
-        }
-
-        /* ─── CENTER COLUMN ─── */
-        .center-col { display: flex; flex-direction: column; gap: 14px; }
-
-        /* Overview */
-        .overview-text {
-            font-size: .82em;
-            color: #cfd8dc;
-            line-height: 1.7;
-        }
+        .tm-name { color: #cfd8dc; font-weight: 600; }
+        .tm-id { background: rgba(255,107,53,.12); color: #ff8f65; padding: 1px 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: .88em; }
+        .main-grid { display: grid; grid-template-columns: 280px 1fr 300px; gap: 12px; align-items: start; }
+        .section-box { background: linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 12px 14px; }
+        .section-label { font-size: .7em; font-weight: 800; color: #ff6b35; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 7px; padding-bottom: 4px; border-bottom: 2px solid rgba(255,107,53,.2); display: flex; align-items: center; gap: 5px; }
+        .left-col { display: flex; flex-direction: column; gap: 8px; }
+        .motivation p { font-size: .7em; color: #90a4ae; line-height: 1.6; }
+        .motivation p strong { color: #ff8f65; }
+        .features-list { list-style: none; display: flex; flex-direction: column; gap: 1.5px; }
+        .features-list li { font-size: .66em; color: #b0bec5; padding: 2.5px 7px; background: linear-gradient(90deg, rgba(255,107,53,.08), transparent); border-left: 2.5px solid #ff6b35; border-radius: 0 4px 4px 0; }
+        .features-list li::before { content: '\25B8 '; color: #ff6b35; font-weight: 700; }
+        .center-col { display: flex; flex-direction: column; gap: 8px; }
+        .overview-text { font-size: .74em; color: #b0bec5; line-height: 1.6; }
         .overview-text strong { color: #ff8f65; }
-
-        /* Screenshots grid */
-        .screenshots-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        .screenshot-card {
-            background: rgba(255,255,255,.08);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1.5px solid rgba(255,255,255,.1);
-        }
-        .ss-header {
-            background: linear-gradient(135deg, #ff6b35, #ff8f65);
-            padding: 8px 12px;
-            font-size: .72em;
-            font-weight: 700;
-            color: #fff;
-            text-align: center;
-        }
-        .ss-body {
-            padding: 10px;
-            min-height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .ss-body .ss-icon { font-size: 2em; }
-        .ss-body .ss-desc { font-size: .65em; color: #90a4ae; text-align: center; }
-
-        /* Tech badges */
-        .tech-bar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 8px;
-        }
-        .tech-badge {
-            padding: 7px 18px;
-            border-radius: 8px;
-            font-size: .78em;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 1px;
-        }
-        .tb-node { background: linear-gradient(135deg, #339933, #4db84d); }
-        .tb-express { background: linear-gradient(135deg, #333, #555); }
-        .tb-mysql { background: linear-gradient(135deg, #00758f, #0097b2); }
-        .tb-html { background: linear-gradient(135deg, #e44d26, #f16529); }
-        .tb-css { background: linear-gradient(135deg, #264de4, #2965f1); }
-        .tb-js { background: linear-gradient(135deg, #c4a000, #f0db4f); color: #333; }
-        .tb-jwt { background: linear-gradient(135deg, #d63aff, #9733ee); }
-        .tb-ssl { background: linear-gradient(135deg, #c62828, #e53935); }
-
-        /* ─── RIGHT COLUMN ─── */
-        .right-col { display: flex; flex-direction: column; gap: 14px; }
-
-        /* Workflow tree */
-        .workflow-tree {
-            position: relative;
-        }
-        .wf-role {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 14px;
-        }
-        .wf-role-badge {
-            min-width: 90px;
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-size: .78em;
-            font-weight: 700;
-            text-align: center;
-            flex-shrink: 0;
-        }
+        .screenshots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+        .screenshot-card { background: rgba(255,255,255,.05); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); }
+        .ss-header { background: linear-gradient(135deg, #ff6b35, #e05a28); padding: 4px 6px; font-size: .64em; font-weight: 700; color: #fff; text-align: center; }
+        .ss-body { padding: 6px 5px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; }
+        .ss-body .ss-icon { font-size: 1.4em; line-height: 1; }
+        .ss-body .ss-desc { font-size: .56em; color: #78909c; text-align: center; line-height: 1.35; }
+        .tech-bar { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; margin-top: 3px; }
+        .tech-badge { padding: 4px 13px; border-radius: 6px; font-size: .7em; font-weight: 700; color: #fff; letter-spacing: .5px; box-shadow: 0 2px 10px rgba(0,0,0,.3); }
+        .tb-node { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .tb-express { background: linear-gradient(135deg, #37474f, #546e7a); }
+        .tb-mysql { background: linear-gradient(135deg, #00695c, #00897b); }
+        .tb-html { background: linear-gradient(135deg, #d84315, #f4511e); }
+        .tb-css { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+        .tb-js { background: linear-gradient(135deg, #f57f17, #fdd835); color: #333; }
+        .tb-jwt { background: linear-gradient(135deg, #7b1fa2, #ab47bc); }
+        .tb-ssl { background: linear-gradient(135deg, #b71c1c, #e53935); }
+        .right-col { display: flex; flex-direction: column; gap: 8px; }
+        .wf-role { display: flex; align-items: flex-start; margin-bottom: 8px; }
+        .wf-role:last-child { margin-bottom: 0; }
+        .wf-role-badge { min-width: 72px; padding: 5px 7px; border-radius: 7px; font-size: .66em; font-weight: 700; text-align: center; flex-shrink: 0; box-shadow: 0 3px 12px rgba(0,0,0,.3); }
         .wf-citizen { background: linear-gradient(135deg, #1565c0, #1e88e5); }
-        .wf-admin  { background: linear-gradient(135deg, #c62828, #e53935); }
-        .wf-connector {
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            color: #ff6b35;
-            font-size: .85em;
-        }
-        .wf-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .wf-action {
-            background: rgba(255,255,255,.07);
-            border: 1px solid rgba(255,255,255,.12);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: .67em;
-            color: #b0bec5;
-            white-space: nowrap;
-        }
-
-        /* DB Stats */
-        .db-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .db-stat {
-            background: rgba(255,107,53,.08);
-            border: 1px solid rgba(255,107,53,.2);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-        }
-        .db-stat .num {
-            font-size: 1.6em;
-            font-weight: 800;
-            color: #ff6b35;
-            line-height: 1;
-        }
-        .db-stat .lbl {
-            font-size: .65em;
-            color: #78909c;
-            margin-top: 2px;
-        }
-
-        /* Security chips */
-        .sec-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .sec-chip {
-            background: rgba(76,175,80,.1);
-            border: 1px solid rgba(76,175,80,.25);
-            color: #66bb6a;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: .67em;
-            font-weight: 600;
-        }
-
-        /* ─── FOOTER ─── */
-        .poster-footer {
-            margin-top: 20px;
-            padding-top: 14px;
-            border-top: 2px solid rgba(255,255,255,.06);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .footer-left { font-size: .72em; color: #546e7a; }
-        .footer-center {
-            display: flex;
-            gap: 6px;
-        }
-        .footer-tag {
-            background: rgba(255,107,53,.12);
-            color: #ff8f65;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: .68em;
-            font-weight: 600;
-        }
-        .footer-right { font-size: .72em; color: #546e7a; }
+        .wf-admin { background: linear-gradient(135deg, #c62828, #e53935); }
+        .wf-system { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .wf-connector { padding: 0 5px; color: #ff6b35; font-size: .75em; display: flex; align-items: center; }
+        .wf-actions { display: flex; flex-wrap: wrap; gap: 2.5px; }
+        .wf-action { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); padding: 2px 7px; border-radius: 4px; font-size: .58em; color: #90a4ae; white-space: nowrap; }
+        .db-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .db-stat { background: linear-gradient(135deg, rgba(255,107,53,.1), rgba(255,107,53,.03)); border: 1px solid rgba(255,107,53,.18); border-radius: 7px; padding: 6px 3px; text-align: center; }
+        .db-stat .num { font-family: 'Orbitron', sans-serif; font-size: 1.1em; font-weight: 800; color: #ff6b35; line-height: 1; }
+        .db-stat .lbl { font-size: .55em; color: #607d8b; margin-top: 1px; }
+        .normalization-banner { background: linear-gradient(135deg, rgba(0,200,83,.1), rgba(0,150,136,.06)); border: 1.5px solid rgba(0,200,83,.3); border-radius: 9px; padding: 10px 12px; text-align: center; position: relative; overflow: hidden; }
+        .normalization-banner::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(0,200,83,.05), transparent); }
+        .norm-title { font-family: 'Orbitron', sans-serif; font-size: 1em; font-weight: 900; letter-spacing: 2px; background: linear-gradient(135deg, #00c853, #69f0ae); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
+        .norm-badges { display: flex; gap: 8px; justify-content: center; }
+        .norm-badge { padding: 4px 16px; border-radius: 6px; font-size: .72em; font-weight: 800; letter-spacing: 1.5px; }
+        .nb-3nf { background: linear-gradient(135deg, #00c853, #00e676); color: #0a2e1a; box-shadow: 0 2px 12px rgba(0,200,83,.3); }
+        .nb-bcnf { background: linear-gradient(135deg, #00bfa5, #1de9b6); color: #0a2e2e; box-shadow: 0 2px 12px rgba(0,191,165,.3); }
+        .norm-sub { font-size: .58em; color: #4db6ac; margin-top: 4px; font-weight: 500; position: relative; }
+        .sec-chips { display: flex; flex-wrap: wrap; gap: 3px; }
+        .sec-chip { background: rgba(76,175,80,.08); border: 1px solid rgba(76,175,80,.2); color: #66bb6a; padding: 2.5px 7px; border-radius: 4px; font-size: .58em; font-weight: 600; }
+        .arch-row { display: flex; gap: 5px; align-items: center; margin-bottom: 3px; font-size: .66em; }
+        .arch-row:last-child { margin-bottom: 0; }
+        .arch-badge { padding: 2px 9px; border-radius: 4px; font-weight: 700; font-size: .88em; color: #fff; min-width: 52px; text-align: center; flex-shrink: 0; }
+        .ab-client { background: linear-gradient(135deg, #1565c0, #1e88e5); }
+        .ab-server { background: linear-gradient(135deg, #ff6b35, #e05a28); }
+        .ab-data { background: linear-gradient(135deg, #2e7d32, #43a047); }
+        .arch-arrow { color: #ff6b35; font-weight: 700; }
+        .arch-desc { color: #90a4ae; }
+        .poster-footer { margin-top: 14px; padding-top: 10px; border-top: 2px solid; border-image: linear-gradient(90deg, rgba(255,107,53,.3), rgba(255,107,53,.05)) 1; display: flex; justify-content: space-between; align-items: center; }
+        .footer-left { font-size: .64em; color: #455a64; }
+        .footer-center { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+        .footer-tag { background: rgba(255,107,53,.1); color: #ff8f65; padding: 2.5px 9px; border-radius: 10px; font-size: .6em; font-weight: 600; }
+        .footer-right { font-size: .64em; color: #455a64; }
     </style>
 </head>
 <body>
-
-<!-- Download Bar -->
 <div class="download-bar">
     <span>NATIONX Poster</span>
-    <button class="dl-btn dl-png" onclick="downloadPNG()">📥 Download HD PNG</button>
+    <button class="dl-btn dl-png" onclick="downloadPNG()">&#x1F4E5; Download HD PNG</button>
     <span class="dl-status" id="dlStatus"></span>
 </div>
-
-<!-- ═══════════════ THE POSTER ═══════════════ -->
 <div id="poster">
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+    <div class="grid-overlay"></div>
 <div class="poster-inner">
-
-    <!-- ─── HEADER ─── -->
     <div class="poster-header">
         <div class="header-left">
-            <h1>🇧🇩 NATIONX</h1>
+            <h1><span class="flag-emoji">&#x1F1E7;&#x1F1E9;</span> NATIONX</h1>
             <div class="tagline">Unified Digital Government Services Platform for Bangladesh</div>
         </div>
         <div class="header-center">
-            <div class="course">DBMS Project — Database Management System</div>
-            <div class="uni">United International University &middot; CSE Department &middot; 2026</div>
+            <div class="course">DBMS Project &#8212; Database Management System</div>
+            <div class="uni">United International University &#183; CSE Department &#183; 2025</div>
         </div>
         <div class="team-box">
             <div class="team-title">TEAM NATION X</div>
@@ -428,152 +132,86 @@
             <div class="team-member"><span class="tm-name">Kazi Mahabubur Rahman</span><span class="tm-id">0112330689</span></div>
         </div>
     </div>
-
-    <!-- ─── 3 COLUMN LAYOUT ─── -->
     <div class="main-grid">
-
-        <!-- ═══ LEFT COLUMN ═══ -->
         <div class="left-col">
             <div class="section-box motivation">
-                <div class="section-label">📌 Project Motivation</div>
-                <p>Bangladesh's government services are scattered across disconnected websites and manual offices. Citizens waste hours navigating bureaucratic systems for basic needs like NID cards, passports, tax filing, and land records. We developed <strong style="color:#ff8f65;">NATIONX</strong> — a single unified platform that digitizes 20+ government service modules, bringing everything under one login with real-time tracking, online payments, and transparent processing.</p>
+                <div class="section-label">&#x1F4CC; Project Motivation</div>
+                <p>Bangladesh's government services are scattered across disconnected websites and manual offices. Citizens waste hours navigating bureaucracy for NID cards, passports, tax filing, and land records. <strong>NATIONX</strong> is a single unified platform that digitizes 20+ government service modules &#8212; one login, real-time tracking, online payments, and transparent processing for all citizens.</p>
             </div>
-
             <div class="section-box">
-                <div class="section-label">✦ Key Features (30+)</div>
+                <div class="section-label">&#x2726; Key Features (30+)</div>
                 <ul class="features-list">
-                    <li>User Registration & JWT Auth</li>
+                    <li>User Registration &amp; JWT Auth</li>
                     <li>Admin Panel with RBAC</li>
-                    <li>NID Application & Smart Card</li>
-                    <li>Passport Application & Tracking</li>
-                    <li>Health Card & Vaccination</li>
+                    <li>NID Application &amp; Smart Card</li>
+                    <li>Passport Application &amp; Tracking</li>
+                    <li>Health Card &amp; Vaccination</li>
                     <li>Hospital Appointments</li>
-                    <li>Water Connection & Billing</li>
-                    <li>Land Records & Mutation</li>
+                    <li>Water Connection &amp; Billing</li>
+                    <li>Land Records &amp; Mutation</li>
                     <li>TIN/VAT Tax Filing (NBR)</li>
                     <li>Education Results (JSC/SSC/HSC)</li>
                     <li>University Admission Portal</li>
                     <li>Stipend Applications</li>
-                    <li>Agriculture Subsidies & Training</li>
-                    <li>Community Forum & Groups</li>
-                    <li>E-Commerce Shop & Cart</li>
+                    <li>Agriculture Subsidies &amp; Training</li>
+                    <li>Community Forum &amp; Groups</li>
+                    <li>E-Commerce Shop &amp; Cart</li>
                     <li>Market Price Monitoring</li>
                     <li>SSLCommerz Payment Gateway</li>
                     <li>25+ Service Request Forms</li>
                     <li>Real-time Notifications</li>
-                    <li>Document Upload & Storage</li>
-                    <li>User Dashboard & Analytics</li>
-                    <li>Audit Logging & Triggers</li>
-                    <li>Stored Procedures & Views</li>
+                    <li>Document Upload &amp; Storage</li>
+                    <li>User Dashboard &amp; Analytics</li>
+                    <li>Audit Logging &amp; Triggers</li>
+                    <li>Stored Procedures &amp; Views</li>
                     <li>Password Reset via OTP</li>
                 </ul>
             </div>
         </div>
-
-        <!-- ═══ CENTER COLUMN ═══ -->
         <div class="center-col">
             <div class="section-box">
-                <div class="section-label">📋 Project Overview</div>
+                <div class="section-label">&#x1F4CB; Project Overview</div>
                 <div class="overview-text">
-                    <strong>NATIONX</strong> is a full-stack web application implementing a <strong>3-Tier Client-Server Architecture</strong> that digitizes Bangladesh's central government services. It connects <strong>citizens</strong> to 20+ government departments through a single portal — from <strong>NID & Passport</strong> applications to <strong>Tax filing, Health services, Education results, Land management, Agriculture, Water resources</strong>, and more. The system features <strong>JWT authentication</strong>, <strong>role-based admin panels</strong>, <strong>SSLCommerz payment integration</strong>, and a <strong>MySQL database with 134+ normalized tables</strong> including stored procedures, triggers, and complex queries.
+                    <strong>NATIONX</strong> is a full-stack web application implementing a <strong>3-Tier Client-Server Architecture</strong> that digitizes Bangladesh's central government services. It connects <strong>citizens</strong> to 20+ government departments through a single portal &#8212; from <strong>NID &amp; Passport</strong> applications to <strong>Tax filing, Health services, Education results, Land management, Agriculture, Water resources</strong>, and more. The system features <strong>JWT authentication</strong>, <strong>role-based admin panels</strong>, <strong>SSLCommerz payment integration</strong>, and a <strong>MySQL database with 134+ normalized tables (3NF &amp; BCNF achieved)</strong> including stored procedures, triggers, views, and complex queries.
                 </div>
             </div>
-
             <div class="section-box">
-                <div class="section-label">📸 Output Snapshot — Module Previews</div>
+                <div class="section-label">&#x1F4F8; Module Previews</div>
                 <div class="screenshots-grid">
-                    <div class="screenshot-card">
-                        <div class="ss-header">🏠 Dashboard</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">📊</div>
-                            <div class="ss-desc">User dashboard with stats, weather, quick access to all 20 modules</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">🪪 NID Services</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">🆔</div>
-                            <div class="ss-desc">Apply, correct, reissue NID. Smart card upgrade, biometric booking</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">🛂 Passport</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">📕</div>
-                            <div class="ss-desc">New/Renewal applications with fee calc, office selection, status tracking</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">🏥 Health</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">💉</div>
-                            <div class="ss-desc">Health cards, vaccinations, hospital appointments, ambulance requests</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">💰 Tax / NBR</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">📑</div>
-                            <div class="ss-desc">TIN registration, e-Returns, VAT, tax payments, challan & notices</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">🌾 Agriculture</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">🚜</div>
-                            <div class="ss-desc">Subsidies, crop reports, expert queries, farmer market, training</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">📚 Education</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">🎓</div>
-                            <div class="ss-desc">JSC/SSC/HSC results, university admission portal, stipend applications</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">💧 Water & Land</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">🏡</div>
-                            <div class="ss-desc">Water connections, bills, land records, mutations, tax payments</div>
-                        </div>
-                    </div>
-                    <div class="screenshot-card">
-                        <div class="ss-header">👥 Community</div>
-                        <div class="ss-body">
-                            <div class="ss-icon">💬</div>
-                            <div class="ss-desc">Groups, posts, comments, likes — citizen social networking forum</div>
-                        </div>
-                    </div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F3E0; Dashboard</div><div class="ss-body"><div class="ss-icon">&#x1F4CA;</div><div class="ss-desc">Stats, weather, quick access to all 20 modules</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1FAAA; NID Services</div><div class="ss-body"><div class="ss-icon">&#x1F194;</div><div class="ss-desc">Apply, correct, reissue NID, smart card upgrade</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F6C2; Passport</div><div class="ss-body"><div class="ss-icon">&#x1F4D5;</div><div class="ss-desc">New/Renewal, fee calc, office selection, tracking</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F3E5; Health</div><div class="ss-body"><div class="ss-icon">&#x1F489;</div><div class="ss-desc">Health cards, vaccines, appointments, ambulance</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F4B0; Tax / NBR</div><div class="ss-body"><div class="ss-icon">&#x1F4D1;</div><div class="ss-desc">TIN, e-Returns, VAT, payments, challan</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F33E; Agriculture</div><div class="ss-body"><div class="ss-icon">&#x1F69C;</div><div class="ss-desc">Subsidies, crop reports, farmer market, training</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F4DA; Education</div><div class="ss-body"><div class="ss-icon">&#x1F393;</div><div class="ss-desc">JSC/SSC/HSC results, admission, stipends</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F4A7; Water &amp; Land</div><div class="ss-body"><div class="ss-icon">&#x1F3E1;</div><div class="ss-desc">Connections, bills, land records, mutations</div></div></div>
+                    <div class="screenshot-card"><div class="ss-header">&#x1F6D2; Shop &amp; Community</div><div class="ss-body"><div class="ss-icon">&#x1F4AC;</div><div class="ss-desc">E-commerce, cart, forum, groups, posts</div></div></div>
                 </div>
             </div>
-
             <div class="section-box" style="text-align:center;">
-                <div class="section-label">⚡ Tech Highlights</div>
+                <div class="section-label" style="justify-content:center;">&#x26A1; Technology Stack</div>
                 <div class="tech-bar">
                     <span class="tech-badge tb-node">Node.js</span>
-                    <span class="tech-badge tb-express">Express.js</span>
+                    <span class="tech-badge tb-express">Express.js v5</span>
                     <span class="tech-badge tb-mysql">MySQL</span>
                     <span class="tech-badge tb-html">HTML5</span>
                     <span class="tech-badge tb-css">CSS3</span>
                     <span class="tech-badge tb-js">JavaScript</span>
-                    <span class="tech-badge tb-jwt">JWT</span>
+                    <span class="tech-badge tb-jwt">JWT Auth</span>
                     <span class="tech-badge tb-ssl">SSLCommerz</span>
                 </div>
             </div>
         </div>
-
-        <!-- ═══ RIGHT COLUMN ═══ -->
         <div class="right-col">
             <div class="section-box">
-                <div class="section-label">🔄 Basic Workflow</div>
+                <div class="section-label">&#x1F504; Basic Workflow</div>
                 <div class="workflow-tree">
-                    <!-- Citizen -->
                     <div class="wf-role">
-                        <div class="wf-role-badge wf-citizen">👤 Citizen</div>
-                        <div class="wf-connector">→</div>
+                        <div class="wf-role-badge wf-citizen">&#x1F464; Citizen</div>
+                        <div class="wf-connector">&#x2192;</div>
                         <div class="wf-actions">
-                            <span class="wf-action">Register/Login</span>
+                            <span class="wf-action">Register / Login</span>
                             <span class="wf-action">Apply NID</span>
                             <span class="wf-action">Apply Passport</span>
                             <span class="wf-action">Health Card</span>
@@ -592,167 +230,139 @@
                             <span class="wf-action">Vaccination Record</span>
                             <span class="wf-action">Upload Documents</span>
                             <span class="wf-action">Track Applications</span>
-                            <span class="wf-action">Reset Password (OTP)</span>
+                            <span class="wf-action">Reset Password</span>
                         </div>
                     </div>
-                    <!-- Admin -->
                     <div class="wf-role">
-                        <div class="wf-role-badge wf-admin">🔑 Admin</div>
-                        <div class="wf-connector">→</div>
+                        <div class="wf-role-badge wf-admin">&#x1F511; Admin</div>
+                        <div class="wf-connector">&#x2192;</div>
                         <div class="wf-actions">
                             <span class="wf-action">Review Applications</span>
-                            <span class="wf-action">Approve/Reject</span>
+                            <span class="wf-action">Approve / Reject</span>
                             <span class="wf-action">Manage Users</span>
                             <span class="wf-action">NID/Passport Admin</span>
                             <span class="wf-action">Health/Water Admin</span>
-                            <span class="wf-action">Update Market Prices</span>
+                            <span class="wf-action">Update Prices</span>
                             <span class="wf-action">Post Notices</span>
                             <span class="wf-action">Generate Reports</span>
                             <span class="wf-action">View Audit Logs</span>
                             <span class="wf-action">Manage Departments</span>
-                            <span class="wf-action">Payment Verification</span>
+                            <span class="wf-action">Payment Verify</span>
                             <span class="wf-action">Content Moderation</span>
+                        </div>
+                    </div>
+                    <div class="wf-role">
+                        <div class="wf-role-badge wf-system">&#x2699;&#xFE0F; System</div>
+                        <div class="wf-connector">&#x2192;</div>
+                        <div class="wf-actions">
+                            <span class="wf-action">Auto Triggers</span>
+                            <span class="wf-action">Stored Procedures</span>
+                            <span class="wf-action">Audit Logging</span>
+                            <span class="wf-action">OTP via Email</span>
+                            <span class="wf-action">Rate Limiting</span>
+                            <span class="wf-action">Input Validation</span>
+                            <span class="wf-action">Session Mgmt</span>
+                            <span class="wf-action">File Upload</span>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="section-box">
-                <div class="section-label">🗄️ Database Stats</div>
+                <div class="section-label">&#x1F5C4;&#xFE0F; Database Architecture</div>
                 <div class="db-stats">
                     <div class="db-stat"><div class="num">134+</div><div class="lbl">Tables</div></div>
-                    <div class="db-stat"><div class="num">20</div><div class="lbl">Modules</div></div>
-                    <div class="db-stat"><div class="num">200+</div><div class="lbl">Relationships</div></div>
+                    <div class="db-stat"><div class="num">200+</div><div class="lbl">Relations</div></div>
                     <div class="db-stat"><div class="num">1000+</div><div class="lbl">Columns</div></div>
-                    <div class="db-stat"><div class="num">3NF</div><div class="lbl">Normalized</div></div>
+                    <div class="db-stat"><div class="num">20</div><div class="lbl">Modules</div></div>
                     <div class="db-stat"><div class="num">25+</div><div class="lbl">SQL Files</div></div>
+                    <div class="db-stat"><div class="num">21</div><div class="lbl">API Routes</div></div>
                 </div>
             </div>
-
+            <div class="normalization-banner">
+                <div class="norm-title">&#x2705; NORMALIZATION ACHIEVED</div>
+                <div class="norm-badges">
+                    <span class="norm-badge nb-3nf">3NF &#x2713;</span>
+                    <span class="norm-badge nb-bcnf">BCNF &#x2713;</span>
+                </div>
+                <div class="norm-sub">All 134+ tables follow Third Normal Form &amp; Boyce-Codd Normal Form &#8212; zero redundancy, full dependency compliance</div>
+            </div>
             <div class="section-box">
-                <div class="section-label">🔐 Security Features</div>
+                <div class="section-label">&#x1F510; Security</div>
                 <div class="sec-chips">
-                    <span class="sec-chip">JWT Authentication</span>
-                    <span class="sec-chip">Bcrypt Hashing</span>
+                    <span class="sec-chip">JWT Auth</span>
+                    <span class="sec-chip">Bcrypt Hash</span>
                     <span class="sec-chip">Helmet CSP</span>
-                    <span class="sec-chip">Rate Limiting</span>
-                    <span class="sec-chip">Input Validation</span>
-                    <span class="sec-chip">CORS Protection</span>
-                    <span class="sec-chip">Prepared Statements</span>
+                    <span class="sec-chip">Rate Limit</span>
+                    <span class="sec-chip">Validation</span>
+                    <span class="sec-chip">CORS</span>
+                    <span class="sec-chip">Prepared Stmt</span>
                     <span class="sec-chip">Audit Trail</span>
-                    <span class="sec-chip">File Size Limit</span>
-                    <span class="sec-chip">OTP Verification</span>
+                    <span class="sec-chip">OTP Verify</span>
                 </div>
             </div>
-
             <div class="section-box">
-                <div class="section-label">🏗️ Architecture</div>
-                <div style="font-size:.72em; color:#90a4ae; line-height:1.7;">
-                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
-                        <span style="background:#1565c0;color:#fff;padding:3px 10px;border-radius:5px;font-weight:700;font-size:.9em;">Client</span>
-                        <span style="color:#ff6b35;">→</span>
-                        <span style="color:#b0bec5;">HTML/CSS/JS (30+ pages)</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
-                        <span style="background:#ff6b35;color:#fff;padding:3px 10px;border-radius:5px;font-weight:700;font-size:.9em;">Server</span>
-                        <span style="color:#ff6b35;">→</span>
-                        <span style="color:#b0bec5;">Express.js + 21 Routes + 4 Controllers</span>
-                    </div>
-                    <div style="display:flex;gap:6px;align-items:center;">
-                        <span style="background:#2e7d32;color:#fff;padding:3px 10px;border-radius:5px;font-weight:700;font-size:.9em;">Data</span>
-                        <span style="color:#ff6b35;">→</span>
-                        <span style="color:#b0bec5;">MySQL 134+ Tables + Procedures + Triggers</span>
-                    </div>
-                </div>
+                <div class="section-label">&#x1F3D7;&#xFE0F; Architecture</div>
+                <div class="arch-row"><span class="arch-badge ab-client">Client</span><span class="arch-arrow">&#x2192;</span><span class="arch-desc">HTML/CSS/JS (30+ pages)</span></div>
+                <div class="arch-row"><span class="arch-badge ab-server">Server</span><span class="arch-arrow">&#x2192;</span><span class="arch-desc">Express.js + 21 Routes + 4 Controllers</span></div>
+                <div class="arch-row"><span class="arch-badge ab-data">Data</span><span class="arch-arrow">&#x2192;</span><span class="arch-desc">MySQL 134+ Tables + Procedures + Triggers</span></div>
             </div>
         </div>
-    </div><!-- /main-grid -->
-
-    <!-- ─── FOOTER ─── -->
+    </div>
     <div class="poster-footer">
-        <div class="footer-left">🇧🇩 Central Government of Bangladesh — Digital Services Platform</div>
+        <div class="footer-left">&#x1F1E7;&#x1F1E9; Central Government of Bangladesh &#8212; Digital Services Platform</div>
         <div class="footer-center">
             <span class="footer-tag">Full-Stack Web App</span>
             <span class="footer-tag">REST API</span>
             <span class="footer-tag">3-Tier Architecture</span>
             <span class="footer-tag">MVC Pattern</span>
             <span class="footer-tag">CRUD Operations</span>
+            <span class="footer-tag">3NF + BCNF</span>
         </div>
         <div class="footer-right">github.com/Abiralsaba/Govt_Project</div>
     </div>
-
-</div><!-- /poster-inner -->
-</div><!-- /poster -->
-
+</div>
+</div>
 <script>
 function downloadPNG() {
-    const poster = document.getElementById('poster');
-    const status = document.getElementById('dlStatus');
-    const btn = document.querySelector('.dl-png');
-
+    var poster = document.getElementById('poster');
+    var status = document.getElementById('dlStatus');
+    var btn = document.querySelector('.dl-png');
     btn.disabled = true;
-    btn.textContent = '⏳ Generating HD PNG...';
+    btn.textContent = 'Generating HD PNG...';
     status.textContent = 'Capturing poster at 4x resolution...';
-
-    // Small delay to let UI update
     setTimeout(function() {
         html2canvas(poster, {
-            scale: 4,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#0d1b2a',
-            logging: false,
-            width: poster.scrollWidth,
-            height: poster.scrollHeight,
-            windowWidth: poster.scrollWidth + 50,
-            windowHeight: poster.scrollHeight + 50,
-            scrollX: 0,
-            scrollY: 0,
-            x: 0,
-            y: 0
+            scale: 4, useCORS: true, allowTaint: true,
+            backgroundColor: '#0b0e1a', logging: false,
+            width: poster.scrollWidth, height: poster.scrollHeight,
+            windowWidth: poster.scrollWidth + 50, windowHeight: poster.scrollHeight + 50,
+            scrollX: 0, scrollY: 0, x: 0, y: 0
         }).then(function(canvas) {
-            status.textContent = 'Creating PNG file (' + canvas.width + 'x' + canvas.height + ')...';
-
+            status.textContent = 'Creating PNG (' + canvas.width + 'x' + canvas.height + ')...';
             canvas.toBlob(function(blob) {
                 if (!blob) {
-                    status.textContent = '❌ Blob creation failed. Trying fallback...';
                     try {
                         var dataUrl = canvas.toDataURL('image/png');
                         var a = document.createElement('a');
-                        a.href = dataUrl;
-                        a.download = 'NATIONX_Project_Poster_HD.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        status.textContent = '✅ Downloaded via fallback!';
-                    } catch(e) {
-                        status.textContent = '❌ Export failed: ' + e.message;
-                    }
-                    btn.disabled = false;
-                    btn.textContent = '📥 Download HD PNG';
-                    return;
+                        a.href = dataUrl; a.download = 'NATIONX_Project_Poster_HD.png';
+                        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                        status.textContent = 'Downloaded (fallback)!';
+                    } catch(e) { status.textContent = 'Failed: ' + e.message; }
+                    btn.disabled = false; btn.textContent = 'Download HD PNG'; return;
                 }
-
                 var sizeMB = (blob.size / 1024 / 1024).toFixed(1);
-                status.textContent = '✅ Done! ' + canvas.width + 'x' + canvas.height + ' (' + sizeMB + ' MB)';
-
+                status.textContent = 'Done! ' + canvas.width + ' x ' + canvas.height + ' (' + sizeMB + ' MB)';
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement('a');
-                a.href = url;
-                a.download = 'NATIONX_Project_Poster_HD.png';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                a.href = url; a.download = 'NATIONX_Project_Poster_HD.png';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-
-                btn.disabled = false;
-                btn.textContent = '📥 Download HD PNG';
+                btn.disabled = false; btn.textContent = 'Download HD PNG';
             }, 'image/png', 1.0);
         }).catch(function(err) {
-            console.error('html2canvas error:', err);
-            status.textContent = '❌ Failed: ' + err.message;
-            btn.disabled = false;
-            btn.textContent = '📥 Download HD PNG';
+            console.error(err);
+            status.textContent = 'Failed: ' + err.message;
+            btn.disabled = false; btn.textContent = 'Download HD PNG';
         });
     }, 200);
 }
