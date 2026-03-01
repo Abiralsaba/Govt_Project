@@ -110,7 +110,7 @@ const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Error Handler
+
 // Error Handler
 app.use((err, req, res, next) => {
     console.error(err.stack);

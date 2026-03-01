@@ -25,9 +25,7 @@ CREATE TABLE IF NOT EXISTS admins (
 -- INSERT INTO admins (name, email, password, mobile, status) VALUES 
 -- ('Super Admin', 'admin@govt.bd', '$2a$10$hashedpassword', '01700000000', 'approved');
 
--- ==========================================
 -- ADMIN AUDIT LOG (Optional - track admin actions)
--- ==========================================
 CREATE TABLE IF NOT EXISTS admin_actions_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     admin_id INT NOT NULL,

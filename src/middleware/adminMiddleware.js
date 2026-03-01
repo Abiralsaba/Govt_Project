@@ -1,7 +1,4 @@
-/**
- * Admin Authentication Middleware
- * Verifies JWT token and ensures user is an approved admin
- */
+// Admin Authentication Middleware - Verifies JWT token and ensures...
 
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';

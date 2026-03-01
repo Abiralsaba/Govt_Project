@@ -3,9 +3,7 @@
 -- Database Schema for University Applications
 -- =====================================================
 
--- =====================================================
 -- UNIVERSITIES TABLE
--- =====================================================
 CREATE TABLE IF NOT EXISTS universities (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(200) NOT NULL,
@@ -20,9 +18,7 @@ CREATE TABLE IF NOT EXISTS universities (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- =====================================================
 -- ADMISSION POSTS TABLE (University Admission Circulars)
--- =====================================================
 CREATE TABLE IF NOT EXISTS admission_posts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     university_id INT NOT NULL,
@@ -60,9 +56,7 @@ CREATE TABLE IF NOT EXISTS admission_posts (
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 );
 
--- =====================================================
 -- UNIVERSITY APPLICATIONS TABLE
--- =====================================================
 CREATE TABLE IF NOT EXISTS university_applications (
     id INT PRIMARY KEY AUTO_INCREMENT,
     application_id VARCHAR(30) NOT NULL UNIQUE,
@@ -111,18 +105,14 @@ CREATE TABLE IF NOT EXISTS university_applications (
     UNIQUE KEY unique_application (admission_post_id, hsc_roll, hsc_year)
 );
 
--- =====================================================
 -- INDEXES
--- =====================================================
 CREATE INDEX idx_admission_posts_status ON admission_posts(status);
 CREATE INDEX idx_admission_posts_dates ON admission_posts(start_date, end_date);
 CREATE INDEX idx_applications_hsc ON university_applications(hsc_roll, hsc_year);
 CREATE INDEX idx_applications_status ON university_applications(application_status);
 CREATE INDEX idx_applications_payment ON university_applications(payment_status);
 
--- =====================================================
 -- SAMPLE DATA: UNIVERSITIES
--- =====================================================
 INSERT INTO universities (name, name_bn, code, type, location, website) VALUES
 ('University of Dhaka', 'ঢাকা বিশ্ববিদ্যালয়', 'DU', 'General', 'Dhaka', 'https://www.du.ac.bd'),
 ('Bangladesh University of Engineering and Technology', 'বাংলাদেশ প্রকৌশল বিশ্ববিদ্যালয়', 'BUET', 'Engineering', 'Dhaka', 'https://www.buet.ac.bd'),
@@ -135,9 +125,7 @@ INSERT INTO universities (name, name_bn, code, type, location, website) VALUES
 ('Khulna University', 'খুলনা বিশ্ববিদ্যালয়', 'KU', 'General', 'Khulna', 'https://www.ku.ac.bd'),
 ('Chittagong Medical College', 'চট্টগ্রাম মেডিকেল কলেজ', 'CMC', 'Medical', 'Chittagong', 'https://www.cmc.edu.bd');
 
--- =====================================================
 -- SAMPLE DATA: ADMISSION POSTS (2024-2025 Session)
--- =====================================================
 
 -- University of Dhaka - General Units
 INSERT INTO admission_posts (university_id, session, unit_code, unit_name, unit_description, min_gpa, required_group, application_fee, start_date, end_date, exam_date, total_seats, status) VALUES

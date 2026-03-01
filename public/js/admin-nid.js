@@ -1,6 +1,5 @@
 /**
  * Admin NID Panel — JavaScript
- * Manages NID applications: view, filter, update status
  */
 
 const AdminNID = {
@@ -9,7 +8,7 @@ const AdminNID = {
     applications: [],
     currentApp: null,
 
-    // Status options per table type (must match DB ENUMs exactly)
+    // Status options per table type 
     STATUS_MAP: {
         'nid_applications': ['Draft', 'Submitted', 'Under Review', 'Biometric Pending', 'Verified', 'Approved', 'Rejected', 'Card Printing', 'Ready for Collection', 'Delivered'],
         'nid_correction_requests': ['Draft', 'Submitted', 'Under Review', 'Document Verification', 'Approved', 'Rejected', 'Completed'],

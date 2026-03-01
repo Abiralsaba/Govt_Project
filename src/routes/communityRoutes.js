@@ -1,8 +1,4 @@
-/**
- * Community Routes
- * 
- * API endpoints for the community group system
- */
+// Community Routes - API endpoints for the community group system
 
 const express = require('express');
 const router = express.Router();
@@ -17,9 +13,7 @@ router.use(verifyToken);
 // GROUP ENDPOINTS
 // ==========================================
 
-/**
- * GET /groups - List all approved groups
- */
+// GET /groups
 router.get('/groups', async (req, res) => {
     try {
         const [groups] = await db.query(`
@@ -39,9 +33,7 @@ router.get('/groups', async (req, res) => {
     }
 });
 
-/**
- * GET /my-groups - Get groups user has joined
- */
+// GET /my-groups
 router.get('/my-groups', async (req, res) => {
     try {
         const [groups] = await db.query(`
@@ -63,10 +55,7 @@ router.get('/my-groups', async (req, res) => {
     }
 });
 
-/**
- * POST /groups - Create a new group (pending approval)
- * Supports file upload for cover_image
- */
+// POST /groups - Supports file upload for cover_image
 router.post('/groups', upload.single('cover_image'), async (req, res) => {
     const { name, description } = req.body;
 
@@ -109,9 +98,6 @@ router.post('/groups', upload.single('cover_image'), async (req, res) => {
     }
 });
 
-/**
- * GET /groups/:id - Get group details with approved posts
- */
 router.get('/groups/:id', async (req, res) => {
     try {
         // Get group info
@@ -162,9 +148,7 @@ router.get('/groups/:id', async (req, res) => {
     }
 });
 
-/**
- * PUT /groups/:id - Edit a group (admin/creator only, requires re-approval)
- */
+
 router.put('/groups/:id', upload.single('cover_image'), async (req, res) => {
     const { name, description, keep_existing_cover } = req.body;
 
@@ -230,9 +214,7 @@ router.put('/groups/:id', upload.single('cover_image'), async (req, res) => {
     }
 });
 
-/**
- * POST /groups/:id/join - Join a group
- */
+// POST /groups/:id/join
 router.post('/groups/:id/join', async (req, res) => {
     try {
         // Check if group exists and is approved
@@ -265,9 +247,7 @@ router.post('/groups/:id/join', async (req, res) => {
     }
 });
 
-/**
- * POST /groups/:id/leave - Leave a group
- */
+// POST /groups/:id/leave
 router.post('/groups/:id/leave', async (req, res) => {
     try {
         // Check if user is the creator (admin can't leave)
@@ -295,10 +275,7 @@ router.post('/groups/:id/leave', async (req, res) => {
 // POST ENDPOINTS
 // ==========================================
 
-/**
- * POST /groups/:id/posts - Create a post in group (pending approval)
- * Supports file upload for post_image
- */
+// POST /groups/:id/posts - Supports file upload for post_image
 router.post('/groups/:id/posts', upload.single('post_image'), async (req, res) => {
     const { content } = req.body;
 
@@ -344,9 +321,7 @@ router.post('/groups/:id/posts', upload.single('post_image'), async (req, res) =
     }
 });
 
-/**
- * PUT /posts/:id - Edit a post (author only, requires re-approval)
- */
+// PUT /posts/:id
 router.put('/posts/:id', upload.single('post_image'), async (req, res) => {
     const { content, keep_existing_image } = req.body;
 
@@ -403,9 +378,7 @@ router.put('/posts/:id', upload.single('post_image'), async (req, res) => {
     }
 });
 
-/**
- * POST /posts/:id/like - Toggle like on a post
- */
+// POST /posts/:id/like
 router.post('/posts/:id/like', async (req, res) => {
     try {
         // Check if already liked
@@ -443,9 +416,7 @@ router.post('/posts/:id/like', async (req, res) => {
     }
 });
 
-/**
- * GET /posts/:id/comments - Get comments for a post
- */
+// GET /posts/:id/comments
 router.get('/posts/:id/comments', async (req, res) => {
     try {
         const [comments] = await db.query(`
@@ -465,9 +436,7 @@ router.get('/posts/:id/comments', async (req, res) => {
     }
 });
 
-/**
- * POST /posts/:id/comments - Add a comment
- */
+// POST /posts/:id/comments
 router.post('/posts/:id/comments', async (req, res) => {
     const { content } = req.body;
 
@@ -505,9 +474,7 @@ router.post('/posts/:id/comments', async (req, res) => {
     }
 });
 
-/**
- * PUT /comments/:id - Edit a comment (author only)
- */
+// PUT /comments/:id
 router.put('/comments/:id', async (req, res) => {
     const { content } = req.body;
 
@@ -542,9 +509,7 @@ router.put('/comments/:id', async (req, res) => {
     }
 });
 
-/**
- * DELETE /comments/:id - Delete a comment (author only)
- */
+// DELETE /comments/:id
 router.delete('/comments/:id', async (req, res) => {
     try {
         // Check if comment exists and user is the author
@@ -583,9 +548,7 @@ router.delete('/comments/:id', async (req, res) => {
 // ADMIN ENDPOINTS
 // ==========================================
 
-/**
- * GET /admin/groups - Get pending groups (admin only)
- */
+// GET /admin/groups
 router.get('/admin/groups', async (req, res) => {
     try {
         const [groups] = await db.query(`
@@ -605,9 +568,7 @@ router.get('/admin/groups', async (req, res) => {
     }
 });
 
-/**
- * PUT /admin/groups/:id - Approve or reject a group
- */
+// PUT /admin/groups/:id
 router.put('/admin/groups/:id', async (req, res) => {
     const { action } = req.body; // 'approve' or 'reject'
 
@@ -638,9 +599,7 @@ router.put('/admin/groups/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /admin/posts - Get pending posts (admin only)
- */
+// GET /admin/posts
 router.get('/admin/posts', async (req, res) => {
     try {
         const [posts] = await db.query(`
@@ -661,9 +620,7 @@ router.get('/admin/posts', async (req, res) => {
     }
 });
 
-/**
- * PUT /admin/posts/:id - Approve or reject a post
- */
+// PUT /admin/posts/:id
 router.put('/admin/posts/:id', async (req, res) => {
     const { action } = req.body; // 'approve' or 'reject'
 

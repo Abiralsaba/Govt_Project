@@ -1,7 +1,4 @@
-/**
- * Admin Authentication Controller
- * Handles admin registration and login
- */
+// Admin Authentication Controller - Handles admin registration and...
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -10,9 +7,7 @@ const db = require('../config/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-/**
- * Register a new admin (status will be 'pending')
- */
+// Register a new admin (status will be 'pending')
 const register = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -49,9 +44,7 @@ const register = async (req, res) => {
     }
 };
 
-/**
- * Login admin (only if status is 'approved')
- */
+// Login admin (only if status is 'approved')
 const login = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -129,9 +122,7 @@ const login = async (req, res) => {
     }
 };
 
-/**
- * Get current admin info
- */
+// current admin info
 const getMe = async (req, res) => {
     try {
         const [admins] = await db.query(

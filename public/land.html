@@ -586,7 +586,6 @@
                                     onchange="loadAddRecordDistricts()" required>
                                     <option value="">Select Division</option>
                                 </select>
-                                <input type="hidden" name="division" id="hidden_division">
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 0.5rem; color: #94a3b8;">District</label>
@@ -594,17 +593,14 @@
                                     onchange="loadAddRecordUpazilas()" required disabled>
                                     <option value="">Select District</option>
                                 </select>
-                                <input type="hidden" name="district" id="hidden_district">
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                             <div>
                                 <label style="display: block; margin-bottom: 0.5rem; color: #94a3b8;">Upazila</label>
-                                <select id="addRecordUpazila" name="upazila_id" class="form-select"
-                                    onchange="updateHiddenNames()" required disabled>
+                                <select id="addRecordUpazila" name="upazila_id" class="form-select" required disabled>
                                     <option value="">Select Upazila</option>
                                 </select>
-                                <input type="hidden" name="upazila" id="hidden_upazila">
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 0.5rem; color: #94a3b8;">Mouza
@@ -614,19 +610,12 @@
                             </div>
                         </div>
 
-                        <!-- 2. Applicant / Owner Info -->
+                        <!-- 2. Owner NID (for verification) -->
                         <h4
                             style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem; color: #e2e8f0;">
                             2. Owner Information</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                            <input type="text" name="owner_name" class="form-input" placeholder="Owner Info (Name)"
-                                required>
-                            <input type="text" name="nid" class="form-input" placeholder="Owner NID" required>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                            <input type="text" name="father_name" class="form-input" placeholder="Father's Name"
-                                required>
-                            <input type="text" name="mother_name" class="form-input" placeholder="Mother's Name"
+                        <div style="margin-bottom: 1.5rem;">
+                            <input type="text" name="nid" class="form-input" placeholder="Owner NID (for verification)"
                                 required>
                         </div>
 
@@ -692,12 +681,8 @@
                         <!-- Personal Info -->
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                            <input type="text" name="applicant_name" class="form-input" placeholder="Applicant Name"
-                                required>
                             <input type="text" name="nid" class="form-input" placeholder="NID Number" required>
                             <input type="text" name="mobile" class="form-input" placeholder="Mobile Number" required>
-                            <input type="text" name="father_name" class="form-input" placeholder="Father's Name">
-                            <input type="text" name="mother_name" class="form-input" placeholder="Mother's Name">
                         </div>
 
                         <!-- Land Location (Reusing existing loader logic if possible, else manual inputs) -->
@@ -707,15 +692,15 @@
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                             <!-- We can reuse loadDivisions(), but keep IDs unique -->
-                            <select id="taxDivision" name="division" class="form-select" onchange="loadTaxDistricts()"
-                                required>
+                            <select id="taxDivision" name="division_id" class="form-select"
+                                onchange="loadTaxDistricts()" required>
                                 <option value="">Select Division</option>
                             </select>
-                            <select id="taxDistrict" name="district" class="form-select" onchange="loadTaxUpazilas()"
+                            <select id="taxDistrict" name="district_id" class="form-select" onchange="loadTaxUpazilas()"
                                 required disabled>
                                 <option value="">Select District</option>
                             </select>
-                            <select id="taxUpazila" name="upazila" class="form-select" required disabled>
+                            <select id="taxUpazila" name="upazila_id" class="form-select" required disabled>
                                 <option value="">Select Upazila</option>
                             </select>
                         </div>
@@ -823,15 +808,10 @@
                     const formData = new FormData(form);
                     const payload = Object.fromEntries(formData.entries());
 
-                    // Get Division/District/Upazila Names
-                    try {
-                        payload.division = document.getElementById('taxDivision').options[document.getElementById('taxDivision').selectedIndex].text;
-                        payload.district = document.getElementById('taxDistrict').options[document.getElementById('taxDistrict').selectedIndex].text;
-                        payload.upazila = document.getElementById('taxUpazila').options[document.getElementById('taxUpazila').selectedIndex].text;
-                    } catch (err) {
-                        console.error('Error getting location names:', err);
-                        return Swal.fire({ icon: 'error', title: 'Form Error', text: 'Please select all location fields.', background: '#1e293b', color: '#fff' });
-                    }
+                    // Add division/district/upazila IDs (selects have text as value, we need IDs)
+                    payload.division_id = document.getElementById('taxDivision').value;
+                    payload.district_id = document.getElementById('taxDistrict').value;
+                    payload.upazila_id = document.getElementById('taxUpazila').value;
 
                     console.log('Payload:', payload);
                     Swal.fire({ title: 'Initiating Payment...', didOpen: () => Swal.showLoading(), background: '#1e293b', color: '#fff' });
@@ -923,14 +903,9 @@
                 <!-- 2. Applicant Info -->
                 <h4 style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem;">2. Applicant
                     / Current Owner Info</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <input type="text" id="appName" class="form-input" placeholder="Applicant Name" required>
+                <div style="margin-bottom: 1.5rem;">
                     <input type="text" id="appNid" class="form-input" placeholder="Applicant NID (Must be registered)"
                         required>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                    <input type="text" id="appFather" class="form-input" placeholder="Father's Name" required>
-                    <input type="text" id="appMother" class="form-input" placeholder="Mother's Name" required>
                 </div>
 
                 <!-- 3. Land Info -->
@@ -953,14 +928,9 @@
                 <!-- 4. Buyer Info -->
                 <h4 style="border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-bottom: 1rem;">4. Buyer
                     Information</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <input type="text" id="buyerName" class="form-input" placeholder="Buyer Name" required>
+                <div style="margin-bottom: 2rem;">
                     <input type="text" id="buyerNid" class="form-input" placeholder="Buyer NID (Must be registered)"
                         required>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-                    <input type="text" id="buyerFather" class="form-input" placeholder="Buyer's Father's Name" required>
-                    <input type="text" id="buyerMother" class="form-input" placeholder="Buyer's Mother's Name" required>
                 </div>
 
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
@@ -1128,13 +1098,7 @@
         }
 
         function updateHiddenNames() {
-            const divSel = document.getElementById('addRecordDivision');
-            const distSel = document.getElementById('addRecordDistrict');
-            const upaSel = document.getElementById('addRecordUpazila');
-
-            if (divSel.selectedIndex > 0) document.getElementById('hidden_division').value = divSel.options[divSel.selectedIndex].text;
-            if (distSel.selectedIndex > 0) document.getElementById('hidden_district').value = distSel.options[distSel.selectedIndex].text;
-            if (upaSel.selectedIndex > 0) document.getElementById('hidden_upazila').value = upaSel.options[upaSel.selectedIndex].text;
+            // No-op: hidden name fields removed (3NF)
         }
 
         async function submitNewRecord(e) {
@@ -1233,40 +1197,24 @@
             // Helper to set value if element exists
             const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
 
-            // 1. Locations (Match by Text)
-            // Function to set dropdown by text content
-            const setDropdownByText = (id, text) => {
-                const el = document.getElementById(id);
-                if (!el || !text) return;
-                for (let i = 0; i < el.options.length; i++) {
-                    if (el.options[i].text === text) {
-                        el.selectedIndex = i;
-                        el.dispatchEvent(new Event('change')); // Trigger change to load next level
-                        return;
-                    }
-                }
-            };
-
-            // Set Division and trigger loadDistricts
-            if (r.division) {
-                setDropdownByText('formDivision', r.division);
-                // Wait for districts to load then set District
+            // 1. Locations — set by division_id/district_id/upazila_id
+            if (r.division_id) {
+                const divSel = document.getElementById('formDivision');
+                divSel.value = r.division_id;
+                divSel.dispatchEvent(new Event('change'));
                 setTimeout(() => {
-                    if (r.district) {
-                        setDropdownByText('formDistrict', r.district);
-                        // Wait for upazilas to load then set Upazila
+                    if (r.district_id) {
+                        document.getElementById('formDistrict').value = r.district_id;
+                        document.getElementById('formDistrict').dispatchEvent(new Event('change'));
                         setTimeout(() => {
-                            if (r.upazila) setDropdownByText('formUpazila', r.upazila);
+                            if (r.upazila_id) document.getElementById('formUpazila').value = r.upazila_id;
                         }, 500);
                     }
                 }, 500);
             }
 
-            // 2. Owner Info
-            setVal('appName', r.owner_name);
-            setVal('appNid', r.nid);
-            setVal('appFather', r.father_name);
-            setVal('appMother', r.mother_name);
+            // 2. NID (auto-fill from logged-in user's NID if available)
+            setVal('appNid', '');
 
             // 3. Land Details
             setVal('khatian', r.khatian_no);
@@ -1539,9 +1487,6 @@
                 divId: document.getElementById('formDivision').value,
                 distId: document.getElementById('formDistrict').value,
                 upaId: document.getElementById('formUpazila').value,
-                appName: document.getElementById('appName').value,
-                appFather: document.getElementById('appFather').value,
-                appMother: document.getElementById('appMother').value,
                 appNid: document.getElementById('appNid').value,
                 khatian: document.getElementById('khatian').value,
                 dag: document.getElementById('dag').value,
@@ -1549,10 +1494,7 @@
                 price: document.getElementById('price').value,
                 deed: document.getElementById('deed').value,
                 ownType: document.getElementById('ownType').value,
-                buyerName: document.getElementById('buyerName').value,
-                buyerNid: document.getElementById('buyerNid').value,
-                buyerFather: document.getElementById('buyerFather').value,
-                buyerMother: document.getElementById('buyerMother').value
+                buyerNid: document.getElementById('buyerNid').value
             };
 
             Swal.fire({ title: 'Submitting...', didOpen: () => Swal.showLoading(), background: '#1e293b', color: '#fff' });

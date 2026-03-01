@@ -125,55 +125,51 @@ router.get('/locations/upazilas/:distId', async (req, res) => {
 router.post('/land/mutation_v2', async (req, res) => {
     const {
         divId, distId, upaId,
-        appName, appFather, appMother, appNid,
-        khatian, dag, amount, price, deed, ownType,
-        buyerName, buyerNid, buyerFather, buyerMother
+        appNid, buyerNid,
+        khatian, dag, amount, price, deed, ownType
     } = req.body;
 
     try {
-        // Validation: Check if Applicant NID exists in reg_info
+        // 1. Validate applicant NID
         const [appCheck] = await db.query('SELECT id FROM reg_info WHERE nid = ?', [appNid]);
         if (appCheck.length === 0) {
             return res.status(400).json({ error: 'Applicant NID not found in system registration.' });
         }
 
-        // Validation: Check if Buyer NID exists in reg_info
+        // 2. Validate buyer NID + get buyer_id
         const [buyerCheck] = await db.query('SELECT id FROM reg_info WHERE nid = ?', [buyerNid]);
         if (buyerCheck.length === 0) {
             return res.status(400).json({ error: 'Buyer NID not found in system registration.' });
         }
+        const buyerId = buyerCheck[0].id;
 
-        // --- SECURITY CHECK: VERIFY OWNERSHIP ---
-        // Ensure Seller (req.user) has this land in their My Records and it is Approved
+        // 3. Verify ownership
         const [ownershipCheck] = await db.query(
             "SELECT id FROM my_land_record WHERE user_id = ? AND khatian_no = ? AND dag_no = ? AND status = 'Approved'",
             [req.user.id, khatian, dag]
         );
-
         if (ownershipCheck.length === 0) {
             return res.status(403).json({ error: 'You can only sell Verified Land from your records. Please verified this land in "My Records" first.' });
         }
-        // ----------------------------------------
 
-        // Generate Random Tracking Number (e.g., LMT-2026-XXXX)
+        // 4. Generate tracking number
         const trackingNum = `LMT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+        // 5. Insert mutation (3NF — FKs only, no name cols)
         await db.query(`
             INSERT INTO land_mutations_v2 
-            (user_id, division_id, district_id, upazila_id, applicant_name, applicant_father, applicant_mother, applicant_nid, khatian_no, dag_no, land_amount, land_price, deed_no, ownership_type, buyer_name, buyer_nid, buyer_father_name, buyer_mother_name, tracking_number)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, land_amount, land_price, deed_no, ownership_type, buyer_nid, buyer_id, tracking_number)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             req.user.id, divId, distId, upaId,
-            appName, appFather, appMother, appNid,
             khatian, dag, amount, price, deed, ownType,
-            buyerName, buyerNid, buyerFather, buyerMother, trackingNum
+            buyerNid, buyerId, trackingNum
         ]);
 
-        // Also log to notifications
+        // 6. Notification + service_requests log
         await db.query('INSERT INTO notifications (user_id, message) VALUES (?, ?)',
             [req.user.id, `Mutation application submitted. Tracking #: ${trackingNum}`]);
 
-        // Log to service_requests for Admin Dashboard handling
         await db.query(`
             INSERT INTO service_requests (user_id, service_type, details, status, notification_read) 
             VALUES (?, ?, ?, ?, ?)
@@ -255,8 +251,17 @@ router.get('/land/applications', async (req, res) => {
 // Get My Records (Merged with Approved Mutations)
 router.get('/land/records', async (req, res) => {
     try {
-        // 1. Fetch manually added records
-        const [manualRecords] = await db.query('SELECT * FROM my_land_record WHERE user_id = ? ORDER BY recorded_at DESC', [req.user.id]);
+        // 1. Fetch manually added records (JOIN for display names)
+        const [manualRecords] = await db.query(
+            `SELECT lr.*, 
+                d.name as division, dist.name as district, u.name as upazila,
+                ri.name as owner_name
+            FROM my_land_record lr
+            LEFT JOIN divisions d ON lr.division_id = d.id
+            LEFT JOIN districts dist ON lr.district_id = dist.id
+            LEFT JOIN upazilas u ON lr.upazila_id = u.id
+            LEFT JOIN reg_info ri ON lr.user_id = ri.id
+            WHERE lr.user_id = ? ORDER BY lr.recorded_at DESC`, [req.user.id]);
 
         // 2. Fetch approved mutations where user is the buyer
         // Mapping mutation fields to record fields for consistency
@@ -308,41 +313,32 @@ router.get('/land/records', async (req, res) => {
 });
 
 // Add New Record (Verified)
-// Add New Record (Verified)
 router.post('/land/records', async (req, res) => {
     const {
-        division_id, district_id, upazila_id, // IDs
-        division, district, upazila, // Hidden Names
-        owner_name, nid, father_name, mother_name,
+        division_id, district_id, upazila_id,
         khatian, dag, mouza, land_size,
         deed_no, land_price,
-        description
+        description, nid
     } = req.body;
 
-    console.log('Received POST /land/records payload:', req.body); // DEBUG
-
     try {
-        // 1. Verify against official records (land_mutations_v2)
+        // 1. Verify against official records
         const [officialRecords] = await db.query(
             'SELECT status FROM land_mutations_v2 WHERE khatian_no = ? AND buyer_nid = ?',
-            [khatian, nid]
+            [khatian, nid || '']
         );
 
-        let verificationStatus = 'Pending'; // Default if not found
-
-        if (officialRecords.length > 0) {
-            const status = officialRecords[0].status;
-            if (status === 'Approved') {
-                verificationStatus = 'Approved';
-            }
+        let verificationStatus = 'Pending';
+        if (officialRecords.length > 0 && officialRecords[0].status === 'Approved') {
+            verificationStatus = 'Approved';
         }
 
-        // 2. Insert into My Records (with normalized location IDs)
+        // 2. Insert (3NF — FKs only, no name/geo text cols)
         await db.query(
             `INSERT INTO my_land_record 
-            (user_id, division, district, upazila, division_id, district_id, upazila_id, owner_name, father_name, mother_name, nid, khatian_no, dag_no, mouza, land_size, deed_no, land_price, ownership_description, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [req.user.id, division, district, upazila, division_id, district_id, upazila_id, owner_name, father_name, mother_name, nid, khatian, dag, mouza, land_size, deed_no, land_price, description, verificationStatus]
+            (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, mouza, land_size, deed_no, land_price, ownership_description, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [req.user.id, division_id, district_id, upazila_id, khatian, dag, mouza, land_size, deed_no, land_price, description, verificationStatus]
         );
 
         res.json({ success: true, status: verificationStatus, message: verificationStatus === 'Approved' ? 'Verified & Approved' : 'Record added but verification pending.' });

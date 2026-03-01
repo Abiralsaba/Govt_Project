@@ -71,7 +71,7 @@ function initCalendar() {
         editable: false, // Set true if you want drag-drop date changing
         events: [],
         eventClick: function (info) {
-            viewTask(info.event.id);
+            viewTask(parseInt(info.event.id, 10));
         }
     });
     calendar.render();
@@ -80,8 +80,8 @@ function initCalendar() {
 function updateCalendarEvents() {
     if (!calendar) return;
 
-    // Clear old events
-    calendar.removeAllEvents();
+    // Clear old events (FullCalendar v5 method)
+    calendar.getEvents().forEach(event => event.remove());
 
     // Add new events
     const events = window.todos
@@ -90,7 +90,7 @@ function updateCalendarEvents() {
             // Apply different colors based on status
             const statusClass = 'fc-event-' + t.status;
             return {
-                id: t.id,
+                id: String(t.id),
                 title: t.title,
                 start: t.due_date, // FullCalendar uses ISO strings YYYY-MM-DDTHH:mm
                 classNames: [statusClass],
@@ -100,7 +100,7 @@ function updateCalendarEvents() {
             };
         });
 
-    calendar.addEventSource(events);
+    events.forEach(e => calendar.addEvent(e));
 }
 
 // Kanban Logic
@@ -182,7 +182,7 @@ async function createTask() {
         showCancelButton: true,
         preConfirm: () => {
             const dateVal = document.getElementById('swal-input3').value;
-            // Convert to format backend expects if necessary, or just send ISO
+
             return {
                 title: document.getElementById('swal-input1').value,
                 description: document.getElementById('swal-input2').value,
@@ -227,7 +227,7 @@ async function updateTaskStatus(id, status) {
         },
         body: JSON.stringify({ status })
     });
-    // Update stats subtly? For now just silent
+    // Update stats subtly
 }
 
 async function deleteTask(id, event) {
@@ -258,7 +258,7 @@ if (logoutBtn) {
     });
 }
 
-// Function openDeptService removed as we now use dedicated pages
+
 
 // Make functions globally available
 // Event Listeners for Modal
@@ -363,11 +363,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
     };
 
-    // updateServiceSubtypes is now defined on window above
 
     // Handle Form Submission
-    // Handle Form Submission via Button Click
-    // Handle Form Submission via Button Click
+
+    
     const submitBtn = document.getElementById('submitRequestBtn');
 
     // Define the submit handler function
@@ -433,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (submitBtn) {
-        // Remove old listeners by cloning (optional but ensures clean slate)
+        // Remove old listeners by cloning 
         const newBtn = submitBtn.cloneNode(true);
         submitBtn.parentNode.replaceChild(newBtn, submitBtn);
 
@@ -443,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Submit Button not found');
     }
 
-    // Attach to window just in case we need to call it from console or inline
+
     window.submitServiceRequestManual = handleServiceSubmit;
 
     const userProfileSection = document.getElementById('userProfileSection');
@@ -457,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDashboard();
 });
 
-// -- Lifecycle Functions (Global) --
+
 
 // Close Modal Generic
 function closeModal(modalId) {
@@ -515,7 +514,7 @@ async function updateRequestStatus(id, status) {
         background: '#0f172a', color: '#fff'
     });
 
-    if (comments !== undefined) { // User didn't cancel (empty string is ok)
+    if (comments !== undefined) {
         try {
             const res = await fetch('/api/dashboard/services/status', {
                 method: 'PUT',

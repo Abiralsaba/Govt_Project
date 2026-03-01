@@ -159,9 +159,7 @@ CREATE TABLE IF NOT EXISTS hsc_results (
     FOREIGN KEY (board_id) REFERENCES education_boards(id)
 );
 
--- =====================================================
 -- INDEXES FOR FASTER SEARCHES
--- =====================================================
 CREATE INDEX idx_jsc_roll_year ON jsc_results(roll_number, exam_year);
 CREATE INDEX idx_jsc_student ON jsc_results(student_name);
 
@@ -173,7 +171,7 @@ CREATE INDEX idx_hsc_student ON hsc_results(student_name);
 
 -- =====================================================
 -- SAMPLE DATA FOR TESTING
--- Extended Dataset for Comprehensive Analytics
+-- Extended dataset
 -- =====================================================
 
 -- Initial JSC Results (2024)
@@ -194,9 +192,7 @@ VALUES
 ('345678', 'HREG2024001', 2024, 'সাকিব আল হাসান', 'মোঃ আলম', 'নাজমা বেগম', 'Notre Dame College', 1, 'Science', 'A+', 'A', 'A+', 'A', 'A+', 'A+', 'A', 'A+', 'A+', 'A', 'A+', 4.91, 'Passed'),
 ('345679', 'HREG2024002', 2024, 'নুসরাত জাহান', 'মোঃ হানিফ', 'শাহানা পারভীন', 'Viqarunnisa Noon School & College', 1, 'Science', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 5.00, 'Passed');
 
--- =====================================================
 -- EXTENDED JSC RESULTS - Multiple Years, Multiple Boards
--- =====================================================
 
 -- 2024 - Dhaka Board (Additional)
 INSERT INTO jsc_results (roll_number, registration_number, exam_year, student_name, father_name, mother_name, institution_name, board_id, bangla, english, mathematics, general_science, bangladesh_global_studies, religion, ict, gpa, result_status) VALUES
@@ -237,9 +233,7 @@ INSERT INTO jsc_results (roll_number, registration_number, exam_year, student_na
 ('122002', 'JSC2022D002', 2022, 'ফাতিমা জান্নাত', 'হাসান মাহমুদ', 'রুমা বেগম', 'Viqarunnisa Noon School & College', 1, 'A', 'A+', 'A', 'A+', 'A', 'A', 'A+', 4.64, 'Passed'),
 ('222001', 'JSC2022C001', 2022, 'সাদমান সাকিব', 'রফিক উদ্দিন', 'রাবেয়া বেগম', 'BAF Shaheen College Chittagong', 2, 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 'A+', 5.00, 'Passed');
 
--- =====================================================
 -- EXTENDED SSC RESULTS - Multiple Years, Multiple Boards
--- =====================================================
 
 -- 2024 - Dhaka Board (Additional)
 INSERT INTO ssc_results (roll_number, registration_number, exam_year, student_name, father_name, mother_name, institution_name, board_id, exam_group, bangla_1st, bangla_2nd, english_1st, english_2nd, mathematics, physics, chemistry, biology, higher_math, bangladesh_global_studies, religion, ict, gpa, result_status) VALUES
@@ -265,9 +259,7 @@ INSERT INTO ssc_results (roll_number, registration_number, exam_year, student_na
 ('533003', 'SSC2023D003', 2023, 'জাকির হোসেন', 'মজিবুর রহমান', 'আসমা বেগম', 'Dhaka College', 1, 'Science', 'A', 'A-', 'A', 'A-', 'A-', 'B', 'A-', 'B', 'A-', 'A-', 'A', 'A-', 3.83, 'Passed'),
 ('533004', 'SSC2023D004', 2023, 'ফাহমিদা খানম', 'খান মোহাম্মদ', 'রোকেয়া খাতুন', 'Ideal School and College', 1, 'Science', 'B', 'C', 'C', 'D', 'C', 'D', 'D', 'F', NULL, 'C', 'B', 'C', 0.00, 'Failed');
 
--- =====================================================
 -- EXTENDED HSC RESULTS - Multiple Years, Multiple Boards
--- =====================================================
 
 -- 2024 - Dhaka Board (Additional)
 INSERT INTO hsc_results (roll_number, registration_number, exam_year, student_name, father_name, mother_name, institution_name, board_id, exam_group, bangla_1st, bangla_2nd, english_1st, english_2nd, physics_1st, physics_2nd, chemistry_1st, chemistry_2nd, biology_1st, biology_2nd, higher_math_1st, higher_math_2nd, ict, gpa, result_status) VALUES

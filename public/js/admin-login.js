@@ -7,7 +7,6 @@ localStorage.removeItem('adminToken');
 localStorage.removeItem('adminName');
 
 
-// DOM Elements
 const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
 const showRegisterLink = document.getElementById('showRegister');

@@ -1,6 +1,4 @@
--- ==========================================
 -- LOGIN & SECURITY LOGS
--- ==========================================
 
 CREATE TABLE IF NOT EXISTS login_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

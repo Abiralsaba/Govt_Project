@@ -5,9 +5,7 @@
 
 DELIMITER //
 
--- ==========================================
 -- TRIGGER 1: Auto-create notification on service request status change
--- ==========================================
 DROP TRIGGER IF EXISTS tr_service_request_status_change //
 CREATE TRIGGER tr_service_request_status_change
 AFTER UPDATE ON service_requests
@@ -28,9 +26,7 @@ BEGIN
 END //
 
 
--- ==========================================
 -- TRIGGER 2: Update post like count on insert
--- ==========================================
 DROP TRIGGER IF EXISTS tr_like_insert //
 CREATE TRIGGER tr_like_insert
 AFTER INSERT ON post_likes
@@ -42,9 +38,7 @@ BEGIN
 END //
 
 
--- ==========================================
 -- TRIGGER 3: Update post like count on delete
--- ==========================================
 DROP TRIGGER IF EXISTS tr_like_delete //
 CREATE TRIGGER tr_like_delete
 AFTER DELETE ON post_likes
@@ -56,9 +50,7 @@ BEGIN
 END //
 
 
--- ==========================================
 -- TRIGGER 4: Update comment count on insert
--- ==========================================
 DROP TRIGGER IF EXISTS tr_comment_insert //
 CREATE TRIGGER tr_comment_insert
 AFTER INSERT ON post_comments
@@ -70,9 +62,7 @@ BEGIN
 END //
 
 
--- ==========================================
 -- TRIGGER 5: Update comment count on delete
--- ==========================================
 DROP TRIGGER IF EXISTS tr_comment_delete //
 CREATE TRIGGER tr_comment_delete
 AFTER DELETE ON post_comments
@@ -86,7 +76,7 @@ END //
 
 -- ==========================================
 -- TRIGGER 6: Audit log for land mutations (UPDATE)
--- Tracks all changes to critical land mutation data
+-- Track land mutation changes
 -- ==========================================
 DROP TRIGGER IF EXISTS tr_land_mutation_audit_update //
 CREATE TRIGGER tr_land_mutation_audit_update
@@ -108,29 +98,24 @@ BEGIN
         JSON_OBJECT(
             'status', OLD.status,
             'land_price', OLD.land_price,
-            'buyer_name', OLD.buyer_name,
             'buyer_nid', OLD.buyer_nid,
             'khatian_no', OLD.khatian_no
         ),
         JSON_OBJECT(
             'status', NEW.status,
             'land_price', NEW.land_price,
-            'buyer_name', NEW.buyer_name,
             'buyer_nid', NEW.buyer_nid,
             'khatian_no', NEW.khatian_no
         ),
         CONCAT_WS(',',
             IF(OLD.status != NEW.status, 'status', NULL),
-            IF(OLD.land_price != NEW.land_price, 'land_price', NULL),
-            IF(OLD.buyer_name != NEW.buyer_name, 'buyer_name', NULL)
+            IF(OLD.land_price != NEW.land_price, 'land_price', NULL)
         )
     );
 END //
 
 
--- ==========================================
 -- TRIGGER 7: Audit log for land mutations (INSERT)
--- ==========================================
 DROP TRIGGER IF EXISTS tr_land_mutation_audit_insert //
 CREATE TRIGGER tr_land_mutation_audit_insert
 AFTER INSERT ON land_mutations_v2
@@ -149,8 +134,7 @@ BEGIN
         'INSERT',
         JSON_OBJECT(
             'tracking_number', NEW.tracking_number,
-            'applicant_name', NEW.applicant_name,
-            'buyer_name', NEW.buyer_name,
+            'buyer_nid', NEW.buyer_nid,
             'khatian_no', NEW.khatian_no,
             'land_price', NEW.land_price
         ),
@@ -159,9 +143,7 @@ BEGIN
 END //
 
 
--- ==========================================
 -- TRIGGER 8: Notify group admin on new member join
--- ==========================================
 DROP TRIGGER IF EXISTS tr_member_join_notify //
 CREATE TRIGGER tr_member_join_notify
 AFTER INSERT ON community_members
@@ -217,9 +199,7 @@ BEGIN
 END //
 
 
--- ==========================================
 -- TRIGGER 10: Log user document uploads
--- ==========================================
 DROP TRIGGER IF EXISTS tr_document_upload_log //
 CREATE TRIGGER tr_document_upload_log
 AFTER INSERT ON govt_user_documents
@@ -276,7 +256,7 @@ END //
 
 -- ==========================================
 -- TRIGGER 15: Audit log for shop orders (INSERT)
--- Tracks new order creations
+-- Track new orders
 -- ==========================================
 DROP TRIGGER IF EXISTS tr_shop_order_audit_insert //
 CREATE TRIGGER tr_shop_order_audit_insert

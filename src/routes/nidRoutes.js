@@ -1,8 +1,4 @@
-/**
- * NID Wing Routes - Election Commission of Bangladesh
- * জাতীয় পরিচয় নিবন্ধন অনুবিভাগ
- * National Identity Registration Wing
- */
+// NID Wing Routes - Election Commission of Bangla... - জাতীয় পরিচ...
 
 const express = require('express');
 const router = express.Router();

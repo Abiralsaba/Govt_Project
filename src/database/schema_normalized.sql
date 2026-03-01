@@ -3,9 +3,7 @@
 -- Central Government System
 -- ==========================================
 
--- ==========================================
 -- ADDRESS NORMALIZATION
--- ==========================================
 
 -- Address Types (Lookup table - 1NF, 2NF, 3NF compliant)
 CREATE TABLE IF NOT EXISTS address_types (
@@ -38,9 +36,7 @@ CREATE TABLE IF NOT EXISTS addresses (
     UNIQUE KEY unique_user_address_type (user_id, address_type_id)
 );
 
--- ==========================================
 -- DOCUMENT STATUS NORMALIZATION
--- ==========================================
 
 -- Document Statuses (Eliminates repeated ENUMs across tables)
 CREATE TABLE IF NOT EXISTS document_statuses (
@@ -59,9 +55,7 @@ INSERT IGNORE INTO document_statuses (status_name, description, color_code) VALU
 ('Processing', 'Under processing', '#3B82F6'),
 ('Cancelled', 'Cancelled by user', '#9CA3AF');
 
--- ==========================================
 -- PAYMENT NORMALIZATION
--- ==========================================
 
 -- Payment Methods (Lookup table)
 CREATE TABLE IF NOT EXISTS payment_methods (
@@ -103,9 +97,7 @@ CREATE TABLE IF NOT EXISTS payments (
     INDEX idx_service_reference (service_type, reference_id)
 );
 
--- ==========================================
 -- AUDIT LOG TABLE
--- ==========================================
 
 CREATE TABLE IF NOT EXISTS audit_log (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -125,9 +117,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     INDEX idx_timestamp (action_timestamp)
 );
 
--- ==========================================
 -- ENHANCED MY_LAND_RECORD (Add location FKs)
--- ==========================================
 
 -- Add columns if they don't exist
 ALTER TABLE my_land_record 
@@ -146,9 +136,7 @@ ALTER TABLE my_land_record
 -- Add foreign key constraints if not exist (wrapped in procedure to handle errors)
 -- Note: Run manually if ALTER fails due to existing constraints
 
--- ==========================================
 -- ENHANCED GOVT_USER_DOCUMENTS
--- ==========================================
 
 ALTER TABLE govt_user_documents
     ADD COLUMN IF NOT EXISTS expiry_date DATE,
@@ -156,9 +144,7 @@ ALTER TABLE govt_user_documents
     ADD COLUMN IF NOT EXISTS verified_by INT,
     ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP NULL;
 
--- ==========================================
 -- INDEXES FOR PERFORMANCE
--- ==========================================
 
 -- Create indexes for frequently queried columns
 CREATE INDEX IF NOT EXISTS idx_reg_info_nid ON reg_info(nid);

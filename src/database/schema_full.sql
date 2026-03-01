@@ -1046,7 +1046,7 @@ CREATE TABLE IF NOT EXISTS water_issues (
 -- ==========================================
 
 -- ==========================================
--- VIEW 1: Comprehensive Citizen Profile
+-- VIEW 1: Citizen Profile
 -- Joins multiple tables to show complete user information
 -- ==========================================
 CREATE OR REPLACE VIEW v_citizen_profile AS
@@ -1134,7 +1134,7 @@ ORDER BY d.name, dist.name, up.name;
 
 -- ==========================================
 -- VIEW 3: Community Group Analytics
--- Provides insights into group activity and engagement
+-- Community group analytics
 -- ==========================================
 CREATE OR REPLACE VIEW v_community_analytics AS
 SELECT 
@@ -1241,7 +1241,7 @@ ORDER BY request_date DESC, service_type;
 
 -- ==========================================
 -- VIEW 5: User Activity Summary
--- Comprehensive user engagement metrics
+-- User engagement metrics
 -- ==========================================
 CREATE OR REPLACE VIEW v_user_activity AS
 SELECT 

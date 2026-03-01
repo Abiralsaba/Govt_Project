@@ -13,9 +13,7 @@ DROP TABLE IF EXISTS passport_applications;
 DROP TABLE IF EXISTS passport_fee_schedule;
 DROP TABLE IF EXISTS passport_offices;
 
--- =============================================
 -- 1. Regional Passport Offices
--- =============================================
 CREATE TABLE IF NOT EXISTS passport_offices (
     id INT AUTO_INCREMENT PRIMARY KEY,
     office_code VARCHAR(10) NOT NULL UNIQUE,
@@ -50,9 +48,7 @@ INSERT INTO passport_offices (office_code, office_name, office_name_bn, division
 ('RPO-CXB',   'RPO Coxs Bazar',           'আঞ্চলিক পাসপোর্ট অফিস, কক্সবাজার',            'Chittagong',  'Coxs Bazar',   'Coxs Bazar City', '0341-63670');
 
 
--- =============================================
 -- 2. Fee Schedule (Updatable by admin)
--- =============================================
 CREATE TABLE IF NOT EXISTS passport_fee_schedule (
     id INT AUTO_INCREMENT PRIMARY KEY,
     passport_type ENUM('Ordinary','Official','Diplomatic') NOT NULL,
@@ -87,9 +83,7 @@ INSERT INTO passport_fee_schedule (passport_type, page_count, validity_years, de
 ('Ordinary', '64', '10', 'Super Express', 27600.00, '64 পৃষ্ঠা, ১০ বছর, অতি জরুরি', '2024-01-01');
 
 
--- =============================================
 -- 3. Main Passport Applications Table
--- =============================================
 CREATE TABLE IF NOT EXISTS passport_applications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -225,9 +219,7 @@ CREATE TABLE IF NOT EXISTS passport_applications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- =============================================
 -- 4. Status History / Audit Trail
--- =============================================
 CREATE TABLE IF NOT EXISTS passport_status_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     application_id BIGINT NOT NULL,
@@ -243,9 +235,7 @@ CREATE TABLE IF NOT EXISTS passport_status_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- =============================================
 -- 5. Issued Passport Books
--- =============================================
 CREATE TABLE IF NOT EXISTS passport_books (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     application_id BIGINT NOT NULL UNIQUE,
@@ -266,9 +256,7 @@ CREATE TABLE IF NOT EXISTS passport_books (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- =============================================
 -- 6. Useful Views
--- =============================================
 
 -- View: Application Summary with User & Office details
 CREATE OR REPLACE VIEW vw_passport_application_summary AS
@@ -332,9 +320,7 @@ LEFT JOIN passport_applications pa ON po.office_code = pa.preferred_office
 GROUP BY po.office_code, po.office_name, po.division;
 
 
--- =============================================
 -- 7. Stored Procedures
--- =============================================
 
 DELIMITER //
 
@@ -428,9 +414,7 @@ END //
 DELIMITER ;
 
 
--- =============================================
 -- 8. Triggers
--- =============================================
 
 DELIMITER //
 

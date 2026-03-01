@@ -1,10 +1,4 @@
-/**
- * ==============================================
- * পানি সম্পদ মন্ত্রণালয়
- * Ministry of Water Resources
- * Water Module Routes
- * ==============================================
- */
+
 
 const express = require('express');
 const router = express.Router();

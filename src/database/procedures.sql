@@ -7,7 +7,7 @@ DELIMITER //
 
 -- ==========================================
 -- PROCEDURE 1: Get Complete User Report
--- Returns comprehensive user data across multiple tables
+-- Get user data
 -- ==========================================
 CREATE PROCEDURE IF NOT EXISTS sp_get_user_report(IN p_user_id INT)
 BEGIN
@@ -97,7 +97,7 @@ END //
 
 -- ==========================================
 -- PROCEDURE 2: Process Land Mutation with Transaction
--- Handles the complete land mutation approval/rejection workflow
+-- Land mutation workflow
 -- ==========================================
 CREATE PROCEDURE IF NOT EXISTS sp_process_land_mutation(
     IN p_mutation_id INT,
@@ -233,7 +233,7 @@ END //
 
 -- ==========================================
 -- PROCEDURE 3: Generate Monthly Statistics Report
--- Produces comprehensive monthly statistics
+-- Monthly stats
 -- ==========================================
 CREATE PROCEDURE IF NOT EXISTS sp_monthly_statistics(
     IN p_year INT,

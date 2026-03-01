@@ -191,9 +191,7 @@ CREATE TABLE IF NOT EXISTS nbr_tax_challan (
 );
 
 
--- =============================================
 -- SAMPLE DATA: Tax Zones
--- =============================================
 INSERT IGNORE INTO nbr_tax_zones (zone_name, zone_name_bn, circle_name, division, district, zone_code, office_address) VALUES
 ('Tax Zone-1, Dhaka', 'কর অঞ্চল-১, ঢাকা', 'Circle-1', 'Dhaka', 'Dhaka', 'TZ-DHK-01', 'Segunbagicha, Dhaka-1000'),
 ('Tax Zone-2, Dhaka', 'কর অঞ্চল-২, ঢাকা', 'Circle-2', 'Dhaka', 'Dhaka', 'TZ-DHK-02', 'Kakrail, Dhaka-1000'),

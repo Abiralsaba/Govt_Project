@@ -1,7 +1,4 @@
-/**
- * Admin Authentication Routes
- * Public routes for admin login and registration
- */
+// Admin Authentication Routes - Public routes for admin login and ...
 
 const express = require('express');
 const { body } = require('express-validator');

@@ -4,9 +4,7 @@
 -- জাতীয় পরিচয় নিবন্ধন অনুবিভাগ
 -- =============================================
 
--- ===========================================
 -- 1. NID REGISTRATION & PROFILE TABLE
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_profiles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -109,9 +107,7 @@ CREATE TABLE IF NOT EXISTS nid_profiles (
     INDEX idx_mobile (mobile_primary)
 );
 
--- ===========================================
 -- 2. NID APPLICATIONS (New Registration)
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -194,9 +190,7 @@ CREATE TABLE IF NOT EXISTS nid_applications (
     INDEX idx_status (status)
 );
 
--- ===========================================
 -- 3. NID CORRECTION REQUESTS
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_correction_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -261,9 +255,7 @@ CREATE TABLE IF NOT EXISTS nid_correction_requests (
     INDEX idx_nid (nid_number)
 );
 
--- ===========================================
 -- 4. NID REISSUE REQUESTS (Lost/Damaged)
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_reissue_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -317,9 +309,7 @@ CREATE TABLE IF NOT EXISTS nid_reissue_requests (
     INDEX idx_reissue_no (request_no)
 );
 
--- ===========================================
 -- 5. SMART NID CARD APPLICATIONS
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_smart_card_applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -371,9 +361,7 @@ CREATE TABLE IF NOT EXISTS nid_smart_card_applications (
     FOREIGN KEY (user_id) REFERENCES reg_info(id) ON DELETE CASCADE
 );
 
--- ===========================================
 -- 6. NID VERIFICATION REQUESTS
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_verification_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -402,9 +390,7 @@ CREATE TABLE IF NOT EXISTS nid_verification_requests (
     INDEX idx_verify_nid (verify_nid_number)
 );
 
--- ===========================================
 -- 7. NID ADDRESS CHANGE REQUESTS
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_address_changes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -457,9 +443,7 @@ CREATE TABLE IF NOT EXISTS nid_address_changes (
     FOREIGN KEY (user_id) REFERENCES reg_info(id) ON DELETE CASCADE
 );
 
--- ===========================================
 -- 8. NID COLLECTION CENTERS (EC Offices)
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_collection_centers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     
@@ -493,9 +477,7 @@ CREATE TABLE IF NOT EXISTS nid_collection_centers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ===========================================
 -- 9. NID ACTIVITY LOG (Audit Trail)
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_activity_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     
@@ -525,9 +507,7 @@ CREATE TABLE IF NOT EXISTS nid_activity_log (
     INDEX idx_activity_date (created_at)
 );
 
--- ===========================================
 -- 10. NID FAMILY MEMBERS
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_family_members (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nid_profile_id INT NOT NULL,
@@ -549,9 +529,7 @@ CREATE TABLE IF NOT EXISTS nid_family_members (
     FOREIGN KEY (user_id) REFERENCES reg_info(id) ON DELETE CASCADE
 );
 
--- ===========================================
 -- 11. NID BIOMETRIC APPOINTMENTS
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_biometric_appointments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -586,9 +564,7 @@ CREATE TABLE IF NOT EXISTS nid_biometric_appointments (
     INDEX idx_appointment_date (appointment_date)
 );
 
--- ===========================================
 -- 12. NID FEES CONFIGURATION
--- ===========================================
 CREATE TABLE IF NOT EXISTS nid_fees (
     id INT AUTO_INCREMENT PRIMARY KEY,
     
@@ -623,9 +599,7 @@ INSERT INTO nid_fees (service_type, service_code, normal_fee, urgent_fee, proces
 ('Digital NID Download', 'NID_DIG', 0.00, NULL, 0, 0)
 ON DUPLICATE KEY UPDATE normal_fee = VALUES(normal_fee);
 
--- ===========================================
 -- SAMPLE COLLECTION CENTERS (Major Districts)
--- ===========================================
 INSERT INTO nid_collection_centers (center_code, center_name, center_name_bn, address, phone) VALUES
 ('EC-DHK-01', 'Dhaka Regional EC Office', 'ঢাকা আঞ্চলিক নির্বাচন কার্যালয়', 'Nirbachan Bhaban, Agargaon, Dhaka-1207', '02-8181818'),
 ('EC-CTG-01', 'Chittagong Regional EC Office', 'চট্টগ্রাম আঞ্চলিক নির্বাচন কার্যালয়', 'Agrabad Commercial Area, Chittagong', '031-2520871'),

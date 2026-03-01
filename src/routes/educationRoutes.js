@@ -1,8 +1,4 @@
-/**
- * Education Routes
- * Public API endpoints for checking exam results (JSC, SSC, HSC)
- * Bangladesh Education Board System
- */
+// Education Routes - Public API endpoints for checking exam result...
 
 const express = require('express');
 const router = express.Router();
@@ -12,9 +8,7 @@ const db = require('../config/db');
 // PUBLIC ENDPOINTS - No Auth Required
 // ==========================================
 
-/**
- * GET /api/education/boards - Get all education boards
- */
+// GET /boards
 router.get('/boards', async (req, res) => {
     try {
         const [boards] = await db.query('SELECT * FROM education_boards ORDER BY name');
@@ -25,11 +19,7 @@ router.get('/boards', async (req, res) => {
     }
 });
 
-/**
- * GET /api/education/results/:examType/:year/:roll
- * Check result by exam type, year, and roll number
- * examType: jsc, ssc, hsc
- */
+// GET /results/:examType/:year/:roll - Check result by exam type, ...
 router.get('/results/:examType/:year/:roll', async (req, res) => {
     try {
         const { examType, year, roll } = req.params;
@@ -142,9 +132,7 @@ router.get('/results/:examType/:year/:roll', async (req, res) => {
     }
 });
 
-/**
- * GET /api/education/years - Get available exam years
- */
+// GET /years
 router.get('/years', async (req, res) => {
     try {
         // Get unique years from all result tables
@@ -166,9 +154,7 @@ router.get('/years', async (req, res) => {
     }
 });
 
-/**
- * GET /api/education/institutions/:boardId - Get institutions by board
- */
+// GET /institutions/:boardId
 router.get('/institutions/:boardId', async (req, res) => {
     try {
         const { boardId } = req.params;
@@ -183,9 +169,7 @@ router.get('/institutions/:boardId', async (req, res) => {
     }
 });
 
-/**
- * GET /api/education/institutions - Get all institutions
- */
+// GET /institutions
 router.get('/institutions', async (req, res) => {
     try {
         const [institutions] = await db.query(

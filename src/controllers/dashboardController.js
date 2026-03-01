@@ -102,9 +102,9 @@ exports.updateRequestStatus = async (req, res) => {
 
                             if (existing.length === 0) {
                                 await db.query(`INSERT INTO my_land_record 
-                                    (user_id, division, district, upazila, owner_name, father_name, mother_name, nid, khatian_no, dag_no, mouza, land_size, deed_no, land_price, ownership_description, status) 
-                                    VALUES (?, (SELECT name FROM divisions WHERE id=?), (SELECT name FROM districts WHERE id=?), (SELECT name FROM upazilas WHERE id=?), ?, ?, ?, ?, ?, ?, 'Mutation Transfer', ?, ?, ?, ?, 'Approved')`,
-                                    [buyerId, mut.division_id, mut.district_id, mut.upazila_id, mut.buyer_name, mut.buyer_father_name, mut.buyer_mother_name, mut.buyer_nid, matKhatian, matDag, matAmount, mut.deed_no || 'N/A', mut.land_price, `Purchased via Mutation (Tracking: ${uniqueId})`]
+                                    (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, mouza, land_size, deed_no, land_price, ownership_description, status) 
+                                    VALUES (?, ?, ?, ?, ?, ?, 'Mutation Transfer', ?, ?, ?, ?, 'Approved')`,
+                                    [buyerId, mut.division_id, mut.district_id, mut.upazila_id, matKhatian, matDag, matAmount, mut.deed_no || 'N/A', mut.land_price, `Purchased via Mutation (Tracking: ${uniqueId})`]
                                 );
                                 console.log(`[Transfer] Added Land Record for Buyer ${buyerId} (Size: ${matAmount})`);
                             } else {
@@ -329,7 +329,7 @@ exports.submitServiceRequest = async (req, res) => {
         // Also log into general service_requests table for easy history tracking (optional but good practice to refer back)
         // Adjusting original service_requests table usage to keep track of ALL requests centrally if needed, 
         // OR just relying on the specific tables. 
-        // The previous implementation used 'service_requests'. Let's keep it for the "History" tab to work easily 
+        // using service_requests for History tab
         // without querying 25 tables.
 
         await db.query('INSERT INTO service_requests (user_id, service_type, details, evidence_link) VALUES (?, ?, ?, ?)',
@@ -440,8 +440,17 @@ exports.getDocuments = async (req, res) => {
             };
         }
 
-        // Land
-        const [land] = await db.query('SELECT * FROM my_land_record WHERE user_id = ?', [userId]);
+        // Land (JOIN for display names)
+        const [land] = await db.query(
+            `SELECT lr.*, 
+                d.name as division, dist.name as district, u.name as upazila,
+                ri.name as owner_name
+            FROM my_land_record lr
+            LEFT JOIN divisions d ON lr.division_id = d.id
+            LEFT JOIN districts dist ON lr.district_id = dist.id
+            LEFT JOIN upazilas u ON lr.upazila_id = u.id
+            LEFT JOIN reg_info ri ON lr.user_id = ri.id
+            WHERE lr.user_id = ?`, [userId]);
 
         res.json({
             nid: nidCard,
@@ -496,7 +505,7 @@ exports.updateUserDocument = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Ensure user owns the document
+        // check ownership
         const [doc] = await db.query('SELECT * FROM user_documents WHERE id = ? AND user_id = ?', [id, req.user.id]);
         if (doc.length === 0) {
             return res.status(404).json({ error: 'Document not found' });

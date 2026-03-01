@@ -2,7 +2,7 @@
 -- COMPLEX SQL QUERIES
 -- Central Government System - DBMS Project
 -- ==========================================
--- This file contains advanced SQL queries demonstrating:
+-- Advanced SQL queries:
 -- - Common Table Expressions (CTEs)
 -- - Window Functions (RANK, NTILE, ROW_NUMBER, SUM OVER)
 -- - ROLLUP and CUBE aggregations
@@ -93,7 +93,7 @@ ORDER BY request_date DESC, daily_rank;
 
 -- ========================================
 -- QUERY 3: User Engagement Score with CTE
--- Comprehensive user activity scoring with multiple metrics
+-- User activity scoring
 -- ========================================
 WITH login_stats AS (
     SELECT user_id, COUNT(*) AS cnt FROM login_logs GROUP BY user_id
@@ -452,7 +452,7 @@ ORDER BY total_land_value DESC;
 
 -- ========================================
 -- QUERY 9: Shop Sales Analytics with CTE and Window Functions
--- Comprehensive sales analysis by product, time period, and customer
+-- Sales analysis
 -- ========================================
 WITH daily_sales AS (
     SELECT 

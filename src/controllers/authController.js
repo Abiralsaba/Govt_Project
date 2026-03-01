@@ -82,7 +82,7 @@ exports.login = async (req, res) => {
         // Check Password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            // Check if it's the old users table just in case? No, strict switch to reg_info
+            // strict reg_info check
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -101,7 +101,7 @@ exports.login = async (req, res) => {
             );
         } catch (logError) {
             console.error('Logging Error:', logError);
-            // Don't fail the login if logging fails, but log the error
+            // non-blocking log
         }
 
         res.json({
@@ -122,23 +122,22 @@ exports.login = async (req, res) => {
 
 const nodemailer = require('nodemailer');
 
-// Configure Nodemailer (Ethereal for testing)
-// In production, use real SMTP credentials
+// nodemailer setup
 const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
     auth: {
-        user: 'ethereal.user@ethereal.email', // Placeholder, will be replaced by test account if generated dynamic
+        user: 'ethereal.user@ethereal.email', // placeholder
         pass: 'ethereal.pass'
     }
 });
 
-// Helper to get test account (since we don't have static credentials)
+// get test account
 let testAccount = null;
 async function getTransporter() {
     if (!testAccount) {
         testAccount = await nodemailer.createTestAccount();
-        // Re-create transporter with valid test account
+        // recreate with test creds
         return nodemailer.createTransport({
             host: testAccount.smtp.host,
             port: testAccount.smtp.port,
@@ -194,7 +193,7 @@ exports.sendResetOTP = async (req, res) => {
 
         res.json({
             message: 'Secret Code sent to your email!',
-            previewUrl: nodemailer.getTestMessageUrl(info) // Sending this to frontend for demo purposes so user can see it
+            previewUrl: nodemailer.getTestMessageUrl(info) // for demo
         });
 
     } catch (error) {

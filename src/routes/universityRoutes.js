@@ -1,8 +1,3 @@
-/**
- * University Admission Routes
- * Public API endpoints for university admission system
- * Bangladesh University Admission Portal
- */
 
 const express = require('express');
 const router = express.Router();
@@ -12,9 +7,7 @@ const db = require('../config/db');
 // PUBLIC ENDPOINTS - No Auth Required
 // ==========================================
 
-/**
- * GET /api/university/admissions - Get all active admission posts
- */
+
 router.get('/admissions', async (req, res) => {
     try {
         const { university, type, status } = req.query;
@@ -63,9 +56,7 @@ router.get('/admissions', async (req, res) => {
     }
 });
 
-/**
- * GET /api/university/admissions/:id - Get admission post details
- */
+
 router.get('/admissions/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -98,9 +89,7 @@ router.get('/admissions/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /api/university/universities - Get all universities
- */
+
 router.get('/universities', async (req, res) => {
     try {
         const [universities] = await db.query(`
@@ -113,9 +102,7 @@ router.get('/universities', async (req, res) => {
     }
 });
 
-/**
- * GET /api/university/verify-hsc/:roll/:year - Verify HSC result and check eligibility
- */
+
 router.get('/verify-hsc/:roll/:year', async (req, res) => {
     try {
         const { roll, year } = req.params;
@@ -216,9 +203,7 @@ router.get('/verify-hsc/:roll/:year', async (req, res) => {
     }
 });
 
-/**
- * POST /api/university/apply - Submit application
- */
+
 router.post('/apply', async (req, res) => {
     try {
         const {
@@ -409,9 +394,7 @@ router.post('/payment/init', async (req, res) => {
     }
 });
 
-/**
- * POST /api/university/payment/success - Payment success callback
- */
+
 router.post('/payment/success', async (req, res) => {
     try {
         const { value_a, tran_id, val_id, card_type } = req.body;
@@ -497,9 +480,7 @@ router.get('/application/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /api/university/my-applications/:roll/:year - Get all applications by HSC roll
- */
+
 router.get('/my-applications/:roll/:year', async (req, res) => {
     try {
         const { roll, year } = req.params;

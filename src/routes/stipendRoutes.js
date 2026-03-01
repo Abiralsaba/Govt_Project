@@ -3,17 +3,9 @@ const router = express.Router();
 const db = require('../config/db');
 const verifyToken = require('../middleware/authMiddleware');
 
-// Middleware to ensure user is authenticated
 router.use(verifyToken);
 
-// ==========================================
-// STIPEND ROUTES
-// ==========================================
 
-/**
- * GET /api/stipends
- * Fetch all active stipends
- */
 router.get('/', async (req, res) => {
     try {
         const [stipends] = await db.query('SELECT * FROM available_stipends WHERE is_active = TRUE ORDER BY deadline ASC');
@@ -24,10 +16,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * GET /api/stipends/my-applications
- * Fetch user's applications
- */
+
 router.get('/my-applications', async (req, res) => {
     try {
         const [applications] = await db.query(`
@@ -48,10 +37,7 @@ router.get('/my-applications', async (req, res) => {
     }
 });
 
-/**
- * POST /api/stipends/apply
- * Submit a new stipend application
- */
+
 router.post('/apply', async (req, res) => {
     try {
         const { stipendId, studentDetails, financialInfo, guardianInfo, bankDetails } = req.body;

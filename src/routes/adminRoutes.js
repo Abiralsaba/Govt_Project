@@ -1,8 +1,4 @@
-/**
- * Admin Routes
- * API endpoints for admin dashboard operations
- * All routes require admin authentication
- */
+// Admin Routes - API endpoints for admin dashboard operations
 
 const express = require('express');
 const router = express.Router();
@@ -16,9 +12,7 @@ router.use(adminMiddleware);
 // USERS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/users - Get all users list
- */
+// GET /users
 router.get('/users', async (req, res) => {
     try {
         const [users] = await db.query(`
@@ -35,9 +29,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/new-users - Get users registered in last 7 days
- */
+// GET /new-users
 router.get('/new-users', async (req, res) => {
     try {
         const [users] = await db.query(`
@@ -59,9 +51,7 @@ router.get('/new-users', async (req, res) => {
 // SERVICE REQUESTS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/service-requests - Get all service requests
- */
+// GET /service-requests
 router.get('/service-requests', async (req, res) => {
     try {
         const status = req.query.status; // Optional filter
@@ -89,9 +79,7 @@ router.get('/service-requests', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/service-requests/:id/approve - Approve service request
- */
+// PUT /service-requests/:id/approve
 router.put('/service-requests/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -102,7 +90,7 @@ router.put('/service-requests/:id/approve', async (req, res) => {
             [id]
         );
 
-        // Get request details for notification
+        // get user for notif
         const [request] = await db.query(
             `SELECT user_id, service_type FROM service_requests WHERE id = ?`,
             [id]
@@ -116,7 +104,7 @@ router.put('/service-requests/:id/approve', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // log action
         console.log('Attempting to log admin action: APPROVE service_requests', id);
         try {
             const [logResult] = await db.query(
@@ -129,7 +117,7 @@ router.put('/service-requests/:id/approve', async (req, res) => {
             console.error('Failed to log admin action:', logError);
         }
 
-        // Manual Audit Log Insertion
+        // audit log
         await db.query(
             `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
              VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
@@ -149,9 +137,7 @@ router.put('/service-requests/:id/approve', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/service-requests/:id/reject - Reject service request
- */
+// PUT /service-requests/:id/reject
 router.put('/service-requests/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -162,7 +148,7 @@ router.put('/service-requests/:id/reject', async (req, res) => {
             [id]
         );
 
-        // Get request details for notification
+        // get user for notif
         const [request] = await db.query(
             `SELECT user_id, service_type FROM service_requests WHERE id = ?`,
             [id]
@@ -179,14 +165,14 @@ router.put('/service-requests/:id/reject', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // log action
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status, notes) 
              VALUES (?, 'REJECT', 'service_requests', ?, 'pending', 'rejected', ?)`,
             [req.admin.id, id, reason || null]
         );
 
-        // Manual Audit Log Insertion
+        // audit log
         await db.query(
             `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
              VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
@@ -210,9 +196,7 @@ router.put('/service-requests/:id/reject', async (req, res) => {
 // LAND MUTATIONS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/land-mutations - Get all land mutations
- */
+// GET /land-mutations
 router.get('/land-mutations', async (req, res) => {
     try {
         const status = req.query.status;
@@ -222,12 +206,16 @@ router.get('/land-mutations', async (req, res) => {
                 d.name as division_name,
                 dist.name as district_name,
                 u.name as upazila_name,
-                owner.name as owner_name
+                applicant.name as applicant_name,
+                applicant.nid as applicant_nid,
+                buyer.name as buyer_name,
+                buyer.nid as buyer_display_nid
             FROM land_mutations_v2 m
             LEFT JOIN divisions d ON m.division_id = d.id
             LEFT JOIN districts dist ON m.district_id = dist.id
             LEFT JOIN upazilas u ON m.upazila_id = u.id
-            LEFT JOIN reg_info owner ON m.user_id = owner.id
+            LEFT JOIN reg_info applicant ON m.user_id = applicant.id
+            LEFT JOIN reg_info buyer ON m.buyer_id = buyer.id
         `;
         const params = [];
 
@@ -246,10 +234,7 @@ router.get('/land-mutations', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/land-mutations/:id/approve - Approve land mutation
- * This includes transferring land ownership
- */
+// PUT /land-mutations/:id/approve - This includes transferring lan...
 router.put('/land-mutations/:id/approve', async (req, res) => {
     const connection = await db.getConnection();
     console.log(`[Admin] Starting approval for mutation ID: ${req.params.id}`);
@@ -274,14 +259,14 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
         const mutation = mutations[0];
         console.log('[Admin] Mutation details:', mutation);
 
-        // Update mutation status
+        // update status
         await connection.query(
             `UPDATE land_mutations_v2 SET status = 'Approved' WHERE id = ?`,
             [id]
         );
         console.log('[Admin] Status updated to Approved');
 
-        // Delete land from seller's my_land_record
+        // remove from seller
         const [deleteResult] = await connection.query(
             `DELETE FROM my_land_record 
              WHERE user_id = ? AND khatian_no = ? AND dag_no = ?`,
@@ -289,43 +274,36 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
         );
         console.log('[Admin] Deleted from seller record:', deleteResult.affectedRows);
 
-        // Add land to buyer's my_land_record
-        const [buyerUser] = await connection.query(
-            `SELECT id FROM reg_info WHERE nid = ?`,
-            [mutation.buyer_nid]
-        );
+        // add to buyer (3NF — FKs only)
+        const buyerId = mutation.buyer_id;
 
-        if (buyerUser.length > 0) {
+        if (buyerId) {
             await connection.query(
                 `INSERT INTO my_land_record 
-                 (user_id, division_id, district_id, upazila_id, division, district, upazila,
-                  owner_name, nid, father_name, mother_name, khatian_no, dag_no, mouza, 
+                 (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, mouza, 
                   land_size, deed_no, land_price, ownership_description, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Approved')`,
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Approved')`,
                 [
-                    buyerUser[0].id,
+                    buyerId,
                     mutation.division_id, mutation.district_id, mutation.upazila_id,
-                    mutation.division_name || '', mutation.district_name || '', mutation.upazila_name || '',
-                    mutation.buyer_name, mutation.buyer_nid,
-                    mutation.buyer_father_name || '', mutation.buyer_mother_name || '',
                     mutation.khatian_no, mutation.dag_no, 'Transferred via Mutation',
                     parseFloat(mutation.land_amount) || 0, mutation.deed_no, mutation.land_price,
-                    `Transferred from ${mutation.applicant_name}`
+                    `Ownership transferred via Mutation`
                 ]
             );
             console.log('[Admin] Added to buyer record');
         } else {
-            console.warn(`[Admin] Buyer with NID ${mutation.buyer_nid} not found in reg_info. Land record not added to buyer.`);
+            console.warn(`[Admin] No buyer_id for mutation ${id}. Land record not added to buyer.`);
         }
 
-        // Send notification to original user
+        // notify user
         await connection.query(
             `INSERT INTO notifications (user_id, type, message, is_read) 
              VALUES (?, 'Land Mutation', 'Your land mutation request has been approved!', false)`,
             [mutation.user_id]
         );
 
-        // Manual Audit Log Insertion (Replaces Trigger)
+        // audit log
         await connection.query(
             `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
              VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
@@ -338,14 +316,14 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
             ]
         );
 
-        // Update service request if linked
+        // update linked service req
         await connection.query(
             `UPDATE service_requests SET status = 'approved'
              WHERE user_id = ? AND service_type = 'Land Mutation' AND status = 'pending'`,
             [mutation.user_id]
         );
 
-        // Log admin action
+        // log action
         await connection.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status) 
              VALUES (?, 'APPROVE', 'land_mutations_v2', ?, 'Pending', 'Approved')`,
@@ -369,15 +347,13 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/land-mutations/:id/reject - Reject land mutation
- */
+// PUT /land-mutations/:id/reject
 router.put('/land-mutations/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
         const { reason } = req.body;
 
-        // Get mutation details for notification
+        // get mutation for notif
         const [mutation] = await db.query(
             `SELECT user_id, tracking_number FROM land_mutations_v2 WHERE id = ?`,
             [id]
@@ -399,14 +375,14 @@ router.put('/land-mutations/:id/reject', async (req, res) => {
             );
         }
 
-        // Log admin action (Legacy/Backup)
+        // log action
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status, notes) 
              VALUES (?, 'REJECT', 'land_mutations_v2', ?, 'Pending', 'Rejected', ?)`,
             [req.admin.id, id, reason || null]
         );
 
-        // Manual Audit Log Insertion (For Dashboard)
+        // audit log
         await db.query(
             `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, changed_fields, user_id)
              VALUES (?, ?, 'UPDATE', ?, ?, 'status', ?)`,
@@ -431,9 +407,7 @@ router.put('/land-mutations/:id/reject', async (req, res) => {
 // COMMUNITY GROUPS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/community-groups - Get all community groups
- */
+// GET /community-groups
 router.get('/community-groups', async (req, res) => {
     try {
         const status = req.query.status;
@@ -464,9 +438,7 @@ router.get('/community-groups', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/community-groups/:id/approve - Approve community group
- */
+// PUT /community-groups/:id/approve
 router.put('/community-groups/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -476,7 +448,7 @@ router.put('/community-groups/:id/approve', async (req, res) => {
             [id]
         );
 
-        // Get group details for notification
+        // get group for notif
         const [group] = await db.query(
             `SELECT created_by, name FROM community_groups WHERE id = ?`,
             [id]
@@ -489,7 +461,7 @@ router.put('/community-groups/:id/approve', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // log action
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status) 
              VALUES (?, 'APPROVE', 'community_groups', ?, 'pending', 'approved')`,
@@ -503,9 +475,7 @@ router.put('/community-groups/:id/approve', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/community-groups/:id/reject - Reject community group
- */
+// PUT /community-groups/:id/reject
 router.put('/community-groups/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -516,7 +486,7 @@ router.put('/community-groups/:id/reject', async (req, res) => {
             [id]
         );
 
-        // Get group details for notification
+        // get group for notif
         const [group] = await db.query(
             `SELECT created_by, name FROM community_groups WHERE id = ?`,
             [id]
@@ -533,7 +503,7 @@ router.put('/community-groups/:id/reject', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // log action
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status, notes) 
              VALUES (?, 'REJECT', 'community_groups', ?, 'pending', 'rejected', ?)`,
@@ -551,9 +521,7 @@ router.put('/community-groups/:id/reject', async (req, res) => {
 // COMMUNITY POSTS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/community-posts - Get all community posts
- */
+// GET /community-posts
 router.get('/community-posts', async (req, res) => {
     try {
         const status = req.query.status;
@@ -586,9 +554,7 @@ router.get('/community-posts', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/community-posts/:id/approve - Approve community post
- */
+// PUT /community-posts/:id/approve
 router.put('/community-posts/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -598,7 +564,7 @@ router.put('/community-posts/:id/approve', async (req, res) => {
             [id]
         );
 
-        // Get post details for notification
+        // get post for notif
         const [post] = await db.query(
             `SELECT p.user_id, g.name as group_name 
              FROM community_posts p 
@@ -614,7 +580,7 @@ router.put('/community-posts/:id/approve', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // log action
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status) 
              VALUES (?, 'APPROVE', 'community_posts', ?, 'pending', 'approved')`,
@@ -628,9 +594,7 @@ router.put('/community-posts/:id/approve', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/community-posts/:id/reject - Reject community post
- */
+// PUT /community-posts/:id/reject
 router.put('/community-posts/:id/reject', async (req, res) => {
     try {
         const { id } = req.params;
@@ -641,7 +605,7 @@ router.put('/community-posts/:id/reject', async (req, res) => {
             [id]
         );
 
-        // Get post details for notification
+        // get post for notif
         const [post] = await db.query(
             `SELECT p.user_id, g.name as group_name 
              FROM community_posts p 
@@ -661,7 +625,7 @@ router.put('/community-posts/:id/reject', async (req, res) => {
             );
         }
 
-        // Log admin action
+        // log action
         await db.query(
             `INSERT INTO admin_actions_log (admin_id, action_type, target_table, target_id, old_status, new_status, notes) 
              VALUES (?, 'REJECT', 'community_posts', ?, 'pending', 'rejected', ?)`,
@@ -682,7 +646,7 @@ router.put('/community-posts/:id/reject', async (req, res) => {
 const multer = require('multer');
 const path = require('path');
 
-// Configure multer for product images
+// multer config
 const productStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, path.join(__dirname, '../../public/uploads/products'));
@@ -707,9 +671,7 @@ const productUpload = multer({
     }
 });
 
-/**
- * GET /api/admin/shop-items - Get all shop items
- */
+// GET /shop-items
 router.get('/shop-items', async (req, res) => {
     try {
         const [items] = await db.query('SELECT * FROM shop_items ORDER BY created_at DESC');
@@ -720,9 +682,7 @@ router.get('/shop-items', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/shop-items - Add new shop item
- */
+// POST /shop-items
 router.post('/shop-items', productUpload.single('image'), async (req, res) => {
     try {
         const { name, description, price, stock_quantity } = req.body;
@@ -749,9 +709,7 @@ router.post('/shop-items', productUpload.single('image'), async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/shop-items/:id - Update shop item
- */
+// PUT /shop-items/:id
 router.put('/shop-items/:id', productUpload.single('image'), async (req, res) => {
     try {
         const { id } = req.params;
@@ -782,9 +740,7 @@ router.put('/shop-items/:id', productUpload.single('image'), async (req, res) =>
 
 
 
-/**
- * DELETE /api/admin/shop-items/:id - Delete shop item
- */
+// DELETE /shop-items/:id
 router.delete('/shop-items/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -796,18 +752,13 @@ router.delete('/shop-items/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/orders - Get all orders
- * (Existing Code)
- */
+// GET /orders - (Existing Code)
 
 // ==========================================
 // STIPEND MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/stipends - Get all stipends
- */
+// GET /stipends
 router.get('/stipends', async (req, res) => {
     try {
         const [stipends] = await db.query('SELECT * FROM available_stipends ORDER BY created_at DESC');
@@ -818,9 +769,7 @@ router.get('/stipends', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/stipends - Add new stipend
- */
+// POST /stipends
 router.post('/stipends', async (req, res) => {
     try {
         const { title, description, amount, type, min_gpa, max_income, deadline, is_active } = req.body;
@@ -838,9 +787,7 @@ router.post('/stipends', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/stipend-applications - Get all applications
- */
+// GET /stipend-applications
 router.get('/stipend-applications', async (req, res) => {
     try {
         const [apps] = await db.query(`
@@ -861,9 +808,7 @@ router.get('/stipend-applications', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/stipend-applications/:id/status - Update status
- */
+// PUT /stipend-applications/:id/status
 router.put('/stipend-applications/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
@@ -900,9 +845,7 @@ router.get('/orders', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/orders/:id/status - Update order status
- */
+// PUT /orders/:id/status
 router.put('/orders/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
@@ -924,9 +867,7 @@ router.put('/orders/:id/status', async (req, res) => {
 // MARKET PRICE MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/market-prices - Get all market prices
- */
+// GET /market-prices
 router.get('/market-prices', async (req, res) => {
     try {
         const [prices] = await db.query('SELECT * FROM market_prices ORDER BY category, item_name');
@@ -937,9 +878,7 @@ router.get('/market-prices', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/market-prices - Add new market price item
- */
+// POST /market-prices
 router.post('/market-prices', async (req, res) => {
     try {
         const { item_name, item_name_bn, category, unit, price } = req.body;
@@ -961,9 +900,7 @@ router.post('/market-prices', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/market-prices/:id - Update market price
- */
+// PUT /market-prices/:id
 router.put('/market-prices/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -982,9 +919,7 @@ router.put('/market-prices/:id', async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/admin/market-prices/:id - Delete market price item
- */
+// DELETE /market-prices/:id
 router.delete('/market-prices/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1000,9 +935,7 @@ router.delete('/market-prices/:id', async (req, res) => {
 // PRICE COMPLAINTS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/complaints - Get all price complaints
- */
+// GET /complaints
 router.get('/complaints', async (req, res) => {
     try {
         const status = req.query.status;
@@ -1027,9 +960,7 @@ router.get('/complaints', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/complaints/:id - Update complaint status
- */
+// PUT /complaints/:id
 router.put('/complaints/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1061,9 +992,7 @@ router.put('/complaints/:id', async (req, res) => {
 // EDUCATION RESULTS MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/education/boards - Get all education boards
- */
+// GET /education/boards
 router.get('/education/boards', async (req, res) => {
     try {
         const [boards] = await db.query('SELECT * FROM education_boards ORDER BY name');
@@ -1074,9 +1003,7 @@ router.get('/education/boards', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/education/institutions/:boardId - Get institutions by board
- */
+// GET /education/institutions/:boardId
 router.get('/education/institutions/:boardId', async (req, res) => {
     try {
         const { boardId } = req.params;
@@ -1091,10 +1018,7 @@ router.get('/education/institutions/:boardId', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/education/results/:examType - Get all results for an exam type
- * examType: jsc, ssc, hsc
- */
+// GET /education/results/:examType - examType: jsc, ssc, hsc
 router.get('/education/results/:examType', async (req, res) => {
     try {
         const { examType } = req.params;
@@ -1135,9 +1059,7 @@ router.get('/education/results/:examType', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/education/results/:examType - Add new result
- */
+// POST /education/results/:examType
 router.post('/education/results/:examType', async (req, res) => {
     try {
         const { examType } = req.params;
@@ -1191,9 +1113,7 @@ router.post('/education/results/:examType', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/education/results/:examType/:id - Update result
- */
+// PUT /education/results/:examType/:id
 router.put('/education/results/:examType/:id', async (req, res) => {
     try {
         const { examType, id } = req.params;
@@ -1231,9 +1151,7 @@ router.put('/education/results/:examType/:id', async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/admin/education/results/:examType/:id - Delete result
- */
+// DELETE /education/results/:examType/:id
 router.delete('/education/results/:examType/:id', async (req, res) => {
     try {
         const { examType, id } = req.params;
@@ -1254,9 +1172,7 @@ router.delete('/education/results/:examType/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/education/stats - Get education statistics
- */
+// GET /education/stats
 router.get('/education/stats', async (req, res) => {
     try {
         const [jscCount] = await db.query('SELECT COUNT(*) as count FROM jsc_results');
@@ -1279,9 +1195,7 @@ router.get('/education/stats', async (req, res) => {
 // UNIVERSITY ADMISSION MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/universities - Get all universities
- */
+// GET /universities
 router.get('/universities', async (req, res) => {
     try {
         const [universities] = await db.query(`
@@ -1296,9 +1210,7 @@ router.get('/universities', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/universities - Add new university
- */
+// POST /universities
 router.post('/universities', async (req, res) => {
     try {
         const {
@@ -1327,9 +1239,7 @@ router.post('/universities', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/universities/:id - Update university
- */
+// PUT /universities/:id
 router.put('/universities/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1357,9 +1267,7 @@ router.put('/universities/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/admission-posts - Get all admission posts
- */
+// GET /admission-posts
 router.get('/admission-posts', async (req, res) => {
     try {
         const [posts] = await db.query(`
@@ -1381,9 +1289,7 @@ router.get('/admission-posts', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/admission-posts - Create admission post
- */
+// POST /admission-posts
 router.post('/admission-posts', async (req, res) => {
     try {
         const {
@@ -1431,9 +1337,7 @@ router.post('/admission-posts', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/admission-posts/:id - Update admission post
- */
+// PUT /admission-posts/:id
 router.put('/admission-posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1476,9 +1380,7 @@ router.put('/admission-posts/:id', async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/admin/admission-posts/:id - Delete admission post
- */
+// DELETE /admission-posts/:id
 router.delete('/admission-posts/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1497,9 +1399,7 @@ router.delete('/admission-posts/:id', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/university-applications - Get all applications
- */
+// GET /university-applications
 router.get('/university-applications', async (req, res) => {
     try {
         const { status, admission_id } = req.query;
@@ -1539,9 +1439,7 @@ router.get('/university-applications', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/university-applications/:id/verify - Verify application
- */
+// PUT /university-applications/:id/verify
 router.put('/university-applications/:id/verify', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1562,9 +1460,7 @@ router.put('/university-applications/:id/verify', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/admission-stats - Get admission statistics
- */
+// GET /admission-stats
 router.get('/admission-stats', async (req, res) => {
     try {
         const [universities] = await db.query('SELECT COUNT(*) AS count FROM universities WHERE is_active = TRUE');
@@ -1598,9 +1494,7 @@ router.get('/admission-stats', async (req, res) => {
 // TAX / NBR MANAGEMENT
 // ==========================================
 
-/**
- * GET /api/admin/tax/stats - Tax overview stats
- */
+// GET /tax/stats
 router.get('/tax/stats', async (req, res) => {
     try {
         const [tinStats] = await db.query(`
@@ -1657,9 +1551,7 @@ router.get('/tax/stats', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/tax/returns - Get all tax returns
- */
+// GET /tax/returns
 router.get('/tax/returns', async (req, res) => {
     try {
         const { status } = req.query;
@@ -1685,9 +1577,7 @@ router.get('/tax/returns', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/tax/returns/:id/status - Update tax return status
- */
+// PUT /tax/returns/:id/status
 router.put('/tax/returns/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1714,9 +1604,7 @@ router.put('/tax/returns/:id/status', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/tax/tin-applications - Get all TIN applications
- */
+// GET /tax/tin-applications
 router.get('/tax/tin-applications', async (req, res) => {
     try {
         const { status } = req.query;
@@ -1742,9 +1630,7 @@ router.get('/tax/tin-applications', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/tax/tin/:id/approve - Approve or reject TIN
- */
+// PUT /tax/tin/:id/approve
 router.put('/tax/tin/:id/approve', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1793,9 +1679,7 @@ router.put('/tax/tin/:id/approve', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/tax/payments - Get all tax payments
- */
+// GET /tax/payments
 router.get('/tax/payments', async (req, res) => {
     try {
         const [rows] = await db.query(`
@@ -1813,9 +1697,7 @@ router.get('/tax/payments', async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/tax/payments/:id/verify - Verify payment
- */
+// PUT /tax/payments/:id/verify
 router.put('/tax/payments/:id/verify', async (req, res) => {
     try {
         const { id } = req.params;
@@ -1833,9 +1715,7 @@ router.put('/tax/payments/:id/verify', async (req, res) => {
     }
 });
 
-/**
- * POST /api/admin/tax/notices - Issue a tax notice
- */
+// POST /tax/notices
 router.post('/tax/notices', async (req, res) => {
     try {
         const { user_id, tin_id, notice_type, subject, message, due_date, priority } = req.body;
@@ -1861,9 +1741,7 @@ router.post('/tax/notices', async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/tax/notices - Get all tax notices
- */
+// GET /tax/notices
 router.get('/tax/notices', async (req, res) => {
     try {
         const [rows] = await db.query(`

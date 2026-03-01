@@ -1,23 +1,15 @@
-/**
- * Reports & Analytics Routes
- * 
- * API endpoints for complex database queries, reports, and analytics.
- * Uses views, stored procedures, and complex SQL queries.
- */
+
 
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const adminMiddleware = require('../middleware/adminMiddleware');
 
-// Apply admin middleware to all routes (reports are admin-only)
+// admin-only routes
 console.log('Reports Routes Loaded - Fixed Version');
 router.use(adminMiddleware);
 
-/**
- * GET /api/reports/citizen-profile/:userId
- * Get comprehensive citizen profile using v_citizen_profile view
- */
+// GET citizen profile by userId
 router.get('/citizen-profile/:userId', async (req, res) => {
     try {
         const userId = req.params.userId || req.user.id;
@@ -37,10 +29,7 @@ router.get('/citizen-profile/:userId', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/my-profile
- * Get logged-in user's comprehensive profile
- */
+// GET logged-in user profile
 router.get('/my-profile', async (req, res) => {
     try {
         const [profile] = await db.query(`
@@ -54,10 +43,7 @@ router.get('/my-profile', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/land-by-location
- * Get land mutation statistics by location using v_land_by_location view
- */
+// GET land stats by location
 router.get('/land-by-location', async (req, res) => {
     try {
         const divisionId = req.query.division_id;
@@ -80,10 +66,8 @@ router.get('/land-by-location', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/community-analytics
- * Get community group analytics using v_community_analytics view
- */
+/// Reports & Analytics Routes
+// GET community analytics
 router.get('/community-analytics', async (req, res) => {
     try {
         const [data] = await db.query(`
@@ -99,10 +83,7 @@ router.get('/community-analytics', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/service-dashboard
- * Get service request statistics using v_service_dashboard view
- */
+// GET service dashboard stats
 router.get('/service-dashboard', async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 30;
@@ -135,10 +116,7 @@ router.get('/service-dashboard', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/user-activity
- * Get user activity rankings using v_user_activity view
- */
+// GET user activity rankings
 router.get('/user-activity', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 20;
@@ -174,10 +152,7 @@ router.get('/user-activity', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/user-engagement-scores
- * Complex Query: User engagement scoring with CTE and window functions
- */
+// GET engagement scores (CTE + window funcs)
 router.get('/user-engagement-scores', async (req, res) => {
     try {
         const [data] = await db.query(`
@@ -250,10 +225,7 @@ router.get('/user-engagement-scores', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/land-rollup
- * Complex Query: Hierarchical land report with ROLLUP
- */
+// GET land rollup report
 router.get('/land-rollup', async (req, res) => {
     try {
         const [data] = await db.query(`
@@ -281,10 +253,7 @@ router.get('/land-rollup', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/user-land-details
- * Get land ownership summary for each user using v_user_land_details view
- */
+// GET user land details
 router.get('/user-land-details', async (req, res) => {
     try {
         const [data] = await db.query(`
@@ -298,10 +267,7 @@ router.get('/user-land-details', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/service-pivot
- * Complex Query: Monthly service pivot table
- */
+// GET monthly service pivot
 router.get('/service-pivot', async (req, res) => {
     try {
         const year = parseInt(req.query.year) || new Date().getFullYear();
@@ -334,10 +300,7 @@ router.get('/service-pivot', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/running-totals
- * Complex Query: Service requests with running totals and window functions
- */
+// GET running totals
 router.get('/running-totals', async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 30;
@@ -389,10 +352,7 @@ router.get('/running-totals', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/division-performance
- * Complex Query: Division performance dashboard with derived metrics
- */
+// GET division performance
 router.get('/division-performance', async (req, res) => {
     try {
         const [data] = await db.query(`
@@ -429,10 +389,7 @@ router.get('/division-performance', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/top-group-performers
- * Complex Query: Top 3 performers per community group
- */
+// GET top 3 per community group
 router.get('/top-group-performers', async (req, res) => {
     try {
         const [data] = await db.query(`
@@ -501,10 +458,7 @@ router.get('/top-group-performers', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/audit-log
- * Get audit log entries for tracking changes
- */
+// GET audit log
 router.get('/audit-log', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 50;
@@ -536,10 +490,7 @@ router.get('/audit-log', async (req, res) => {
     }
 });
 
-/**
- * GET /api/reports/summary
- * Get overall system summary stats
- */
+// GET system summary
 router.get('/summary', async (req, res) => {
     try {
         const [users] = await db.query(`SELECT COUNT(*) as count FROM reg_info`);

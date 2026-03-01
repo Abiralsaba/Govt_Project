@@ -1,10 +1,4 @@
-/**
- * ==============================================
- * স্বাস্থ্য ও পরিবার কল্যাণ মন্ত্রণালয়
- * Ministry of Health and Family Welfare
- * Health Module Routes
- * ==============================================
- */
+// ============================================== - স্বাস্থ্য ও পরি...
 
 const express = require('express');
 const router = express.Router();
@@ -182,7 +176,7 @@ router.post('/vaccination/register', async (req, res) => {
             (user_id, health_card_id, vaccine_name, vaccine_type, dose_number, vaccination_date, vaccination_center)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `, [req.user.id, health_card_id || null, vaccine_name, vaccine_type, dose_number || 1,
-            vaccination_date || null, vaccination_center || null]);
+        vaccination_date || null, vaccination_center || null]);
 
         res.json({ success: true, message: 'Vaccination registration successful.' });
     } catch (error) {
@@ -264,7 +258,7 @@ router.post('/appointment/book', async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [req.user.id, hospital_id || null, patient_name, patient_age, patient_gender,
             phone, department, doctor_name || null, appointment_date, appointment_time || null,
-            symptoms || null, urgency || 'Normal']);
+        symptoms || null, urgency || 'Normal']);
 
         res.json({ success: true, message: 'Appointment booked successfully.' });
     } catch (error) {
@@ -321,7 +315,7 @@ router.post('/ambulance/request', async (req, res) => {
              destination_hospital, division, district, urgency, ambulance_type)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [req.user.id, patient_name, phone, emergency_type, pickup_address,
-            destination_hospital || null, division, district, urgency || 'Urgent', ambulance_type || 'Basic']);
+        destination_hospital || null, division, district, urgency || 'Urgent', ambulance_type || 'Basic']);
 
         res.json({ success: true, message: 'Ambulance request submitted. Emergency services will contact you shortly.' });
     } catch (error) {
@@ -403,21 +397,23 @@ router.get('/admin/stats', async (req, res) => {
         const [[totalHospitals]] = await db.query('SELECT COUNT(*) as c FROM health_hospitals WHERE is_active = 1');
         const [[todayAppts]] = await db.query('SELECT COUNT(*) as c FROM health_appointments WHERE DATE(appointment_date) = CURDATE()');
 
-        res.json({ stats: {
-            total_cards: totalCards.c,
-            pending_cards: pendingCards.c,
-            approved_cards: approvedCards.c,
-            total_vaccinations: totalVaccines.c,
-            completed_vaccines: completedVaccines.c,
-            total_appointments: totalAppointments.c,
-            pending_appointments: pendingAppointments.c,
-            total_ambulance: totalAmbulance.c,
-            active_ambulance: activeAmbulance.c,
-            total_complaints: totalComplaints.c,
-            pending_complaints: pendingComplaints.c,
-            total_hospitals: totalHospitals.c,
-            today_appointments: todayAppts.c
-        }});
+        res.json({
+            stats: {
+                total_cards: totalCards.c,
+                pending_cards: pendingCards.c,
+                approved_cards: approvedCards.c,
+                total_vaccinations: totalVaccines.c,
+                completed_vaccines: completedVaccines.c,
+                total_appointments: totalAppointments.c,
+                pending_appointments: pendingAppointments.c,
+                total_ambulance: totalAmbulance.c,
+                active_ambulance: activeAmbulance.c,
+                total_complaints: totalComplaints.c,
+                pending_complaints: pendingComplaints.c,
+                total_hospitals: totalHospitals.c,
+                today_appointments: todayAppts.c
+            }
+        });
     } catch (error) {
         console.error('Admin stats error:', error);
         res.status(500).json({ error: 'Database error' });

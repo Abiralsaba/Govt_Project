@@ -1,8 +1,4 @@
-/**
- * Government Notices Routes
- * Public: list & view notices
- * Admin: create & delete notices
- */
+// Government Notices Routes - Public: list & view notices
 
 const express = require('express');
 const router = express.Router();
@@ -30,10 +26,7 @@ function adminAuth(req, res, next) {
 // PUBLIC ROUTES
 // =====================
 
-/**
- * GET /api/notices
- * List notices with search, filter, pagination
- */
+// GET /api/notices - List notices with search, filter, pagination
 router.get('/', async (req, res) => {
     try {
         const { search, department, category, priority, status, page = 1, limit = 20 } = req.query;
@@ -110,11 +103,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-/**
- * GET /api/notices/admin/all
- * Admin: list all notices including drafts
- * NOTE: This route MUST be before /:id to avoid 'admin' being matched as an ID
- */
+// GET /admin/all - Admin: list all notices including drafts
 router.get('/admin/all', adminAuth, async (req, res) => {
     try {
         const [notices] = await db.query(
@@ -130,10 +119,7 @@ router.get('/admin/all', adminAuth, async (req, res) => {
     }
 });
 
-/**
- * GET /api/notices/:id
- * Single notice detail
- */
+// GET /:id - Single notice detail
 router.get('/:id', async (req, res) => {
     try {
         const [notices] = await db.query(
@@ -151,10 +137,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-/**
- * POST /api/notices
- * Admin: create notice
- */
+// POST /api/notices - Admin: create notice
 router.post('/', adminAuth, async (req, res) => {
     try {
         const {
@@ -188,10 +171,7 @@ router.post('/', adminAuth, async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/notices/:id
- * Admin: delete notice
- */
+// DELETE /:id - Admin: delete notice
 router.delete('/:id', adminAuth, async (req, res) => {
     try {
         const [result] = await db.query('DELETE FROM govt_notices WHERE id = ?', [req.params.id]);
@@ -205,10 +185,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
     }
 });
 
-/**
- * PUT /api/notices/:id
- * Admin: update/edit notice
- */
+// PUT /:id - Admin: update/edit notice
 router.put('/:id', adminAuth, async (req, res) => {
     try {
         const {

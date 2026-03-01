@@ -11,9 +11,8 @@ const is_live = false; // true for live, false for sandbox
 // INIT Payment
 router.post('/land/tax/init', async (req, res) => {
     const {
-        applicant_name, father_name, mother_name, nid, mobile,
-        division, district, upazila,
-        division_id, district_id, upazila_id, // Normalized location IDs
+        nid, mobile,
+        division_id, district_id, upazila_id,
         khatian_no, dag_no,
         land_type, land_size, tax_amount
     } = req.body;
@@ -21,25 +20,29 @@ router.post('/land/tax/init', async (req, res) => {
     const transaction_id = 'LTAX_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
     try {
-        // 1. Save to DB with 'Pending' status (includes both name strings and normalized IDs)
-        const [result] = await pool.query(
+        // 1. Get user_id and name from NID
+        const [userRows] = await pool.query('SELECT id, name FROM reg_info WHERE nid = ?', [nid]);
+        const userId = userRows.length > 0 ? userRows[0].id : null;
+        const applicantName = userRows.length > 0 ? userRows[0].name : 'N/A';
+
+        // 2. Save to DB (3NF — no name/geo text cols)
+        await pool.query(
             `INSERT INTO landtax 
-            (transaction_id, applicant_name, father_name, mother_name, nid, mobile, 
-            division, district, upazila, division_id, district_id, upazila_id,
+            (transaction_id, user_id, nid, mobile, 
+            division_id, district_id, upazila_id,
             khatian_no, dag_no, land_type, land_size, 
             tax_amount, payment_status, payment_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
-            [transaction_id, applicant_name, father_name, mother_name, nid, mobile,
-                division, district, upazila, division_id || null, district_id || null, upazila_id || null,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
+            [transaction_id, userId, nid, mobile,
+                division_id || null, district_id || null, upazila_id || null,
                 khatian_no, dag_no, land_type, land_size, tax_amount]
         );
 
-
-        // 2. Init SSLCommerz
+        // 3. Init SSLCommerz
         const data = {
             total_amount: tax_amount,
             currency: 'BDT',
-            tran_id: transaction_id, // Use unique tran_id for each api call
+            tran_id: transaction_id,
             success_url: `http://localhost:3000/api/payment/land/tax/success/${transaction_id}`,
             fail_url: `http://localhost:3000/api/payment/land/tax/fail/${transaction_id}`,
             cancel_url: `http://localhost:3000/api/payment/land/tax/cancel/${transaction_id}`,
@@ -48,8 +51,8 @@ router.post('/land/tax/init', async (req, res) => {
             product_name: 'Land Development Tax',
             product_category: 'Government Service',
             product_profile: 'general',
-            cus_name: applicant_name,
-            cus_email: 'customer@example.com', // Optional if not collected
+            cus_name: applicantName,
+            cus_email: 'customer@example.com',
             cus_add1: 'Dhaka',
             cus_add2: 'Dhaka',
             cus_city: 'Dhaka',
@@ -58,7 +61,7 @@ router.post('/land/tax/init', async (req, res) => {
             cus_country: 'Bangladesh',
             cus_phone: mobile,
             cus_fax: mobile,
-            ship_name: applicant_name,
+            ship_name: applicantName,
             ship_add1: 'Dhaka',
             ship_add2: 'Dhaka',
             ship_city: 'Dhaka',
