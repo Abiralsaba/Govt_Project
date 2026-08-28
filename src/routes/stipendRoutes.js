@@ -8,7 +8,7 @@ router.use(verifyToken);
 
 router.get('/', async (req, res) => {
     try {
-        const [stipends] = await db.query('SELECT * FROM available_stipends WHERE is_active = TRUE ORDER BY deadline ASC');
+        const [stipends] = await db.query('SELECT * FROM stipends WHERE is_active = TRUE ORDER BY deadline ASC');
         res.json(stipends);
     } catch (error) {
         console.error('Error fetching stipends:', error);
@@ -24,8 +24,8 @@ router.get('/my-applications', async (req, res) => {
                 sa.*,
                 s.title AS stipend_title,
                 s.amount AS stipend_amount
-            FROM stipends_applications sa
-            JOIN available_stipends s ON sa.stipend_id = s.id
+            FROM stipend_applications sa
+            JOIN stipends s ON sa.stipend_id = s.id
             WHERE sa.user_id = ?
             ORDER BY sa.submitted_at DESC
         `, [req.user.id]);
@@ -44,7 +44,7 @@ router.post('/apply', async (req, res) => {
         const userId = req.user.id;
 
         // 1. Check if stipend exists and is active
-        const [stipend] = await db.query('SELECT * FROM available_stipends WHERE id = ? AND is_active = TRUE', [stipendId]);
+        const [stipend] = await db.query('SELECT * FROM stipends WHERE id = ? AND is_active = TRUE', [stipendId]);
         if (stipend.length === 0) {
             return res.status(404).json({ error: 'Stipend program not found or inactive' });
         }
@@ -52,7 +52,7 @@ router.post('/apply', async (req, res) => {
 
         // 2. Check duplicate application
         const [existing] = await db.query(
-            'SELECT id FROM stipends_applications WHERE user_id = ? AND stipend_id = ?',
+            'SELECT id FROM stipend_applications WHERE user_id = ? AND stipend_id = ?',
             [userId, stipendId]
         );
         if (existing.length > 0) {
@@ -74,9 +74,9 @@ router.post('/apply', async (req, res) => {
 
         // 5. Insert Application
         await db.query(`
-            INSERT INTO stipends_applications 
+            INSERT INTO stipend_applications
             (user_id, stipend_id, application_no, student_details, financial_info, guardian_info, bank_details, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'Submitted')
         `, [
             userId,
             stipendId,

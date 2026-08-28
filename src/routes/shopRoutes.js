@@ -128,7 +128,7 @@ router.get('/items', async (req, res) => {
 });
 
 // ==========================================
-// CART (using cart_item table)
+// CART (the authoritative schema stores authenticated ownership by user NID)
 // ==========================================
 
 router.get('/cart', async (req, res) => {
@@ -137,15 +137,15 @@ router.get('/cart', async (req, res) => {
             SELECT 
                 c.id as cart_id,
                 c.quantity,
-                c.product_id,
+                c.item_id AS product_id,
                 i.name AS name,
                 i.price,
                 i.image_url
-            FROM cart_item c
-            JOIN shop_items i ON c.product_id = i.id
-            WHERE c.user_id = ?
+            FROM addto_cart c
+            JOIN shop_items i ON c.item_id = i.id
+            WHERE c.user_nid = ?
             ORDER BY c.created_at DESC
-        `, [req.user.dbId]);
+        `, [req.user.nid]);
         res.json(cartItems);
     } catch (error) {
         console.error(error);
@@ -155,7 +155,11 @@ router.get('/cart', async (req, res) => {
 
 router.post('/cart', async (req, res) => {
     const { item_id, quantity } = req.body;
-    const qty = parseInt(quantity) || 1;
+    const qty = quantity === undefined ? 1 : Number(quantity);
+
+    if (!Number.isInteger(qty) || qty <= 0) {
+        return res.status(400).json({ error: 'Quantity must be a positive integer' });
+    }
 
     console.log(`[DEBUG] Adding to cart. User ID: ${req.user.dbId}, Item: ${item_id}, Qty: ${qty}`);
 
@@ -166,24 +170,22 @@ router.post('/cart', async (req, res) => {
             return res.status(404).json({ error: 'Item not found' });
         }
 
-        const productName = items[0].name;
-
         // check if already in cart
         const [existing] = await db.query(
-            'SELECT id, quantity FROM cart_item WHERE user_id = ? AND product_id = ?',
-            [req.user.dbId, item_id]
+            'SELECT id, quantity FROM addto_cart WHERE user_nid = ? AND item_id = ?',
+            [req.user.nid, item_id]
         );
 
         if (existing.length > 0) {
             await db.query(
-                'UPDATE cart_item SET quantity = quantity + ? WHERE id = ?',
-                [qty, existing[0].id]
+                'UPDATE addto_cart SET quantity = quantity + ? WHERE id = ? AND user_nid = ?',
+                [qty, existing[0].id, req.user.nid]
             );
             console.log('[DEBUG] Updated existing cart item');
         } else {
             await db.query(
-                'INSERT INTO cart_item (user_id, product_id, product_name, quantity) VALUES (?, ?, ?, ?)',
-                [req.user.dbId, item_id, productName, qty]
+                'INSERT INTO addto_cart (user_nid, item_id, quantity) VALUES (?, ?, ?)',
+                [req.user.nid, item_id, qty]
             );
             console.log('[DEBUG] Inserted new cart item');
         }
@@ -198,8 +200,8 @@ router.post('/cart', async (req, res) => {
 router.delete('/cart/:id', async (req, res) => {
     try {
         await db.query(
-            'DELETE FROM cart_item WHERE id = ? AND user_id = ?',
-            [req.params.id, req.user.dbId]
+            'DELETE FROM addto_cart WHERE id = ? AND user_nid = ?',
+            [req.params.id, req.user.nid]
         );
         res.json({ success: true, message: 'Removed from cart' });
     } catch (error) {
@@ -222,11 +224,11 @@ router.post('/order', async (req, res) => {
     try {
         // get cart items with full details
         const [cartItems] = await db.query(`
-            SELECT c.quantity, c.product_id, c.product_name, i.price
-            FROM cart_item c
-            JOIN shop_items i ON c.product_id = i.id
-            WHERE c.user_id = ?
-        `, [req.user.dbId]);
+            SELECT c.quantity, c.item_id AS product_id, i.name AS product_name, i.price
+            FROM addto_cart c
+            JOIN shop_items i ON c.item_id = i.id
+            WHERE c.user_nid = ?
+        `, [req.user.nid]);
 
         if (cartItems.length === 0) {
             return res.status(400).json({ error: 'Cart is empty' });
@@ -255,7 +257,7 @@ router.post('/order', async (req, res) => {
         const orderId = orderResult.insertId;
 
         // Clear Cart
-        await db.query('DELETE FROM cart_item WHERE user_id = ?', [req.user.dbId]);
+        await db.query('DELETE FROM addto_cart WHERE user_nid = ?', [req.user.nid]);
 
         if (payment_method === 'COD') {
             res.json({ success: true, message: 'Order placed successfully via Cash on Delivery!' });

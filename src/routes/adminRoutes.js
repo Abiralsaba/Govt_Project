@@ -246,7 +246,7 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
 
         // Get mutation details
         const [mutations] = await connection.query(
-            `SELECT * FROM land_mutations_v2 WHERE id = ?`,
+            `SELECT * FROM land_mutations_v2 WHERE id = ? FOR UPDATE`,
             [id]
         );
 
@@ -259,42 +259,18 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
         const mutation = mutations[0];
         console.log('[Admin] Mutation details:', mutation);
 
-        // update status
+        if (mutation.status !== 'Pending') {
+            await connection.rollback();
+            return res.status(409).json({ error: `Mutation is already ${mutation.status}` });
+        }
+
+        // Updating the status invokes after_mutation_approval. The database
+        // trigger is the single authority for the ownership transfer.
         await connection.query(
             `UPDATE land_mutations_v2 SET status = 'Approved' WHERE id = ?`,
             [id]
         );
         console.log('[Admin] Status updated to Approved');
-
-        // remove from seller
-        const [deleteResult] = await connection.query(
-            `DELETE FROM my_land_record 
-             WHERE user_id = ? AND khatian_no = ? AND dag_no = ?`,
-            [mutation.user_id, mutation.khatian_no, mutation.dag_no]
-        );
-        console.log('[Admin] Deleted from seller record:', deleteResult.affectedRows);
-
-        // add to buyer (3NF — FKs only)
-        const buyerId = mutation.buyer_id;
-
-        if (buyerId) {
-            await connection.query(
-                `INSERT INTO my_land_record 
-                 (user_id, division_id, district_id, upazila_id, khatian_no, dag_no, mouza, 
-                  land_size, deed_no, land_price, ownership_description, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Approved')`,
-                [
-                    buyerId,
-                    mutation.division_id, mutation.district_id, mutation.upazila_id,
-                    mutation.khatian_no, mutation.dag_no, 'Transferred via Mutation',
-                    parseFloat(mutation.land_amount) || 0, mutation.deed_no, mutation.land_price,
-                    `Ownership transferred via Mutation`
-                ]
-            );
-            console.log('[Admin] Added to buyer record');
-        } else {
-            console.warn(`[Admin] No buyer_id for mutation ${id}. Land record not added to buyer.`);
-        }
 
         // notify user
         await connection.query(
@@ -314,13 +290,6 @@ router.put('/land-mutations/:id/approve', async (req, res) => {
                 JSON.stringify({ status: 'Approved' }),
                 req.admin.id
             ]
-        );
-
-        // update linked service req
-        await connection.query(
-            `UPDATE service_requests SET status = 'approved'
-             WHERE user_id = ? AND service_type = 'Land Mutation' AND status = 'pending'`,
-            [mutation.user_id]
         );
 
         // log action
@@ -761,7 +730,7 @@ router.delete('/shop-items/:id', async (req, res) => {
 // GET /stipends
 router.get('/stipends', async (req, res) => {
     try {
-        const [stipends] = await db.query('SELECT * FROM available_stipends ORDER BY created_at DESC');
+        const [stipends] = await db.query('SELECT * FROM stipends ORDER BY created_at DESC');
         res.json(stipends);
     } catch (error) {
         console.error('Error fetching stipends:', error);
@@ -775,7 +744,7 @@ router.post('/stipends', async (req, res) => {
         const { title, description, amount, type, min_gpa, max_income, deadline, is_active } = req.body;
 
         await db.query(
-            `INSERT INTO available_stipends (title, description, amount, type, min_gpa, max_income, deadline, is_active)
+            `INSERT INTO stipends (title, description, amount, type, min_gpa, max_income, deadline, is_active)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [title, description, amount, type, min_gpa || 0, max_income, deadline, is_active ? 1 : 0]
         );
@@ -796,8 +765,8 @@ router.get('/stipend-applications', async (req, res) => {
                 s.title AS stipend_title,
                 u.name AS student_name,
                 u.nid AS student_nid
-            FROM stipends_applications sa
-            JOIN available_stipends s ON sa.stipend_id = s.id
+            FROM stipend_applications sa
+            JOIN stipends s ON sa.stipend_id = s.id
             JOIN reg_info u ON sa.user_id = u.id
             ORDER BY sa.submitted_at DESC
         `);
@@ -815,7 +784,7 @@ router.put('/stipend-applications/:id/status', async (req, res) => {
         const { status, remarks } = req.body; // Approved / Rejected
 
         await db.query(
-            'UPDATE stipends_applications SET status = ? WHERE id = ?',
+            'UPDATE stipend_applications SET status = ? WHERE id = ?',
             [status, id]
         );
 

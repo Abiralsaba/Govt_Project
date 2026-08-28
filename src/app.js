@@ -33,6 +33,25 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
+const publicDirectory = path.join(__dirname, '../public');
+const reactDistDirectory = path.join(__dirname, '../client/dist');
+const reactIndexFile = path.join(reactDistDirectory, 'index.html');
+const reactFrontendEnabled = process.env.FRONTEND_MODE === 'react';
+const migratedReactRoutes = [
+    '/',
+    '/index.html',
+    '/register.html',
+    '/forgot-password.html',
+    '/admin-login.html',
+    '/dashboard.html',
+    '/profile.html',
+    '/documents.html',
+    '/history.html',
+    '/events.html',
+    '/contact.html',
+    '/market.html'
+];
+
 // ... (middleware)
 
 // Security Middleware
@@ -64,8 +83,17 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// React is an opt-in, route-by-route cutover while legacy pages remain available.
+// API routes, uploads and every unmigrated .html URL continue to use the existing backend/public tree.
+if (reactFrontendEnabled && fs.existsSync(reactIndexFile)) {
+    app.use('/assets', express.static(path.join(reactDistDirectory, 'assets')));
+    app.get(migratedReactRoutes, (req, res) => res.sendFile(reactIndexFile));
+} else if (reactFrontendEnabled) {
+    console.warn('FRONTEND_MODE=react requested, but client/dist is missing. Serving the legacy frontend.');
+}
+
 // Static Files
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(publicDirectory));
 
 // Routes
 app.use('/api/auth', authRoutes);

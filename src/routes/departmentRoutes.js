@@ -135,6 +135,9 @@ router.post('/land/mutation_v2', async (req, res) => {
         if (appCheck.length === 0) {
             return res.status(400).json({ error: 'Applicant NID not found in system registration.' });
         }
+        if (appCheck[0].id !== req.user.id) {
+            return res.status(403).json({ error: 'Applicant NID must belong to the authenticated land owner.' });
+        }
 
         // 2. Validate buyer NID + get buyer_id
         const [buyerCheck] = await db.query('SELECT id FROM reg_info WHERE nid = ?', [buyerNid]);
@@ -142,14 +145,29 @@ router.post('/land/mutation_v2', async (req, res) => {
             return res.status(400).json({ error: 'Buyer NID not found in system registration.' });
         }
         const buyerId = buyerCheck[0].id;
+        if (buyerId === req.user.id) {
+            return res.status(400).json({ error: 'Buyer and seller must be different registered citizens.' });
+        }
+
+        const transferText = String(amount ?? '').trim();
+        const transferAmount = Number(transferText);
+        if (!/^\d+(\.\d{1,4})?$/.test(transferText) || !Number.isFinite(transferAmount) || transferAmount <= 0) {
+            return res.status(400).json({ error: 'Land transfer amount must be a positive number.' });
+        }
 
         // 3. Verify ownership
         const [ownershipCheck] = await db.query(
-            "SELECT id FROM my_land_record WHERE user_id = ? AND khatian_no = ? AND dag_no = ? AND status = 'Approved'",
+            "SELECT id, land_size FROM my_land_record WHERE user_id = ? AND khatian_no = ? AND dag_no = ? AND status = 'Approved'",
             [req.user.id, khatian, dag]
         );
         if (ownershipCheck.length === 0) {
             return res.status(403).json({ error: 'You can only sell Verified Land from your records. Please verified this land in "My Records" first.' });
+        }
+        if (ownershipCheck.length !== 1) {
+            return res.status(409).json({ error: 'Multiple matching land records require administrative reconciliation before mutation.' });
+        }
+        if (transferAmount > Number(ownershipCheck[0].land_size)) {
+            return res.status(400).json({ error: 'Transfer amount exceeds the currently owned land area.' });
         }
 
         // 4. Generate tracking number
@@ -162,7 +180,7 @@ router.post('/land/mutation_v2', async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             req.user.id, divId, distId, upaId,
-            khatian, dag, amount, price, deed, ownType,
+            khatian, dag, transferAmount, price, deed, ownType,
             buyerNid, buyerId, trackingNum
         ]);
 

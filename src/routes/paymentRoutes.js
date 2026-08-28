@@ -22,18 +22,21 @@ router.post('/land/tax/init', async (req, res) => {
     try {
         // 1. Get user_id and name from NID
         const [userRows] = await pool.query('SELECT id, name FROM reg_info WHERE nid = ?', [nid]);
-        const userId = userRows.length > 0 ? userRows[0].id : null;
-        const applicantName = userRows.length > 0 ? userRows[0].name : 'N/A';
+        if (userRows.length === 0) {
+            return res.status(400).json({ error: 'A registered citizen NID is required for land tax payment.' });
+        }
+        const userId = userRows[0].id;
+        const applicantName = userRows[0].name;
 
         // 2. Save to DB (3NF — no name/geo text cols)
         await pool.query(
             `INSERT INTO landtax 
-            (transaction_id, user_id, nid, mobile, 
+            (transaction_id, user_id, applicant_name, nid, mobile,
             division_id, district_id, upazila_id,
             khatian_no, dag_no, land_type, land_size, 
             tax_amount, payment_status, payment_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
-            [transaction_id, userId, nid, mobile,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())`,
+            [transaction_id, userId, applicantName, nid, mobile,
                 division_id || null, district_id || null, upazila_id || null,
                 khatian_no, dag_no, land_type, land_size, tax_amount]
         );

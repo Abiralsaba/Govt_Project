@@ -5,7 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:install:test": "node scripts/database/install.js --target central_govt_db_test",
+    "db:reset:test": "node scripts/database/install.js --target central_govt_db_test --reset",
+    "db:install:dev": "node scripts/database/install.js --target central_govt_db",
+    "test": "node --test --test-concurrency=1 test/regression/database-baseline.test.js",
+    "test:baseline": "node --test --test-concurrency=1 test/regression/database-baseline.test.js",
+    "client:install": "npm install --prefix client",
+    "client:dev": "npm run dev --prefix client",
+    "client:build": "npm run build --prefix client",
+    "client:test": "npm test --prefix client",
+    "start:react": "FRONTEND_MODE=react node src/app.js"
   },
   "keywords": [],
   "author": "",
