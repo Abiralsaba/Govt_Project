@@ -141,8 +141,15 @@ router.post('/bill/pay', async (req, res) => {
         // Find connection
         let connId = null;
         if (connection_number) {
-            const [conn] = await db.query('SELECT id FROM water_connections WHERE connection_number = ?', [connection_number]);
-            if (conn.length) connId = conn[0].id;
+            const [conn] = await db.query(
+                'SELECT id, user_id FROM water_connections WHERE connection_number = ? LIMIT 1',
+                [connection_number]
+            );
+            if (conn.length === 0) return res.status(404).json({ error: 'Water connection not found.' });
+            if (conn[0].user_id !== req.user.id) {
+                return res.status(403).json({ error: 'The selected water connection does not belong to the authenticated citizen.' });
+            }
+            connId = conn[0].id;
         }
         const units = (meter_reading_current || 0) - (meter_reading_prev || 0);
         await db.query(`
@@ -327,8 +334,9 @@ router.put('/admin/connections/:id', async (req, res) => {
     try {
         let approvedDate = null;
         if (status === 'Approved' || status === 'Active') approvedDate = new Date().toISOString().split('T')[0];
-        await db.query('UPDATE water_connections SET status = ?, monthly_rate = ?, admin_remarks = ?, approved_date = COALESCE(?, approved_date) WHERE id = ?',
+        const [result] = await db.query('UPDATE water_connections SET status = ?, monthly_rate = ?, admin_remarks = ?, approved_date = COALESCE(?, approved_date) WHERE id = ?',
             [status, monthly_rate || 0, admin_remarks || null, approvedDate, req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Connection not found' });
         res.json({ success: true, message: 'Connection updated.' });
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
 });
@@ -365,9 +373,10 @@ router.put('/admin/bills/:id', async (req, res) => {
     const { status, admin_remarks } = req.body;
     try {
         let paidDate = null;
-        if (status === 'Paid') paidDate = new Date().toISOString();
-        await db.query('UPDATE water_bill_payments SET status = ?, admin_remarks = ?, paid_date = COALESCE(?, paid_date) WHERE id = ?',
+        if (status === 'Paid') paidDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const [result] = await db.query('UPDATE water_bill_payments SET status = ?, admin_remarks = ?, paid_date = COALESCE(?, paid_date) WHERE id = ?',
             [status, admin_remarks || null, paidDate, req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Bill not found' });
         res.json({ success: true, message: 'Bill updated.' });
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
 });
@@ -404,8 +413,9 @@ router.get('/admin/quality/:id', async (req, res) => {
 router.put('/admin/quality/:id', async (req, res) => {
     const { status, test_result, admin_remarks } = req.body;
     try {
-        await db.query('UPDATE water_quality_reports SET status = ?, test_result = ?, admin_remarks = ? WHERE id = ?',
+        const [result] = await db.query('UPDATE water_quality_reports SET status = ?, test_result = ?, admin_remarks = ? WHERE id = ?',
             [status, test_result || null, admin_remarks || null, req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Quality report not found' });
         res.json({ success: true, message: 'Quality report updated.' });
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
 });
@@ -443,10 +453,11 @@ router.put('/admin/complaints/:id', async (req, res) => {
     const { status, assigned_to, resolution, admin_remarks } = req.body;
     try {
         let resolvedDate = null;
-        if (status === 'Resolved' || status === 'Closed') resolvedDate = new Date().toISOString();
-        await db.query(`UPDATE water_complaints SET status = ?, assigned_to = ?, resolution = ?, 
+        if (status === 'Resolved' || status === 'Closed') resolvedDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const [result] = await db.query(`UPDATE water_complaints SET status = ?, assigned_to = ?, resolution = ?,
             admin_remarks = ?, resolved_date = COALESCE(?, resolved_date) WHERE id = ?`,
             [status, assigned_to || null, resolution || null, admin_remarks || null, resolvedDate, req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Complaint not found' });
         res.json({ success: true, message: 'Complaint updated.' });
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
 });
@@ -492,7 +503,7 @@ router.put('/admin/projects/:id', async (req, res) => {
         division, district, budget_crore, start_date, expected_completion,
         progress_percent, beneficiaries, description, status, is_active } = req.body;
     try {
-        await db.query(`UPDATE water_projects SET 
+        const [result] = await db.query(`UPDATE water_projects SET
             project_name=?, project_name_bn=?, project_type=?, implementing_agency=?,
             division=?, district=?, budget_crore=?, start_date=?, expected_completion=?,
             progress_percent=?, beneficiaries=?, description=?, status=?, is_active=?
@@ -501,13 +512,15 @@ router.put('/admin/projects/:id', async (req, res) => {
                 division, district, budget_crore, start_date, expected_completion,
                 progress_percent, beneficiaries, description, status,
                 is_active !== undefined ? is_active : 1, req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Project not found' });
         res.json({ success: true, message: 'Project updated.' });
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
 });
 
 router.delete('/admin/projects/:id', async (req, res) => {
     try {
-        await db.query('DELETE FROM water_projects WHERE id = ?', [req.params.id]);
+        const [result] = await db.query('DELETE FROM water_projects WHERE id = ?', [req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Project not found' });
         res.json({ success: true, message: 'Project deleted.' });
     } catch (error) { res.status(500).json({ error: 'Database error' }); }
 });

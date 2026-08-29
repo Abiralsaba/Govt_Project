@@ -235,6 +235,16 @@ router.post('/apply', async (req, res) => {
             return res.status(400).json({ error: 'Mobile number is required.' });
         }
 
+        if (nid_number) {
+            const [identityRows] = await db.query(
+                'SELECT id FROM reg_info WHERE id = ? AND nid = ? LIMIT 1',
+                [req.user.id, nid_number]
+            );
+            if (identityRows.length === 0) {
+                return res.status(403).json({ error: 'Passport NID must belong to the authenticated citizen.' });
+            }
+        }
+
         // check for duplicate active application
         const [existing] = await db.query(
             `SELECT id FROM passport_applications 
@@ -881,13 +891,6 @@ router.put('/admin/application/:id/status', async (req, res) => {
         updateParams.push(req.params.id);
 
         await db.query(updateQuery, updateParams);
-
-        // Log status change
-        await db.query(
-            `INSERT INTO passport_status_history (application_id, old_status, new_status, changed_by, remarks)
-             VALUES (?, ?, ?, ?, ?)`,
-            [req.params.id, app.old_status, status, 'Admin', remarks || null]
-        );
 
         res.json({ success: true, message: `Status updated to "${status}".` });
     } catch (error) {

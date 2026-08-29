@@ -211,8 +211,8 @@ router.post('/land/mutation_v2', async (req, res) => {
 router.get('/land/mutation/status/:trackingNum', async (req, res) => {
     try {
         const [rows] = await db.query(
-            'SELECT * FROM land_mutations_v2 WHERE tracking_number = ?',
-            [req.params.trackingNum]
+            'SELECT * FROM land_mutations_v2 WHERE tracking_number = ? AND user_id = ?',
+            [req.params.trackingNum, req.user.id]
         );
 
         if (rows.length === 0) {

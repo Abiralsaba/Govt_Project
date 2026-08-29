@@ -251,6 +251,16 @@ router.post('/payments/pay', async (req, res) => {
             bank_name, branch_name, transaction_id, fiscal_year
         } = req.body;
 
+        if (return_id) {
+            const [ownedReturns] = await db.query(
+                'SELECT id FROM nbr_tax_returns WHERE id = ? AND user_id = ? LIMIT 1',
+                [return_id, userId]
+            );
+            if (ownedReturns.length === 0) {
+                return res.status(403).json({ error: 'The selected tax return does not belong to the authenticated citizen.' });
+            }
+        }
+
         // Get TIN
         const [tin] = await db.query(
             "SELECT id FROM nbr_tin_registrations WHERE user_id = ? AND status = 'Approved' LIMIT 1",

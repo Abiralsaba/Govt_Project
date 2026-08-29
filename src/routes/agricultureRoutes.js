@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const verifyToken = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 // ==============================
 // PUBLIC ROUTES (No auth needed)
@@ -388,6 +389,8 @@ router.get('/recent-activity', async (req, res) => {
 // ===========================
 // ADMIN ROUTES
 // ===========================
+
+router.use('/admin', adminMiddleware);
 
 // Admin: Get all expert queries (pending first)
 router.get('/admin/queries', async (req, res) => {

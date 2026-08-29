@@ -1,63 +1,96 @@
 # React migration matrix
 
-Last verified: 2026-08-28. `React verified` means the page is implemented with
-React-owned markup/state, the Vite production build passed, its focused contract
-tests passed, and its built `.html` route/read APIs were exercised against
-`central_govt_db_test`. It does not mean the whole application is production
-ready. Security blockers remain in `docs/SECURITY_TRACKER.md`.
+Last verified: 2026-08-29. The 29 original page rows below are the project-wide
+source of truth. `Active` means Express serves the built React shell when
+started with `npm run start:react`. Default `npm start` still serves the retained
+legacy files for rollback.
 
-The original files in `public/` are retained unchanged as rollback sources.
-`npm start` serves legacy; `npm run start:react` enables only the verified route
-allow-list in `src/app.js`.
+`Passed` is based on actual Chromium execution plus applicable API/database
+regressions—not HTTP 200, a build, or component tests alone. `Partial` identifies
+controls intentionally not exercised or not locally verifiable. This assesses
+the authorized teacher demonstration, not public-production security.
 
-| Existing URL | Role | Legacy source | Main API contract | Current status |
+| Original URL | React implementation | React active through Express | Functional/browser verification | Remaining blocker or limitation |
 |---|---|---|---|---|
-| `/`, `/index.html` | Public | `index.html`, `js/auth.js`, `css/auth.css` | `/api/auth/login`, `/api/admin/login`, `/api/admin/register` | React verified; `#admin` preserved |
-| `/register.html` | Public | `register.html`, `js/auth.js`, `css/auth.css` | `POST /api/auth/register` | React verified |
-| `/forgot-password.html` | Public | inline + `js/auth.js` | `POST /api/auth/send-reset-otp`, `/reset-password-verify` | React verified; demo preview URL preserved |
-| `/admin-login.html` | Public redirect | `admin-login.html` | none | React verified redirect to `/index.html#admin` |
-| `/dashboard.html` | Citizen | `dashboard.html`, `js/dashboard.js`, shared CSS | summary, departments, requests, notifications | React verified; first complete workflow |
-| `/profile.html` | Citizen | `profile.html`, `js/profile.js`, `css/profile.css` | `GET/PUT /api/user/profile`, `POST /profile/photo` | React verified; only backend-writable fields editable |
-| `/documents.html` | Citizen | `documents.html`, `js/documents.js`, `css/documents.css` | official/personal document GET and multipart upload/update | React verified; FormData names tested |
-| `/history.html` | Citizen | `history.html`, `js/history.js`, `css/history.css` | `GET /api/dashboard/history` | React verified |
-| `/events.html` | Citizen | `events.html`, `js/notices.js` | public `/api/notices` list/detail with filters | React verified |
-| `/contact.html` | Citizen | `contact.html`, inline script | `POST /api/contact` | React verified; write payload unit-tested |
-| `/market.html` | Citizen | `market.html`, `js/market.js` | market prices and price complaints | React verified; active JSON complaint contract used |
-| `/todo.html` | Citizen | `todo.html`, `js/dashboard.js`, `css/todo.css` | dashboard todo CRUD/move | Pending; legacy rollback active |
-| `/community.html` | Citizen | `community.html`, `js/community.js`, `css/community.css` | groups, posts, comments, likes, uploads | Pending; legacy rollback active |
-| `/shop.html` | Citizen/payment return | `shop.html`, `js/shop.js` | items, isolated cart, orders, shop payment return params | Pending; legacy rollback active |
-| `/nid.html` | Citizen | `nid.html`, `js/nid.js`, `css/nid.css` | `/api/nid/*` JSON and multipart workflows | Pending; legacy rollback active |
-| `/passport.html` | Citizen | `passport.html`, `js/passport.js`, `css/passport.css` | `/api/passport/*` wizard/uploads/tracking | Pending; legacy rollback active |
-| `/tax.html` | Citizen | `tax.html`, `js/tax.js`, `css/tax.css` | `/api/tax/*` | Pending; legacy rollback active |
-| `/health.html` | Citizen | `health.html`, `js/health.js`, `css/health.css` | `/api/health/*` | Pending; legacy rollback active |
-| `/water.html` | Citizen | `water.html`, `js/water.js`, `css/water.css` | `/api/water/*` | Pending; legacy rollback active |
-| `/land.html` | Citizen/payment return | `land.html` inline, `css/land.css` | departments land APIs and `/api/payment/land/tax/init` | Pending; legacy handles `status`/`tid` return today |
-| `/agriculture.html` | Citizen | `agriculture.html`, `js/agriculture.js`, `js/weather.js` | `/api/agriculture/*`, weather APIs | Pending; legacy rollback active |
-| `/education.html` | Citizen | `education.html` inline | results and stipend lifecycle | Pending; legacy rollback active |
-| `/admission.html` | Public | `admission.html` inline | public `/api/university/admissions*` | Pending; legacy rollback active |
-| `/apply.html` | Public/payment return | `apply.html` inline | verify/apply/payment plus return query combinations | Pending; legacy handles payment return today |
-| `/reports.html` | Admin | `reports.html`, `js/reports.js`, `css/reports.css` | master `/api/admin/*` console | Pending; legacy rollback active |
-| `/admin-nid.html` | Admin | `admin-nid.html`, `js/admin-nid.js` | `/api/nid/admin/*` | Pending; legacy rollback active |
-| `/admin-passport.html` | Admin | `admin-passport.html`, `js/admin-passport.js` | passport admin endpoints | Pending; legacy rollback active |
-| `/admin-health.html` | Admin | `admin-health.html`, `js/admin-health.js` | `/api/health/admin/*` | Pending; legacy rollback active |
-| `/admin-water.html` | Admin | `admin-water.html`, `js/admin-water.js` | `/api/water/admin/*` | Pending; legacy rollback active |
+| `/`, `/index.html` | Complete | Active | Passed: real citizen and admin login journeys | Synthetic local accounts only |
+| `/register.html` | Complete | Active | Partial: Chromium navigation/refresh and component contracts passed; new-account browser submission not run | Existing-account demo does not require registration |
+| `/forgot-password.html` | Complete | Active | Partial: Chromium navigation/refresh and request contracts passed | Ethereal email delivery was not exercised |
+| `/admin-login.html` | Complete React redirect | Active | Passed: redirect and real admin login | None for local demo |
+| `/dashboard.html` | Complete | Active | Passed: authenticated navigation/refresh and real summary APIs | Some deferred service types remain outside demo |
+| `/profile.html` | Complete | Active | Passed: authenticated navigation/refresh and owner-scoped API tests | Only backend-writable fields are editable |
+| `/documents.html` | Complete | Active | Passed: authenticated navigation/refresh and document ownership/multipart contracts | Historical uploads remain a public privacy blocker |
+| `/history.html` | Complete | Active | Passed: authenticated navigation/refresh and real history API | None for local demo |
+| `/events.html` | Complete | Active | Passed: authenticated navigation/refresh and real notice API | None for local demo |
+| `/contact.html` | Complete | Active | Passed: authenticated navigation/refresh and exact write contract tests | Browser did not create a new contact row |
+| `/market.html` | Complete | Active | Passed: authenticated navigation/refresh and owner-scoped complaint API coverage | Public-data policy remains a deployment review item |
+| `/todo.html` | Complete | Active | Passed: Chromium create, status change, delete, direct navigation and refresh | FullCalendar incompatibility replaced with React-owned calendar grid |
+| `/community.html` | Complete | Active | Passed: Chromium navigation/refresh; multipart uploads, ownership, admin denial, XSS and exact counter tests | Legacy files retained only for rollback |
+| `/shop.html` | Complete | Active | Passed: Chromium navigation/refresh; isolated cart, duplicate add, calculations and COD order APIs | Online payment is simulation-only unless sandbox is used |
+| `/nid.html` | Complete | Active | Passed: Chromium navigation/refresh; multipart workflows, owner isolation, positive photo/signature persistence and XSS tests | Public/cross-identity verification endpoints remain deployment blockers |
+| `/passport.html` | Complete | Active | Passed: Chromium navigation/refresh; application, NID binding, upload ownership, cancellation and single history tests | Real payment verification deferred; simulation explicitly unverified |
+| `/tax.html` | Complete | Active | Passed: Chromium navigation/refresh; TIN/VAT/return/payment ownership and status tests | Payment record is `Pending`, not gateway-verified |
+| `/health.html` | Complete | Active | Passed: Chromium navigation/refresh; card, vaccination, appointment and ownership tests | Admin transition/audit hardening remains backlog |
+| `/water.html` | Complete | Active | Passed: Chromium navigation/refresh; connection, complaint, quality and ownership tests | Bill simulation does not write; legacy endpoint still trusts client totals |
+| `/land.html` | Complete | Active | Passed: Chromium navigation/refresh; owner-scoped records/status and complete transfer-trigger regression | Real land-tax gateway verification deferred |
+| `/agriculture.html` | Complete | Active | Passed: Chromium navigation/refresh; owner isolation, duplicate registration and admin denial | Pending public-listing contact exposure remains deployment blocker |
+| `/education.html` | Complete | Active | Passed: Chromium navigation/refresh; result and stipend workflow tests | Public identity fields in result API remain deployment blocker |
+| `/admission.html` | Complete | Active | Passed: Chromium navigation/refresh; catalogue/detail API regression | Public applicant identity access remains deployment blocker |
+| `/apply.html` | Complete | Active | Passed for Draft/Pending application and duplicate rejection; Chromium navigation/refresh passed | Payment is isolated simulation unless sandbox works; no fake Paid state |
+| `/reports.html` | Complete | Active | Passed: real admin login, all 14 report domains, filtering and client pagination in Chromium; selected-action locks tested | Some legacy CRUD breadth is linked to domain admin pages, not duplicated |
+| `/admin-nid.html` | Complete | Active | Passed: Chromium navigation/refresh; admin authorization, filtering, pagination and selected-record tests | API returns newest 200 subset and lacks transition graph |
+| `/admin-passport.html` | Complete | Active | Passed: Chromium navigation/refresh; authorization, filters, selected update and exactly-one trigger history | Server transition graph remains backlog |
+| `/admin-health.html` | Complete | Active | Passed: Chromium navigation/refresh; all queues, selected updates and hospital CRUD APIs | Unknown-id false success and actor audit remain backlog |
+| `/admin-water.html` | Complete | Active | Passed: Chromium navigation/refresh and real APIs; authorization, filters, selected updates, project CRUD and unknown-id rejection | Bill status is labeled administrative/demo, not gateway verification |
 
-## Verified contracts so far
+## Actual verification record
 
-- Same citizen/admin local-storage keys (`token`, `adminToken`, `adminName`) and
-  `Authorization: Bearer` behavior, including quote sanitization and 401 cleanup.
-- Relative same-origin APIs; JSON and multipart requests remain distinct.
-- Literal `.html` routes and their query strings are accepted by Express.
-- Dashboard generic requests retain the client-side `req_` prefix.
-- `/uploads` remains served by Express and was smoke-tested during React mode.
-- No legacy HTML is embedded and no legacy JavaScript is imported by React.
+- React production build: **passed** (`vite build`, 71 modules).
+- React component/contract tests: **94/94 passed** across 15 files.
+- Backend/database regression: **66/66 passed** against
+  `central_govt_db_test`, sequential and reset-safe.
+- Chromium teacher-demo suite: **3/3 passed**:
+  - all public pages navigate/refresh and all 29 Express routes return React;
+  - real citizen login, all citizen pages, Todo write lifecycle, payment
+    simulation labeling, and citizen denial from an admin API;
+  - real admin login, every admin page, all Reports domains, filtering, and
+    Admin Water real API loading.
+- `central_govt_db` read-only readiness check: **passed**—138 tables, two
+  synthetic citizens, and one approved synthetic admin.
+- Positive multipart checks passed for Community and NID. Invalid NID/passport
+  types were rejected as expected.
+- No page exceptions or API HTTP 500/429 responses occurred in the final
+  authenticated Chromium run.
 
-## Verification record
+The first complete Chromium run failed and is not counted as a pass:
+FullCalendar's React adapter crashed under React 19. It was replaced with a
+React-owned calendar grid, then the complete browser suite passed. The first
+Admin Water focused run exposed a MariaDB `DATETIME` formatting defect; that was
+corrected and both focused and full suites passed.
 
-- React build: passed.
-- React tests: 5 files, 9 tests passed.
-- Database/backend regression: 13 tests passed.
-- Test-database Express smoke: auth/dashboard workflow and the six low-risk page
-  routes/read APIs passed with HTTP 200.
-- Full cross-page compatibility: blocked until every pending row is migrated and
-  exercised. No public deployment or production-readiness claim is authorized.
+## React migration work remaining
+
+- No intended teacher-presentation page remains on legacy HTML in React mode.
+- Legacy HTML/JS/CSS remains intentionally available through default
+  `npm start`; cleanup or changing the default start command needs approval.
+- A click-through of every optional form/control is not claimed. The rehearsed
+  walkthrough covers representative complete citizen, service,
+  payment-simulation, and admin journeys.
+
+## Pre-existing backend/database limitations
+
+- Stored routines remain deferred because XAMPP MariaDB `mysql.proc` metadata
+  is incompatible; active code contains no required `CALL` sites.
+- NID `citizen_id` normalization remains intentionally unresolved.
+- Several legacy/unused endpoints and admin transition graphs are deferred.
+- Health/NID admin APIs retain documented unknown-id/queue-limit behavior.
+
+## Security and public-deployment blockers
+
+- Historical identity uploads, permissive CORS, browser token storage, public
+  identity/result/application lookup, unverified real payment callbacks, and
+  agriculture contact exposure remain open in `docs/SECURITY_TRACKER.md`.
+- The payment fallback is local React state only and visibly says
+  `SIMULATED — NOT GATEWAY VERIFIED`; it never calls a gateway or changes a
+  payment/application status.
+- NationX is ready for the scoped local teacher demonstration, but it is **not
+  secure or ready for public deployment**.

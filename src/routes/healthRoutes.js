@@ -171,6 +171,15 @@ router.post('/vaccination/register', async (req, res) => {
     } = req.body;
 
     try {
+        if (health_card_id) {
+            const [ownedCards] = await db.query(
+                'SELECT id FROM health_cards WHERE id = ? AND user_id = ? LIMIT 1',
+                [health_card_id, req.user.id]
+            );
+            if (ownedCards.length === 0) {
+                return res.status(403).json({ error: 'The selected health card does not belong to the authenticated citizen.' });
+            }
+        }
         await db.query(`
             INSERT INTO health_vaccinations 
             (user_id, health_card_id, vaccine_name, vaccine_type, dose_number, vaccination_date, vaccination_center)

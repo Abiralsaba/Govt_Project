@@ -49,7 +49,25 @@ const migratedReactRoutes = [
     '/history.html',
     '/events.html',
     '/contact.html',
-    '/market.html'
+    '/market.html',
+    '/todo.html',
+    '/community.html',
+    '/shop.html',
+    '/nid.html',
+    '/passport.html',
+    '/health.html',
+    '/water.html',
+    '/tax.html',
+    '/education.html',
+    '/land.html',
+    '/agriculture.html',
+    '/admission.html',
+    '/apply.html',
+    '/reports.html',
+    '/admin-nid.html',
+    '/admin-passport.html',
+    '/admin-health.html',
+    '/admin-water.html'
 ];
 
 // ... (middleware)
@@ -78,7 +96,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
 // Rate Limiting to prevent brute force
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: Number(process.env.API_RATE_LIMIT_MAX) || 100, // browser regression may explicitly raise this; normal default remains 100
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);

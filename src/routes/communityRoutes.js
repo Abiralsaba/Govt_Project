@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const verifyToken = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 // All routes require authentication
@@ -393,20 +394,12 @@ router.post('/posts/:id/like', async (req, res) => {
                 'DELETE FROM post_likes WHERE post_id = ? AND user_id = ?',
                 [req.params.id, req.user.id]
             );
-            await db.query(
-                'UPDATE community_posts SET like_count = like_count - 1 WHERE id = ?',
-                [req.params.id]
-            );
             res.json({ success: true, liked: false });
         } else {
             // Like
             await db.query(
                 'INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)',
                 [req.params.id, req.user.id]
-            );
-            await db.query(
-                'UPDATE community_posts SET like_count = like_count + 1 WHERE id = ?',
-                [req.params.id]
             );
             res.json({ success: true, liked: true });
         }
@@ -449,12 +442,6 @@ router.post('/posts/:id/comments', async (req, res) => {
             INSERT INTO post_comments (post_id, user_id, content)
             VALUES (?, ?, ?)
         `, [req.params.id, req.user.id, content.trim()]);
-
-        // Update comment count
-        await db.query(
-            'UPDATE community_posts SET comment_count = comment_count + 1 WHERE id = ?',
-            [req.params.id]
-        );
 
         // get the new comment with author info
         const [comments] = await db.query(`
@@ -531,12 +518,6 @@ router.delete('/comments/:id', async (req, res) => {
         // Delete the comment
         await db.query('DELETE FROM post_comments WHERE id = ?', [req.params.id]);
 
-        // update comment count on the post
-        await db.query(
-            'UPDATE community_posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = ?',
-            [postId]
-        );
-
         res.json({ success: true, message: 'Comment deleted' });
     } catch (error) {
         console.error(error);
@@ -547,6 +528,8 @@ router.delete('/comments/:id', async (req, res) => {
 // ==========================================
 // ADMIN ENDPOINTS
 // ==========================================
+
+router.use('/admin', adminMiddleware);
 
 // GET /admin/groups
 router.get('/admin/groups', async (req, res) => {

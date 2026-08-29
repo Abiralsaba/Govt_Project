@@ -277,6 +277,9 @@ router.post('/profile', upload.fields([{ name: 'photo', maxCount: 1 }, { name: '
         educational_qualification, occupation, occupation_bn, religion
     } = req.body;
 
+    const photoUrl = req.files?.photo?.[0] ? `/uploads/nid/${req.files.photo[0].filename}` : null;
+    const signatureUrl = req.files?.signature?.[0] ? `/uploads/nid/${req.files.signature[0].filename}` : null;
+
     try {
         // Check if profile exists
         const [existing] = await db.query(
@@ -309,6 +312,7 @@ router.post('/profile', upload.fields([{ name: 'photo', maxCount: 1 }, { name: '
                     permanent_post_office = ?, permanent_post_code = ?, permanent_ward_no = ?,
                     permanent_village_bn = ?, permanent_village_en = ?, permanent_road_no = ?, permanent_house_no = ?,
                     educational_qualification = ?, occupation = ?, occupation_bn = ?, religion = ?,
+                    photo_url = COALESCE(?, photo_url), signature_url = COALESCE(?, signature_url),
                     profile_status = 'Pending', updated_at = NOW()
                 WHERE user_id = ?
             `, [
@@ -323,6 +327,7 @@ router.post('/profile', upload.fields([{ name: 'photo', maxCount: 1 }, { name: '
                 permanent_post_office, permanent_post_code, permanent_ward_no,
                 permanent_village_bn, permanent_village_en, permanent_road_no, permanent_house_no,
                 educational_qualification, occupation, occupation_bn, religion,
+                photoUrl, signatureUrl,
                 req.user.id
             ]);
             // Removed early res.json
@@ -340,8 +345,9 @@ router.post('/profile', upload.fields([{ name: 'photo', maxCount: 1 }, { name: '
                     permanent_division_id, permanent_district_id, permanent_upazila_id,
                     permanent_post_office, permanent_post_code, permanent_ward_no,
                     permanent_village_bn, permanent_village_en, permanent_road_no, permanent_house_no,
-                    educational_qualification, occupation, occupation_bn, religion, profile_status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
+                    educational_qualification, occupation, occupation_bn, religion,
+                    photo_url, signature_url, profile_status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')
             `, [
                 req.user.id, nidNumber, finalNameBn, finalNameEn, father_name_bn, father_name_en,
                 mother_name_bn, mother_name_en, spouse_name_bn, spouse_name_en,
@@ -353,7 +359,8 @@ router.post('/profile', upload.fields([{ name: 'photo', maxCount: 1 }, { name: '
                 permanent_division_id, permanent_district_id, permanent_upazila_id,
                 permanent_post_office, permanent_post_code, permanent_ward_no,
                 permanent_village_bn, permanent_village_en, permanent_road_no, permanent_house_no,
-                educational_qualification, occupation, occupation_bn, religion
+                educational_qualification, occupation, occupation_bn, religion,
+                photoUrl, signatureUrl
             ]);
             // Removed early res.json
         }
@@ -365,7 +372,11 @@ router.post('/profile', upload.fields([{ name: 'photo', maxCount: 1 }, { name: '
         );
         console.log("Success fully saved profile");
 
-        return res.json({ success: true, message: existing.length > 0 ? 'Profile updated successfully' : 'Profile created successfully' });
+        return res.json({
+            success: true,
+            message: existing.length > 0 ? 'Profile updated successfully' : 'Profile created successfully',
+            uploaded: { photo: photoUrl, signature: signatureUrl }
+        });
     } catch (error) {
         console.log("CATCH BLOCK HIT! Error is:");
         console.error(error);

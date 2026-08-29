@@ -1,5 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import LegacyPageHandoff from './components/LegacyPageHandoff.jsx';
+import RouteLoading from './components/RouteLoading.jsx';
 import LoginPage from './features/auth/LoginPage.jsx';
 import RegisterPage from './features/auth/RegisterPage.jsx';
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage.jsx';
@@ -12,20 +13,28 @@ import MarketPage from './features/market/MarketPage.jsx';
 import ProfilePage from './features/profile/ProfilePage.jsx';
 import { AdminGuard, CitizenGuard } from './routes/guards.jsx';
 
-const citizenLegacyRoutes = [
-  'todo.html', 'nid.html', 'passport.html', 'tax.html', 'health.html',
-  'water.html', 'land.html', 'agriculture.html', 'education.html',
-  'community.html', 'shop.html'
-];
-
-const adminLegacyRoutes = [
-  'reports.html', 'admin-nid.html', 'admin-passport.html',
-  'admin-health.html', 'admin-water.html'
-];
+const CommunityPage = lazy(() => import('./features/community/CommunityPage.jsx'));
+const AdmissionPage = lazy(() => import('./features/admission/AdmissionPage.jsx'));
+const ApplyPage = lazy(() => import('./features/admission/ApplyPage.jsx'));
+const AdminNidPage = lazy(() => import('./features/admin/AdminNidPage.jsx'));
+const AdminPassportPage = lazy(() => import('./features/admin/AdminPassportPage.jsx'));
+const AdminHealthPage = lazy(() => import('./features/admin/AdminHealthPage.jsx'));
+const AdminWaterPage = lazy(() => import('./features/admin/AdminWaterPage.jsx'));
+const AdminReportsPage = lazy(() => import('./features/admin/AdminReportsPage.jsx'));
+const AgriculturePage = lazy(() => import('./features/services/AgriculturePage.jsx'));
+const EducationPage = lazy(() => import('./features/services/EducationPage.jsx'));
+const HealthPage = lazy(() => import('./features/services/HealthPage.jsx'));
+const LandPage = lazy(() => import('./features/services/LandPage.jsx'));
+const NidPage = lazy(() => import('./features/services/NidPage.jsx'));
+const PassportPage = lazy(() => import('./features/services/PassportPage.jsx'));
+const ShopPage = lazy(() => import('./features/shop/ShopPage.jsx'));
+const TaxPage = lazy(() => import('./features/services/TaxPage.jsx'));
+const TodoPage = lazy(() => import('./features/todo/TodoPage.jsx'));
+const WaterPage = lazy(() => import('./features/services/WaterPage.jsx'));
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={<RouteLoading label="Loading NationX page…" />}><Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/index.html" element={<LoginPage />} />
       <Route path="/register.html" element={<RegisterPage />} />
@@ -38,19 +47,27 @@ export default function App() {
       <Route path="/events.html" element={<CitizenGuard><EventsPage /></CitizenGuard>} />
       <Route path="/contact.html" element={<CitizenGuard><ContactPage /></CitizenGuard>} />
       <Route path="/market.html" element={<CitizenGuard><MarketPage /></CitizenGuard>} />
+      <Route path="/todo.html" element={<CitizenGuard><TodoPage /></CitizenGuard>} />
+      <Route path="/community.html" element={<CitizenGuard><CommunityPage /></CitizenGuard>} />
+      <Route path="/shop.html" element={<CitizenGuard><ShopPage /></CitizenGuard>} />
+      <Route path="/health.html" element={<CitizenGuard><HealthPage /></CitizenGuard>} />
+      <Route path="/water.html" element={<CitizenGuard><WaterPage /></CitizenGuard>} />
+      <Route path="/tax.html" element={<CitizenGuard><TaxPage /></CitizenGuard>} />
+      <Route path="/education.html" element={<CitizenGuard><EducationPage /></CitizenGuard>} />
+      <Route path="/land.html" element={<CitizenGuard><LandPage /></CitizenGuard>} />
+      <Route path="/agriculture.html" element={<CitizenGuard><AgriculturePage /></CitizenGuard>} />
+      <Route path="/nid.html" element={<CitizenGuard><NidPage /></CitizenGuard>} />
+      <Route path="/passport.html" element={<CitizenGuard><PassportPage /></CitizenGuard>} />
 
-      {/* Public university/payment flows remain on the controlled legacy rollback path until their batch. */}
-      <Route path="/admission.html" element={<LegacyPageHandoff />} />
-      <Route path="/apply.html" element={<LegacyPageHandoff />} />
-
-      {citizenLegacyRoutes.map(path => (
-        <Route path={`/${path}`} element={<CitizenGuard><LegacyPageHandoff /></CitizenGuard>} key={path} />
-      ))}
-      {adminLegacyRoutes.map(path => (
-        <Route path={`/${path}`} element={<AdminGuard><LegacyPageHandoff /></AdminGuard>} key={path} />
-      ))}
+      <Route path="/admission.html" element={<AdmissionPage />} />
+      <Route path="/apply.html" element={<ApplyPage />} />
+      <Route path="/admin-nid.html" element={<AdminGuard><AdminNidPage /></AdminGuard>} />
+      <Route path="/admin-passport.html" element={<AdminGuard><AdminPassportPage /></AdminGuard>} />
+      <Route path="/admin-health.html" element={<AdminGuard><AdminHealthPage /></AdminGuard>} />
+      <Route path="/admin-water.html" element={<AdminGuard><AdminWaterPage /></AdminGuard>} />
+      <Route path="/reports.html" element={<AdminGuard><AdminReportsPage /></AdminGuard>} />
 
       <Route path="*" element={<Navigate to="/index.html" replace />} />
-    </Routes>
+    </Routes></Suspense>
   );
 }

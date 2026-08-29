@@ -6,6 +6,8 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import App from './App.jsx';
 import './styles/react-workflow.css';
 import './styles/low-risk-pages.css';
+import './styles/batch-one-pages.css';
+import './styles/service-pages.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
