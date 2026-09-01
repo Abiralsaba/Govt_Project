@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NationX — Feature Documentation v2.0 (AI-Enhanced)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-dark: #006a4e;
+            --green-light: #10b981;
+            --red: #f42a41;
+            --gold: #d97706;
+            --bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent-bg: #f0fdf4;
+            --section-bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+            font-size: 11pt;
+        }
+
+        @media print {
+            body { font-size: 10pt; line-height: 1.6; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+            @page { margin: 18mm 15mm; size: A4; }
+            .cover-page { height: 100vh; }
+        }
+
+        /* Print prompt banner */
+        .print-banner {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: linear-gradient(135deg, var(--green-dark), #004d3a);
+            color: white; text-align: center;
+            padding: 14px 20px; z-index: 1000;
+            font-size: 14px; font-weight: 500;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        }
+        .print-banner button {
+            background: white; color: var(--green-dark);
+            border: none; padding: 8px 24px; border-radius: 6px;
+            font-weight: 700; cursor: pointer; margin-left: 15px;
+            font-size: 14px; transition: transform 0.2s;
+        }
+        .print-banner button:hover { transform: scale(1.05); }
+
+        .content { max-width: 800px; margin: 0 auto; padding: 70px 40px 40px; }
+
+        /* Cover Page */
+        .cover-page {
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; min-height: 90vh;
+            padding: 60px 40px;
+        }
+        .cover-flag {
+            width: 80px; height: 50px;
+            background: var(--green-dark);
+            border-radius: 4px; position: relative;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,106,78,0.3);
+        }
+        .cover-flag::after {
+            content: ''; position: absolute;
+            width: 22px; height: 22px;
+            background: var(--red); border-radius: 50%;
+            top: 50%; left: 45%; transform: translate(-50%, -50%);
+        }
+        .cover-title {
+            font-size: 42pt; font-weight: 900;
+            color: var(--green-dark);
+            letter-spacing: -1px; margin-bottom: 8px;
+        }
+        .cover-subtitle {
+            font-size: 14pt; font-weight: 400;
+            color: var(--text-muted); font-style: italic;
+            margin-bottom: 40px;
+        }
+        .cover-divider {
+            width: 60px; height: 4px;
+            background: linear-gradient(90deg, var(--green-dark), var(--red));
+            border-radius: 2px; margin-bottom: 40px;
+        }
+        .cover-meta {
+            font-size: 10pt; color: var(--text-muted);
+            line-height: 2;
+        }
+        .cover-meta strong { color: var(--text); }
+        .cover-badge {
+            display: inline-block; margin-top: 30px;
+            background: var(--accent-bg);
+            border: 1px solid #bbf7d0;
+            padding: 10px 24px; border-radius: 8px;
+            font-size: 10pt; color: var(--green-dark);
+            font-weight: 600;
+        }
+
+        /* Section Headers */
+        h1 {
+            font-size: 22pt; font-weight: 800;
+            color: var(--green-dark); margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--green-dark);
+        }
+        h2 {
+            font-size: 15pt; font-weight: 700;
+            color: var(--text); margin: 30px 0 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        h2 .emoji { font-size: 18pt; }
+        h3 {
+            font-size: 12pt; font-weight: 600;
+            color: var(--green-dark); margin: 18px 0 8px;
+        }
+
+        p { margin-bottom: 10px; }
+
+        /* Problem-Solution Boxes */
+        .problem-box {
+            background: #fef2f2; border-left: 4px solid var(--red);
+            padding: 14px 18px; border-radius: 0 8px 8px 0;
+            margin-bottom: 14px; font-size: 10pt;
+        }
+        .problem-box strong { color: #991b1b; }
+
+        .solution-box {
+            background: var(--accent-bg); border-left: 4px solid var(--green-light);
+            padding: 14px 18px; border-radius: 0 8px 8px 0;
+            margin-bottom: 14px;
+        }
+
+        .impact-box {
+            background: #fffbeb; border-left: 4px solid var(--gold);
+            padding: 12px 18px; border-radius: 0 8px 8px 0;
+            margin-bottom: 20px; font-style: italic;
+            font-size: 10pt; color: #92400e;
+        }
+
+        /* Feature Lists */
+        .feature-list {
+            list-style: none; padding: 0; margin: 0 0 14px 0;
+        }
+        .feature-list li {
+            padding: 5px 0 5px 22px;
+            position: relative; font-size: 10.5pt;
+        }
+        .feature-list li::before {
+            content: '✓'; position: absolute; left: 0;
+            color: var(--green-light); font-weight: 800;
+        }
+        .feature-list li strong { color: var(--text); }
+
+        /* Sub-list (indented) */
+        .sub-list {
+            list-style: none; padding: 0; margin: 4px 0 4px 20px;
+        }
+        .sub-list li {
+            padding: 2px 0 2px 16px; position: relative;
+            font-size: 10pt; color: var(--text-muted);
+        }
+        .sub-list li::before {
+            content: '→'; position: absolute; left: 0;
+            color: var(--green-dark); font-weight: 600;
+        }
+
+        /* Tables */
+        table {
+            width: 100%; border-collapse: collapse;
+            margin: 14px 0 20px; font-size: 10pt;
+        }
+        th {
+            background: var(--green-dark); color: white;
+            padding: 10px 14px; text-align: left;
+            font-weight: 600; font-size: 9.5pt;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        td {
+            padding: 9px 14px; border-bottom: 1px solid var(--border);
+        }
+        tr:nth-child(even) td { background: var(--section-bg); }
+        td strong { color: var(--green-dark); }
+
+        /* Architecture Diagram */
+        .arch-box {
+            background: #1e293b; color: #e2e8f0;
+            padding: 24px; border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt; line-height: 1.5;
+            margin: 16px 0 20px;
+            white-space: pre; overflow-x: auto;
+        }
+        .arch-highlight { color: #4ade80; font-weight: 700; }
+        .arch-dim { color: #94a3b8; }
+
+        /* Module Cards Grid */
+        .module-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin: 16px 0 24px;
+        }
+        .module-card {
+            background: var(--section-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 14px;
+            font-size: 10pt;
+        }
+        .module-card .module-icon { font-size: 16pt; margin-bottom: 4px; }
+        .module-card .module-name { font-weight: 700; color: var(--green-dark); }
+        .module-card .module-desc { color: var(--text-muted); font-size: 9pt; margin-top: 2px; }
+
+        /* Callout / Quote */
+        .callout {
+            background: linear-gradient(135deg, #006a4e08, #f42a4108);
+            border: 2px solid var(--green-dark);
+            border-radius: 10px; padding: 20px 24px;
+            text-align: center; margin: 30px 0;
+            font-size: 13pt; font-weight: 700;
+            color: var(--green-dark);
+        }
+
+        /* Separator */
+        hr {
+            border: none; height: 1px;
+            background: var(--border); margin: 30px 0;
+        }
+
+        /* Footer */
+        .doc-footer {
+            text-align: center; padding: 30px 0 10px;
+            color: var(--text-muted); font-size: 9pt;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Print Banner -->
+<div class="print-banner no-print">
+    📄 To save as PDF → press <strong>⌘ + P</strong> (Mac) or <strong>Ctrl + P</strong> (Windows) → choose "Save as PDF"
+    <button onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="content">
+
+<!-- ==================== COVER PAGE ==================== -->
+<div class="cover-page">
+    <div class="cover-flag"></div>
+    <div class="cover-title">NationX</div>
+    <div class="cover-subtitle">AI-Enhanced Central Government Digital Services Platform</div>
+    <div class="cover-divider"></div>
+    <div class="cover-subtitle" style="font-size:12pt; margin-bottom:30px;">
+        A Unified Digital Gateway for the People's Republic of Bangladesh
+    </div>
+    <div class="cover-meta">
+        <strong>Document Type:</strong> Feature Specification & Project Overview<br>
+        <strong>Version:</strong> 2.0 (AI-Enhanced Edition)<br>
+        <strong>Date:</strong> July 2026<br>
+        <strong>Status:</strong> Ready for Development<br>
+        <strong>Tech Stack:</strong> Node.js · Express · MySQL · SSLCommerz · AI/ML (Python · FastAPI · Neo4j · Playwright)
+    </div>
+    <div class="cover-badge">🏗️ 18 Modules · 160+ Tables · 180+ API Endpoints · Full-Stack + AI-Powered Platform</div>
+    <div class="cover-badge" style="margin-top:10px; background:#eff6ff; border-color:#93c5fd; color:#1e40af;">
+        🤖 3 AI-Powered Modules: NagrikAI Agent · DeepTrace Anti-Corruption · Kotha Voice Accessibility
+    </div>
+</div>
+
+<!-- ==================== THE PROBLEM ==================== -->
+<div class="page-break"></div>
+
+<h1>The Problem</h1>
+<p>Bangladesh's government services are <strong>fragmented, paper-heavy, and corruption-prone</strong>. Citizens face:</p>
+
+<table>
+    <thead>
+        <tr><th>Problem</th><th>Reality Today</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><strong>Scattered Offices</strong></td><td>A citizen visits 5–10 different offices for NID, passport, tax, land, health — each with its own process</td></tr>
+        <tr><td><strong>Massive Queues</strong></td><td>Millions waste full working days standing in line at government offices</td></tr>
+        <tr><td><strong>Paper Dependency</strong></td><td>Critical records (land deeds, NID, tax returns) exist only on paper — lost in floods, fires, or corruption</td></tr>
+        <tr><td><strong>Middleman Culture</strong></td><td>Dalals (brokers) charge BDT 2,000–50,000 to "speed up" services that should be free</td></tr>
+        <tr><td><strong>Zero Transparency</strong></td><td>Citizens have no way to track application status — "come back next week" is the standard answer</td></tr>
+        <tr><td><strong>Data Silos</strong></td><td>NID office can't verify land records; tax office can't see education data — nothing is connected</td></tr>
+        <tr><td><strong>Rural Exclusion</strong></td><td>65% of BD's population is rural — they must travel to divisional cities for basic services</td></tr>
+    </tbody>
+</table>
+
+<div class="callout">
+    NationX solves this by building ONE platform where every citizen service — from birth to tax — lives under a single login, with real-time tracking, online payment, and zero middlemen.
+</div>
+
+<!-- ==================== WHAT WE'RE BUILDING ==================== -->
+<h1>What We're Building</h1>
+<p>A <strong>full-stack government services super-app</strong> with <strong>15 citizen-facing modules</strong> + <strong>admin panel</strong>:</p>
+
+<div class="module-grid">
+    <div class="module-card avoid-break">
+        <div class="module-icon">🪪</div>
+        <div class="module-name">Identity</div>
+        <div class="module-desc">NID + Passport Services</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">💰</div>
+        <div class="module-name">Finance</div>
+        <div class="module-desc">Tax (Income + Land) + Payments</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">🏞️</div>
+        <div class="module-name">Land</div>
+        <div class="module-desc">Records + Mutation + Tax</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">🎓</div>
+        <div class="module-name">Education</div>
+        <div class="module-desc">Exam Results + Admissions + Stipends</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">🏥</div>
+        <div class="module-name">Health</div>
+        <div class="module-desc">Appointments + Prescriptions + Facilities</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">💧</div>
+        <div class="module-name">Water & Utilities</div>
+        <div class="module-desc">WASA Bill + Connection + Complaints</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">🌾</div>
+        <div class="module-name">Agriculture</div>
+        <div class="module-desc">Weather + Crop Advisory + Prices</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">🛍️</div>
+        <div class="module-name">E-Commerce</div>
+        <div class="module-desc">Government Shop (verified products)</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">👥</div>
+        <div class="module-name">Community</div>
+        <div class="module-desc">Social Groups + Posts + Moderation</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">📋</div>
+        <div class="module-name">Reports</div>
+        <div class="module-desc">Analytics + Dashboards</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">📰</div>
+        <div class="module-name">Notices</div>
+        <div class="module-desc">Government Circulars + Events</div>
+    </div>
+    <div class="module-card avoid-break">
+        <div class="module-icon">📞</div>
+        <div class="module-name">Contact</div>
+        <div class="module-desc">Help Desk + Feedback</div>
+    </div>
+</div>
+
+<h3 style="color: #1e40af; margin: 24px 0 6px; font-size: 11pt; text-transform: uppercase; letter-spacing: 1px;">🤖 AI-Powered Intelligence Layer</h3>
+<p style="margin-bottom: 14px; font-size: 10pt; color: var(--text-muted);">Three game-changing AI modules that transform NationX from a digital services platform into an <strong>intelligent governance engine</strong>:</p>
+
+<div class="module-grid">
+    <div class="module-card avoid-break" style="border: 2px solid #3b82f6; background: #eff6ff;">
+        <div class="module-icon">🤖</div>
+        <div class="module-name" style="color: #1e40af;">NagrikAI Agent</div>
+        <div class="module-desc">Autonomous AI agent that navigates government portals, fills forms, and submits applications on behalf of citizens</div>
+    </div>
+    <div class="module-card avoid-break" style="border: 2px solid #ef4444; background: #fef2f2;">
+        <div class="module-icon">🔍</div>
+        <div class="module-name" style="color: #991b1b;">DeepTrace</div>
+        <div class="module-desc">Anti-corruption intelligence engine — knowledge graph + anomaly detection on public records</div>
+    </div>
+    <div class="module-card avoid-break" style="border: 2px solid #8b5cf6; background: #f5f3ff;">
+        <div class="module-icon">🗣️</div>
+        <div class="module-name" style="color: #6d28d9;">Kotha (কথা)</div>
+        <div class="module-desc">Voice-first accessibility layer — lets illiterate citizens use the entire platform through Bangla voice commands</div>
+    </div>
+</div>
+
+<!-- ==================== FEATURES ==================== -->
+<div class="page-break"></div>
+<h1>Core Features — Module by Module</h1>
+
+<!-- Module 1 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🔐</span> 1. Authentication & Identity Layer</h2>
+    <div class="problem-box"><strong>Problem:</strong> Citizens have no unified digital identity. Every office asks for the same documents repeatedly.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>NID-based registration</strong> — citizens register once using National ID, mobile number, and address</li>
+            <li><strong>JWT token authentication</strong> — secure, stateless sessions across all modules</li>
+            <li><strong>Forgot Password with 2-Step Email OTP</strong> — no need to visit an office to reset credentials</li>
+            <li><strong>Role-based access</strong> — citizen vs. admin, enforced at middleware level</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 One registration → access to ALL government services. No more filling the same form 10 times.</div>
+</div>
+
+<!-- Module 2 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🪪</span> 2. National ID (NID) Management</h2>
+    <div class="problem-box"><strong>Problem:</strong> Getting/correcting NID information requires visiting the Election Commission office, waiting hours, and often paying bribes to dalals.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Digital NID profile view</strong> — see your NID data (name, DOB, parents, address, photo) online</li>
+            <li><strong>NID correction application</strong> — submit name/address/DOB corrections digitally</li>
+            <li><strong>NID verification API</strong> — other modules can instantly verify a citizen's identity</li>
+            <li><strong>Admin review & approval workflow</strong> — structured processing replaces arbitrary decisions</li>
+            <li><strong>Tracking system</strong> — real-time status updates on every application</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 NID corrections that took 3 months and BDT 5,000 in bribes → done in days, for free.</div>
+</div>
+
+<!-- Module 3 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🛂</span> 3. Passport Services</h2>
+    <div class="problem-box"><strong>Problem:</strong> Passport applications involve visiting regional passport offices, standing in 4 different queues, and paying unofficial "speed money."</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Online passport application</strong> — fill form, upload photo, submit from home</li>
+            <li><strong>Application tracking</strong> — track status: Submitted → Processing → Approved → Ready</li>
+            <li><strong>Fee payment via SSLCommerz</strong> — no cash handling, no corruption</li>
+            <li><strong>Renewal system</strong> — apply for renewal without revisiting the office</li>
+            <li><strong>Document upload</strong> — supporting documents attached digitally</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Passport processing without leaving home. Transparent tracking eliminates "come next week" culture.</div>
+</div>
+
+<!-- Module 4 -->
+<div class="avoid-break">
+    <h2><span class="emoji">💰</span> 4. Tax Management (NBR)</h2>
+    <div class="problem-box"><strong>Problem:</strong> Filing taxes in BD is so complex that 95% of eligible citizens don't file. Those who do pay accountants BDT 5,000–20,000 for a simple return.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Guided tax filing</strong> — step-by-step form for income, assets, and deductions</li>
+            <li><strong>Auto-calculation</strong> — system computes tax liability based on BD tax slabs</li>
+            <li><strong>TIN management</strong> — register/view Tax Identification Number online</li>
+            <li><strong>Tax payment via SSLCommerz</strong> — pay directly, get instant receipt</li>
+            <li><strong>Tax return history</strong> — view all past filings and payments</li>
+            <li><strong>Certificate generation</strong> — tax clearance certificates generated automatically</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 A farmer earning BDT 4 lakh/year can file taxes in 10 minutes without an accountant.</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Module 5 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🏞️</span> 5. Land Ministry Services</h2>
+    <div class="problem-box"><strong>Problem:</strong> Land disputes are Bangladesh's #1 civil court backlog — 3.7 million cases pending. Mutation takes 6 months to 2 years. Fake documents are rampant.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Digital land records</strong> — register and view all parcels (khatian, dag, mouza, deed)</li>
+            <li><strong>Online mutation (Namjari) application</strong> — transfer ownership digitally
+                <ul class="sub-list">
+                    <li>Seller NID verification</li>
+                    <li>Buyer NID verification</li>
+                    <li>Ownership proof verification</li>
+                    <li>Tracking number generated (LMT-2026-XXXX)</li>
+                </ul>
+            </li>
+            <li><strong>Automatic ownership transfer via DB trigger</strong> — on admin approval: buyer gets record, seller's record deleted/reduced, zero manual steps</li>
+            <li><strong>Land Development Tax</strong> — calculate and pay online via SSLCommerz</li>
+            <li><strong>Cascading location system</strong> — Division → District → Upazila (all 8 divisions)</li>
+            <li><strong>Status tracking</strong> — check any application with tracking number</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Land mutation that took 2 years and BDT 50,000 in bribes → processed in weeks, with automatic ownership transfer.</div>
+</div>
+
+<!-- Module 6 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🎓</span> 6. Education Portal</h2>
+    <div class="problem-box"><strong>Problem:</strong> Checking results requires cybercafés. University admission involves traveling to each university. Stipend info is unreachable for rural students.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <h3>6A. Exam Results (JSC / SSC / HSC)</h3>
+        <ul class="feature-list">
+            <li><strong>Instant result lookup</strong> — enter exam type, year, roll → get full marksheet</li>
+            <li><strong>All 11 education boards</strong> supported with color-coded grade badges</li>
+            <li><strong>Print-ready result cards</strong> with Bengali UI</li>
+        </ul>
+        <h3>6B. University Admissions Portal</h3>
+        <ul class="feature-list">
+            <li><strong>Browse admissions</strong> — filter by type (Public/Private/Engineering/Medical)</li>
+            <li><strong>3-step wizard:</strong> HSC verification → Contact info → Online payment</li>
+            <li><strong>Eligibility engine</strong> — GPA, group, deadline, duplicate checks</li>
+            <li><strong>10 universities</strong> seeded: DU, BUET, DMC, JU, RU, CU, BAU, SUST, KU, CMC</li>
+        </ul>
+        <h3>6C. Stipends & Grants</h3>
+        <ul class="feature-list">
+            <li><strong>Browse scholarships</strong> — PM's Education Trust, Research Grants, etc.</li>
+            <li><strong>Online application</strong> — academic info, financial assessment, bank details</li>
+            <li><strong>Status tracking</strong> — Draft → Submitted → Under Review → Approved/Rejected</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 A village student in Rangpur can check results, apply to DU, and submit a stipend application — all from a phone.</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Module 7 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🏥</span> 7. Health Services</h2>
+    <div class="problem-box"><strong>Problem:</strong> Government hospitals have no appointment system. Patients travel hours only to find the doctor absent. No centralized health records.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Doctor appointment booking</strong> — search by specialization, hospital, date</li>
+            <li><strong>Digital prescriptions</strong> — view past prescriptions online</li>
+            <li><strong>Health facility directory</strong> — find nearest government hospitals and clinics</li>
+            <li><strong>Medical record management</strong> — centralized health history per citizen</li>
+            <li><strong>Admin health dashboard</strong> — manage doctors, appointments, prescriptions</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Book a doctor appointment from home. Never lose a prescription again.</div>
+</div>
+
+<!-- Module 8 -->
+<div class="avoid-break">
+    <h2><span class="emoji">💧</span> 8. Water & Utilities (WASA)</h2>
+    <div class="problem-box"><strong>Problem:</strong> WASA bill payment requires visiting offices. New connections take months. Complaints go unresolved.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Online bill view & payment</strong> — see WASA bill, pay via SSLCommerz</li>
+            <li><strong>New connection application</strong> — apply for water connection digitally</li>
+            <li><strong>Complaint system</strong> — file and track water service complaints</li>
+            <li><strong>Usage analytics</strong> — view water consumption history</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Pay water bill in 30 seconds. File a complaint and actually track its resolution.</div>
+</div>
+
+<!-- Module 9 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🌾</span> 9. Agriculture Services</h2>
+    <div class="problem-box"><strong>Problem:</strong> 40% of BD's workforce is in agriculture, yet farmers have zero digital support for weather, crop prices, or pest management.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Real-time weather data</strong> — via Open-Meteo API, localized by district</li>
+            <li><strong>Solar radiation data</strong> — via NASA POWER API for crop planning</li>
+            <li><strong>Crop advisory system</strong> — seasonal guidance based on location</li>
+            <li><strong>Market price dashboard</strong> — current prices for rice, wheat, jute, vegetables</li>
+            <li><strong>Agricultural alerts</strong> — pest warnings, flood advisories</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 A farmer in Sylhet gets personalized crop advisory and market prices on their phone.</div>
+</div>
+
+<!-- Module 10 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🛍️</span> 10. Government E-Commerce</h2>
+    <div class="problem-box"><strong>Problem:</strong> Government-approved products have no official online marketplace. Counterfeit products are rampant.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Product catalog</strong> — browse government-verified products</li>
+            <li><strong>Cart & checkout</strong> — add to cart, proceed to payment</li>
+            <li><strong>SSLCommerz integration</strong> — secure online payment</li>
+            <li><strong>Order tracking</strong> — track delivery status</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Buy genuine government products online with guaranteed quality and transparent pricing.</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Module 11 -->
+<div class="avoid-break">
+    <h2><span class="emoji">👥</span> 11. Community Platform</h2>
+    <div class="problem-box"><strong>Problem:</strong> Citizens have no official platform to discuss local issues or engage with government programs.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Community groups</strong> — create and join topic-based groups</li>
+            <li><strong>Social feed</strong> — post content, images; like and comment</li>
+            <li><strong>Admin moderation</strong> — all groups and posts require approval before going public</li>
+            <li><strong>Edit safeguard</strong> — edited posts reset to "pending" to prevent abuse</li>
+            <li><strong>Group analytics</strong> — engagement scores, member stats, activity tracking</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Official, moderated space for community organizing — replaces unregulated Facebook groups.</div>
+</div>
+
+<!-- Module 12 -->
+<div class="avoid-break">
+    <h2><span class="emoji">📋</span> 12. Reports & Analytics</h2>
+    <div class="problem-box"><strong>Problem:</strong> Government ministries have no real-time visibility into service usage or operational bottlenecks.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Land analytics</strong> — geographic distribution, valuations by division/district</li>
+            <li><strong>Education analytics</strong> — pass rates, board comparisons, institution rankings</li>
+            <li><strong>Community analytics</strong> — engagement scores, post activity, member growth</li>
+            <li><strong>Cross-module dashboards</strong> — unified analytics across all services</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Data-driven governance. Ministers see real numbers, not guesses.</div>
+</div>
+
+<!-- Module 13 -->
+<div class="avoid-break">
+    <h2><span class="emoji">📰</span> 13. Notices & Events</h2>
+    <div class="problem-box"><strong>Problem:</strong> Government circulars are published in Gazette — nobody reads them. Event information doesn't reach citizens.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Digital notice board</strong> — circulars, policy updates, deadlines</li>
+            <li><strong>Event management</strong> — government events, training programs, job fairs</li>
+            <li><strong>Category-based filtering</strong> — filter by ministry, type, urgency</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Every citizen gets relevant government updates — no more missing deadlines.</div>
+</div>
+
+<!-- Module 14 -->
+<div class="avoid-break">
+    <h2><span class="emoji">📞</span> 14. Contact & Help Desk</h2>
+    <div class="problem-box"><strong>Problem:</strong> No centralized help system. Citizens don't know which office to contact for which service.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Unified contact directory</strong> — all ministry contacts in one place</li>
+            <li><strong>Feedback system</strong> — submit feedback/complaints about any service</li>
+            <li><strong>Help request tracking</strong> — track resolution of submitted issues</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 One place to reach any government office. Feedback actually gets recorded.</div>
+</div>
+
+<!-- Module 15 -->
+<div class="avoid-break">
+    <h2><span class="emoji">🖥️</span> 15. Admin Panel</h2>
+    <div class="problem-box"><strong>Problem:</strong> Government officers use paper registers. No audit trail. No accountability.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong>
+        <ul class="feature-list">
+            <li><strong>Unified admin dashboard</strong> — manage all services from one panel</li>
+            <li><strong>Application processing</strong> — approve/reject NID, passport, mutations, stipends</li>
+            <li><strong>Content moderation</strong> — approve community groups and posts</li>
+            <li><strong>User management</strong> — view all registered citizens</li>
+            <li><strong>Admin action logging</strong> — full audit trail of every decision</li>
+        </ul>
+    </div>
+    <div class="impact-box">💡 Government officers process applications digitally with full accountability. Every action is logged.</div>
+</div>
+
+<!-- ==================== AI-POWERED MODULES ==================== -->
+<div class="page-break"></div>
+<h1 style="color: #1e40af; border-bottom-color: #1e40af;">AI-Powered Intelligence Layer</h1>
+<p>Three breakthrough AI modules that elevate NationX from a digital services platform to an <strong>intelligent, autonomous, and inclusive governance engine</strong>. These modules use AI/ML as integrated features — the core engineering is in the system architecture.</p>
+
+<!-- Module 16: NagrikAI -->
+<div class="avoid-break">
+    <h2><span class="emoji">🤖</span> 16. NagrikAI — Autonomous Government Service Agent</h2>
+    <div class="problem-box"><strong>Problem:</strong> Despite NationX digitizing services, many citizens still struggle with complex multi-step online forms, document requirements, and cross-module workflows. Illiterate and elderly citizens abandon applications midway. Citizens still pay "dalals" (brokers) ৳2,000–20,000 to navigate the system for them — even when the service is free.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong> An autonomous AI agent that acts as a citizen's digital representative — it understands what service you need, gathers your information through simple conversation, navigates the NationX modules automatically, fills forms, uploads documents, submits applications, and tracks status — all while you watch.
+        <ul class="feature-list">
+            <li><strong>Intent Understanding Engine</strong> — citizen types "আমার পাসপোর্ট নবায়ন করতে চাই" (I need to renew my passport) → agent identifies: service = passport renewal, required docs = NID + old passport + photo, required modules = Identity + Passport
+                <ul class="sub-list">
+                    <li>Fine-tuned Bangla NLP model (BanglaBERT) for intent classification</li>
+                    <li>Supports 50+ government service intents across all NationX modules</li>
+                    <li>Handles Bangla, English, and mixed (Banglish) input</li>
+                </ul>
+            </li>
+            <li><strong>Government Procedure Knowledge Graph</strong> — a Neo4j graph database containing every NationX service workflow: which forms to fill, what documents are needed, what depends on what, fee amounts, and processing times
+                <ul class="sub-list">
+                    <li>1,200+ service nodes with requirement edges</li>
+                    <li>Dependency mapping: "passport renewal requires valid NID → check NID module first"</li>
+                    <li>Auto-updated when NationX modules change</li>
+                </ul>
+            </li>
+            <li><strong>Autonomous Form-Filling Engine</strong> — the agent navigates NationX's own internal APIs to complete applications programmatically
+                <ul class="sub-list">
+                    <li>Auto-fills forms from citizen's NID profile (no re-entry)</li>
+                    <li>Validates all fields before submission</li>
+                    <li>Handles document upload (auto-resize photos to spec, format conversion)</li>
+                    <li>Initiates SSLCommerz payment when fees are required</li>
+                </ul>
+            </li>
+            <li><strong>Multi-Step Workflow Orchestrator</strong> — handles complex cross-module workflows as a persistent state machine
+                <ul class="sub-list">
+                    <li>Example: Land mutation requires NID verification → ownership proof → fee payment → admin review</li>
+                    <li>Checkpoint/resume: picks up where it left off if interrupted</li>
+                    <li>Human-in-the-loop: pauses for citizen confirmation before final submission</li>
+                    <li>Full audit trail of every action</li>
+                </ul>
+            </li>
+            <li><strong>Real-Time Agent Activity Stream</strong> — citizen watches the agent work step-by-step in a live feed
+                <ul class="sub-list">
+                    <li>"✓ Verified your NID... ✓ Filling passport form... ✓ Uploading photo... ✓ Submitted!"</li>
+                    <li>Transparent: citizen sees everything the agent does</li>
+                    <li>Can pause/cancel at any step</li>
+                </ul>
+            </li>
+            <li><strong>Status Tracking & Notifications</strong> — after submission, agent monitors all active applications and pushes status updates via SMS/push notification</li>
+        </ul>
+    </div>
+
+    <h3>Technical Implementation</h3>
+    <table>
+        <thead><tr><th>Component</th><th>Technology</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Intent Engine</strong></td><td>Fine-tuned BanglaBERT (Hugging Face)</td><td>Classify citizen requests into 50+ service categories</td></tr>
+            <tr><td><strong>Knowledge Graph</strong></td><td>Neo4j graph database</td><td>Map all services, requirements, dependencies, fees</td></tr>
+            <tr><td><strong>Workflow Engine</strong></td><td>Custom state machine (Node.js)</td><td>Orchestrate multi-step, multi-module workflows</td></tr>
+            <tr><td><strong>Form Automation</strong></td><td>Internal NationX API calls</td><td>Programmatically fill and submit forms</td></tr>
+            <tr><td><strong>Document Pipeline</strong></td><td>Sharp (image processing) + Multer</td><td>Auto-resize, format, validate documents</td></tr>
+            <tr><td><strong>NLP Service</strong></td><td>Python FastAPI microservice</td><td>Bangla NLP inference endpoint</td></tr>
+            <tr><td><strong>Activity Stream</strong></td><td>WebSocket (Socket.io)</td><td>Real-time agent activity feed to citizen</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Architecture</h3>
+    <div class="arch-box"><span class="arch-highlight">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│                  CITIZEN CONVERSATION UI                      │</span>
+│  "আমার জন্ম নিবন্ধন সনদ দরকার" → Intent: birth_certificate │
+<span class="arch-highlight">└────────────────────────┬────────────────────────────────────┘</span>
+                         ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     BANGLA INTENT ENGINE (BanglaBERT)  │</span>
+│  → Service: birth_certificate          │
+│  → Module: identity                    │
+│  → Required: name, DOB, parents, NID   │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     KNOWLEDGE GRAPH (Neo4j)            │</span>
+│  birth_cert ──requires──→ NID          │
+│  birth_cert ──requires──→ parent_NID   │
+│  birth_cert ──fee──→ BDT 50           │
+│  birth_cert ──portal──→ bdris.gov.bd  │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     WORKFLOW ORCHESTRATOR              │</span>
+│  Step 1: Verify citizen NID ✓          │
+│  Step 2: Collect birth details ✓       │
+│  Step 3: Fill application form ✓       │
+│  Step 4: Upload documents ✓            │
+│  Step 5: Pay fee (SSLCommerz) ⏳       │
+│  Step 6: Submit → Track               │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     LIVE ACTIVITY STREAM (WebSocket)   │</span>
+│  "✓ NID যাচাই সম্পন্ন"                 │
+│  "✓ ফর্ম পূরণ হচ্ছে..."               │
+│  "✓ আবেদন জমা দেওয়া হয়েছে!"           │
+│  "📋 ট্র্যাকিং নম্বর: BC-2026-47291"  │
+<span class="arch-highlight">└────────────────────────────────────────┘</span></div>
+
+    <div class="impact-box">💡 A citizen says "আমার পাসপোর্ট নবায়ন করতে চাই" and watches NagrikAI complete the entire process in 3 minutes — a task that used to take 3 days and ৳5,000 in bribes. This is the death of the "dalal" system.</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Module 17: DeepTrace -->
+<div class="avoid-break">
+    <h2><span class="emoji">🔍</span> 17. DeepTrace — Anti-Corruption Intelligence Engine</h2>
+    <div class="problem-box"><strong>Problem:</strong> NationX generates millions of government transactions — land mutations, procurement, tax payments, appointments. Hidden within this data are patterns of corruption: fraudulent land transfers, rigged procurement, tax evasion networks, and bribery rings. Current auditing is manual, slow, and catches less than 1% of fraudulent activity.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong> An AI-powered intelligence engine that continuously analyzes all NationX transactions, builds a knowledge graph of entities (citizens, officials, companies, land parcels, contracts), and automatically detects suspicious patterns — surfacing corruption that would be invisible to human auditors.
+        <ul class="feature-list">
+            <li><strong>Multi-Source Data Ingestion Pipeline</strong> — ingests transaction data from ALL NationX modules into a unified analysis layer
+                <ul class="sub-list">
+                    <li>Land mutations, tax filings, passport applications, payments</li>
+                    <li>Admin actions (who approved what, when, how fast)</li>
+                    <li>External public data: company registry (RJSC), procurement (e-GP), election declarations</li>
+                    <li>Normalized entity extraction across Bangla/English records</li>
+                </ul>
+            </li>
+            <li><strong>Entity Resolution Engine</strong> — resolves that "মোঃ আবদুল করিম", "Md. Abdul Karim", and "M.A. Karim" are the same person across different modules
+                <ul class="sub-list">
+                    <li>NID-based deduplication (primary key)</li>
+                    <li>Fuzzy Bangla name matching (Jaro-Winkler + phonetic)</li>
+                    <li>Address normalization across divisions/districts</li>
+                    <li>Company-person relationship resolution</li>
+                </ul>
+            </li>
+            <li><strong>Corruption Knowledge Graph</strong> — a living Neo4j graph that maps relationships between all entities in the NationX ecosystem
+                <ul class="sub-list">
+                    <li>Nodes: Citizens, Officials, Companies, Land Parcels, Contracts, Bank Accounts</li>
+                    <li>Edges: owns, approved_by, transferred_to, paid_to, related_to</li>
+                    <li>Properties: amount, date, source module, verification status</li>
+                    <li>Updated in real-time as NationX transactions occur</li>
+                </ul>
+            </li>
+            <li><strong>Anomaly Detection Algorithms</strong> — 10+ pattern detectors that flag suspicious activity:
+                <ul class="sub-list">
+                    <li>🚩 <strong>Speed anomaly</strong>: Application approved in 2 hours when average is 14 days</li>
+                    <li>🚩 <strong>Concentration</strong>: One admin approving 80% of land mutations in a district</li>
+                    <li>🚩 <strong>Circular transfers</strong>: Land A→B→C→A within 6 months (money laundering indicator)</li>
+                    <li>🚩 <strong>Ghost citizens</strong>: NID profiles with no activity except high-value land transactions</li>
+                    <li>🚩 <strong>Price anomaly</strong>: Land sold at 10x below market rate (potential bribe/kickback)</li>
+                    <li>🚩 <strong>Network clustering</strong>: Group of officials approving each other's family members' applications</li>
+                    <li>🚩 <strong>Temporal spikes</strong>: Unusual surge in approvals before an official's transfer date</li>
+                </ul>
+            </li>
+            <li><strong>Evidence Chain Builder</strong> — when an anomaly is detected, auto-generates a verifiable evidence chain with clickable references to source transactions in NationX
+                <ul class="sub-list">
+                    <li>"Official X approved Land Mutation #LMT-2026-4821 in 3 hours (avg: 14 days)"</li>
+                    <li>"Buyer Y is Official X's brother-in-law (NID family linkage)"</li>
+                    <li>"Land valued at ৳80 lakh sold for ৳8 lakh (90% below market)"</li>
+                    <li>Each link traces back to actual NationX database records</li>
+                </ul>
+            </li>
+            <li><strong>Investigation Dashboard</strong> — interactive force-directed graph visualization for anti-corruption investigators
+                <ul class="sub-list">
+                    <li>Click any entity → see all connections</li>
+                    <li>Filter by time period, amount range, module, district</li>
+                    <li>Anomaly alert feed with severity scoring</li>
+                    <li>Export evidence reports as PDF</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <h3>Anomaly Detection Architecture</h3>
+    <div class="arch-box"><span class="arch-highlight">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│          NATIONX TRANSACTION STREAM (All Modules)            │</span>
+│  Land mutations · Tax payments · Passport approvals          │
+│  Admin actions · Payments · NID corrections                  │
+<span class="arch-highlight">└────────────────────────┬────────────────────────────────────┘</span>
+                         ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     ENTITY RESOLUTION ENGINE           │</span>
+│  NID dedup + Bangla fuzzy matching     │
+│  Company linkage + Address normalization│
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     KNOWLEDGE GRAPH (Neo4j)            │</span>
+│  500K+ nodes · 2M+ edges              │
+│  Citizens ↔ Officials ↔ Companies     │
+│  Land Parcels ↔ Transactions          │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     ANOMALY DETECTION ENGINE           │</span>
+│  10+ pattern detectors running         │
+│  continuously on the graph:            │
+│                                        │
+│  ⚡ Speed anomalies (Isolation Forest) │
+│  🔄 Circular transfers (cycle detect)  │
+│  📊 Concentration (statistical z-score)│
+│  👻 Ghost entities (activity analysis) │
+│  💰 Price anomalies (market comparison)│
+│  🕸️ Network clusters (community detect)│
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     INVESTIGATION DASHBOARD            │</span>
+│  Force-directed graph (D3.js)          │
+│  Anomaly feed · Evidence chains        │
+│  Export reports · Collaboration        │
+<span class="arch-highlight">└────────────────────────────────────────┘</span></div>
+
+    <h3>Technical Implementation</h3>
+    <table>
+        <thead><tr><th>Component</th><th>Technology</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Knowledge Graph</strong></td><td>Neo4j 5.x</td><td>Entity relationship graph with Cypher queries</td></tr>
+            <tr><td><strong>Entity Resolution</strong></td><td>Python (dedupe library + custom Bangla matching)</td><td>Cross-module entity deduplication</td></tr>
+            <tr><td><strong>Anomaly Detection</strong></td><td>scikit-learn (Isolation Forest, DBSCAN) + custom graph algorithms</td><td>Statistical + graph-based pattern detection</td></tr>
+            <tr><td><strong>Stream Processing</strong></td><td>Redis Streams</td><td>Real-time transaction ingestion from NationX modules</td></tr>
+            <tr><td><strong>Network Visualization</strong></td><td>D3.js force-directed graph</td><td>Interactive entity network explorer</td></tr>
+            <tr><td><strong>Evidence Builder</strong></td><td>Node.js service + PDF generation</td><td>Auto-generate verifiable evidence reports</td></tr>
+            <tr><td><strong>API Layer</strong></td><td>FastAPI (Python)</td><td>Graph queries, anomaly results, investigation endpoints</td></tr>
+        </tbody>
+    </table>
+
+    <div class="impact-box">💡 DeepTrace turns NationX's own transaction data into Bangladesh's most powerful anti-corruption weapon. Every fraudulent land transfer, every suspicious approval, every hidden network — surfaced automatically with verifiable evidence. After the 2024 revolution's call for accountability, this is the technical answer.</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Module 18: Kotha -->
+<div class="avoid-break">
+    <h2><span class="emoji">🗣️</span> 18. Kotha (কথা) — Voice-First Accessibility Layer</h2>
+    <div class="problem-box"><strong>Problem:</strong> 40+ million Bangladeshis are illiterate. Even with NationX fully digitized, they cannot read forms, navigate menus, or type inputs. They are permanently excluded from digital government — forced to depend on literate family members or pay brokers. Additionally, elderly and visually impaired citizens face similar barriers.</div>
+    <div class="solution-box">
+        <strong>What we build:</strong> A voice-first accessibility layer that wraps the entire NationX platform in a Bangla conversational interface. Citizens speak naturally, and Kotha navigates NationX for them — reading screens, filling forms, making payments, and confirming actions — all through voice.
+        <ul class="feature-list">
+            <li><strong>Bangla Speech Recognition (ASR)</strong> — on-device and cloud-based Bangla speech-to-text
+                <ul class="sub-list">
+                    <li>Fine-tuned Whisper model for Bangla (including regional dialects: Sylheti, Chittagonian, Noakhali)</li>
+                    <li>Handles noisy environments (markets, fields, busy roads)</li>
+                    <li>Number/date extraction: "উনিশশো পঁচানব্বই" → 1995</li>
+                    <li>On-device lightweight model for offline core functionality</li>
+                </ul>
+            </li>
+            <li><strong>Natural Bangla Text-to-Speech (TTS)</strong> — natural-sounding Bangla voice responses
+                <ul class="sub-list">
+                    <li>Multiple voice options (male/female)</li>
+                    <li>Proper Bangla pronunciation (not transliteration-based)</li>
+                    <li>Contextual emphasis and pacing for readability</li>
+                </ul>
+            </li>
+            <li><strong>Conversational Navigation Engine</strong> — converts NationX's visual UI into step-by-step voice dialogues
+                <ul class="sub-list">
+                    <li>Each NationX module has a voice dialogue template</li>
+                    <li>Example: Passport module → "আপনি কি নতুন পাসপোর্ট চান নাকি নবায়ন? (New passport or renewal?)"</li>
+                    <li>Confirmation at every step: "আপনার নাম মোঃ রহিম, জন্ম তারিখ ১৫ মার্চ ১৯৯৫। ঠিক আছে? (Confirm?)"</li>
+                    <li>Error handling in voice: "দুঃখিত, আমি বুঝতে পারিনি। আবার বলুন। (Sorry, didn't understand. Please repeat.)"</li>
+                </ul>
+            </li>
+            <li><strong>Screen Reader Integration</strong> — reads any NationX page aloud with context
+                <ul class="sub-list">
+                    <li>"আপনার ৩টি আবেদন চলমান আছে। প্রথমটি পাসপোর্ট, অবস্থা: প্রক্রিয়াধীন।"</li>
+                    <li>Reads tables, forms, and status updates in natural Bangla</li>
+                    <li>Summarizes complex pages into simple spoken language</li>
+                </ul>
+            </li>
+            <li><strong>Voice Command System</strong> — navigate the platform with Bangla commands:
+                <ul class="sub-list">
+                    <li>"আমার আবেদনের অবস্থা কী?" → checks all application statuses</li>
+                    <li>"জমির খাজনা দিতে চাই" → navigates to Land Tax module</li>
+                    <li>"ডাক্তারের সময় নিতে চাই" → opens Health appointment booking</li>
+                    <li>"পাশের পৃষ্ঠা" / "আগের পৃষ্ঠা" → page navigation</li>
+                </ul>
+            </li>
+            <li><strong>OTP & Payment Voice Assistance</strong> — critical for completing transactions:
+                <ul class="sub-list">
+                    <li>Reads incoming OTP aloud: "আপনার কোড হলো ৫ ৭ ৩ ২ ১ ৯"</li>
+                    <li>Guides through SSLCommerz payment by voice</li>
+                    <li>Confirms payment amount before proceeding</li>
+                </ul>
+            </li>
+            <li><strong>Accessibility Dashboard (Admin)</strong> — analytics on voice usage:
+                <ul class="sub-list">
+                    <li>Track voice vs. visual usage per module</li>
+                    <li>Most common voice queries (identify gaps)</li>
+                    <li>Regional dialect accuracy metrics</li>
+                    <li>Failure analysis (where does voice navigation fail?)</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <h3>Voice Interaction Architecture</h3>
+    <div class="arch-box"><span class="arch-highlight">┌─────────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│                    CITIZEN (Voice Input)                      │</span>
+│  🎤 "আমার জমির খাজনা কত?"                                   │
+│  (How much is my land tax?)                                  │
+<span class="arch-highlight">└────────────────────────┬────────────────────────────────────┘</span>
+                         ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     BANGLA ASR (Whisper fine-tuned)     │</span>
+│  Audio → "আমার জমির খাজনা কত"          │
+│  Confidence: 94%                        │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     INTENT + ENTITY EXTRACTION         │</span>
+│  Intent: check_land_tax                │
+│  Entities: {owner: current_user}       │
+│  Module: Land Ministry                 │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     NATIONX API EXECUTION              │</span>
+│  GET /api/land/tax?nid={user_nid}      │
+│  Response: {tax_due: 1250, parcel: 3}  │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     RESPONSE GENERATOR                 │</span>
+│  "আপনার ৩টি জমির মোট খাজনা            │
+│   ১,২৫০ টাকা। পরিশোধ করতে চান?"        │
+<span class="arch-highlight">└────────────────┬───────────────────────┘</span>
+                 ▼
+<span class="arch-highlight">┌────────────────────────────────────────┐</span>
+<span class="arch-highlight">│     BANGLA TTS (Neural Voice)          │</span>
+│  🔊 Speaks response naturally          │
+<span class="arch-highlight">└────────────────────────────────────────┘</span></div>
+
+    <h3>Technical Implementation</h3>
+    <table>
+        <thead><tr><th>Component</th><th>Technology</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Speech-to-Text</strong></td><td>OpenAI Whisper (fine-tuned for Bangla)</td><td>Convert citizen's voice to text</td></tr>
+            <tr><td><strong>Text-to-Speech</strong></td><td>Coqui TTS / Google Cloud TTS</td><td>Natural Bangla voice responses</td></tr>
+            <tr><td><strong>Intent Classification</strong></td><td>BanglaBERT (shared with NagrikAI)</td><td>Understand what citizen wants</td></tr>
+            <tr><td><strong>Dialogue Manager</strong></td><td>Custom state machine (Node.js)</td><td>Multi-turn conversation flow per module</td></tr>
+            <tr><td><strong>Voice UI Widget</strong></td><td>Web Speech API + custom JS</td><td>Floating mic button on all NationX pages</td></tr>
+            <tr><td><strong>On-Device ASR</strong></td><td>Whisper-tiny (ONNX runtime)</td><td>Offline speech recognition for low-connectivity areas</td></tr>
+            <tr><td><strong>Analytics</strong></td><td>TimescaleDB</td><td>Voice usage metrics and dialect accuracy tracking</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Supported Voice Workflows (All NationX Modules)</h3>
+    <table>
+        <thead><tr><th>Voice Command (Bangla)</th><th>Action</th><th>Module</th></tr></thead>
+        <tbody>
+            <tr><td>"আমার এনআইডি দেখাও"</td><td>Display NID profile</td><td>Identity</td></tr>
+            <tr><td>"পাসপোর্ট আবেদন করতে চাই"</td><td>Start passport application</td><td>Passport</td></tr>
+            <tr><td>"আমার ট্যাক্স কত?"</td><td>Calculate tax liability</td><td>Tax</td></tr>
+            <tr><td>"জমি নামজারি করতে চাই"</td><td>Start land mutation</td><td>Land</td></tr>
+            <tr><td>"SSC রেজাল্ট দেখাও"</td><td>Look up exam results</td><td>Education</td></tr>
+            <tr><td>"ডাক্তারের সময় নাও"</td><td>Book appointment</td><td>Health</td></tr>
+            <tr><td>"পানির বিল দিতে চাই"</td><td>Pay WASA bill</td><td>Water</td></tr>
+            <tr><td>"আমার আবেদনের অবস্থা কী?"</td><td>Check all application statuses</td><td>Cross-module</td></tr>
+        </tbody>
+    </table>
+
+    <div class="impact-box">💡 Kotha makes NationX accessible to Bangladesh's 40+ million illiterate citizens. A farmer in Rangpur who cannot read says "আমার জমির খাজনা দিতে চাই" and Kotha handles everything — from looking up the tax amount to completing the payment. No screen reading. No typing. Just a conversation in their own language. This is digital inclusion at its most profound.</div>
+</div>
+
+<!-- ==================== ARCHITECTURE ==================== -->
+<div class="page-break"></div>
+<h1>Technical Architecture</h1>
+
+<div class="arch-box"><span class="arch-highlight">┌─────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│                    FRONTEND (Public)                     │</span>
+<span class="arch-highlight">│                                                         │</span>
+│  30+ HTML pages │  Vanilla JS  │  Custom CSS per module │
+│  SweetAlert2    │  Chart.js    │  Bangladesh-themed UI   │
+│  Glassmorphism  │  Dark Mode   │  Bengali/English        │
+│  D3.js (graph)  │  Socket.io   │  Web Speech API         │
+<span class="arch-highlight">└────────────────────────┬────────────────────────────────┘</span>
+                         │  <span class="arch-dim">REST API (JSON) + JWT Auth + WebSocket</span>
+                         ▼
+<span class="arch-highlight">┌─────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│                    BACKEND (Node.js)                     │</span>
+<span class="arch-highlight">│                                                         │</span>
+│  Express 5.x    │  21+ Route Files │  180+ Endpoints    │
+│  Helmet (CSP)   │  Rate Limiting   │  JWT Middleware     │
+│  Multer (Upload)│  bcrypt (Hash)   │  CORS Enabled       │
+│  SSLCommerz     │  Nodemailer      │  Express Validator   │
+│  Socket.io      │  Redis Streams   │  Workflow Engine     │
+<span class="arch-highlight">└────────────────────────┬────────────────────────────────┘</span>
+                         │  <span class="arch-dim">mysql2 (Pool) + neo4j-driver + redis</span>
+                         ▼
+<span class="arch-highlight">┌─────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│              AI INTELLIGENCE LAYER (Python)               │</span>
+<span class="arch-highlight">│                                                         │</span>
+│  FastAPI          │  BanglaBERT     │  Whisper (Bangla)  │
+│  scikit-learn     │  Neo4j (Cypher) │  Coqui TTS         │
+│  Isolation Forest │  DBSCAN         │  ONNX Runtime      │
+│  Anomaly Engine   │  Entity Resolv. │  Intent Classifier  │
+<span class="arch-highlight">└────────────────────────┬────────────────────────────────┘</span>
+                         │  <span class="arch-dim">neo4j-driver + redis + mysql2</span>
+                         ▼
+<span class="arch-highlight">┌─────────────────────────────────────────────────────────┐</span>
+<span class="arch-highlight">│                    DATA LAYER                            │</span>
+<span class="arch-highlight">│                                                         │</span>
+│  MySQL            │  Neo4j           │  Redis             │
+│  160+ Tables      │  Knowledge Graph │  Sessions + Cache  │
+│  14+ Views        │  Entity Graph    │  Event Streams     │
+│  8+ Triggers      │  Procedure Graph │  Pub/Sub           │
+│  6+ Stored Procs  │  Corruption Graph│  Rate Limiting     │
+<span class="arch-highlight">└─────────────────────────────────────────────────────────┘</span></div>
+
+<h2>Security Stack</h2>
+<table>
+    <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Authentication</strong></td><td>JWT tokens with bcrypt password hashing</td></tr>
+        <tr><td><strong>Authorization</strong></td><td>Role-based middleware (citizen / admin / investigator)</td></tr>
+        <tr><td><strong>HTTP Security</strong></td><td>Helmet with Content Security Policy</td></tr>
+        <tr><td><strong>Rate Limiting</strong></td><td>100 requests per 15-minute window per IP</td></tr>
+        <tr><td><strong>Input Validation</strong></td><td>express-validator on all forms</td></tr>
+        <tr><td><strong>XSS Prevention</strong></td><td>HTML escaping on all user content</td></tr>
+        <tr><td><strong>File Upload</strong></td><td>Multer with 5MB file size limit</td></tr>
+        <tr><td><strong>Payment Security</strong></td><td>SSLCommerz payment gateway integration</td></tr>
+        <tr><td><strong>AI Model Security</strong></td><td>Sandboxed Python microservice, input sanitization, output validation</td></tr>
+        <tr><td><strong>Credential Vault</strong></td><td>Encrypted storage (AES-256) for agent-managed citizen credentials</td></tr>
+    </tbody>
+</table>
+
+<h2>AI/ML Tech Stack</h2>
+<table>
+    <thead><tr><th>AI Component</th><th>Technology</th><th>Module</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Bangla NLP</strong></td><td>BanglaBERT (Hugging Face Transformers)</td><td>NagrikAI + Kotha</td></tr>
+        <tr><td><strong>Speech Recognition</strong></td><td>OpenAI Whisper (fine-tuned Bangla)</td><td>Kotha</td></tr>
+        <tr><td><strong>Text-to-Speech</strong></td><td>Coqui TTS / Google Cloud TTS</td><td>Kotha</td></tr>
+        <tr><td><strong>Knowledge Graph</strong></td><td>Neo4j 5.x + Cypher queries</td><td>NagrikAI + DeepTrace</td></tr>
+        <tr><td><strong>Anomaly Detection</strong></td><td>scikit-learn (Isolation Forest, DBSCAN)</td><td>DeepTrace</td></tr>
+        <tr><td><strong>Entity Resolution</strong></td><td>dedupe library + custom Bangla fuzzy matching</td><td>DeepTrace</td></tr>
+        <tr><td><strong>Graph Visualization</strong></td><td>D3.js force-directed graph</td><td>DeepTrace</td></tr>
+        <tr><td><strong>AI API Layer</strong></td><td>Python FastAPI microservice</td><td>All AI modules</td></tr>
+        <tr><td><strong>Real-time Events</strong></td><td>Redis Streams + Socket.io</td><td>NagrikAI + DeepTrace</td></tr>
+        <tr><td><strong>On-Device Inference</strong></td><td>ONNX Runtime (Whisper-tiny)</td><td>Kotha (offline mode)</td></tr>
+    </tbody>
+</table>
+
+<h2>Bangladesh-Specific Design</h2>
+<ul class="feature-list">
+    <li><strong>All 8 divisions</strong> with districts and upazilas (cascading dropdowns)</li>
+    <li><strong>11 education boards</strong> with institution data</li>
+    <li><strong>10 major universities</strong> with admission units</li>
+    <li><strong>Bengali language support</strong> throughout (Hind Siliguri font, bn-BD locale)</li>
+    <li><strong>Bangladesh mobile validation</strong> (01X-XXXXXXXX format)</li>
+    <li><strong>BDT currency</strong> formatting</li>
+    <li><strong>Government branding</strong> — Bangladesh flag colors, official styling</li>
+</ul>
+
+<h2>Payment Integration</h2>
+<ul class="feature-list">
+    <li><strong>Gateway:</strong> SSLCommerz (Bangladesh's #1 payment gateway)</li>
+    <li><strong>Modules with payments:</strong> Land Tax, University Admission, Government Shop, Passport</li>
+    <li><strong>Flow:</strong> Init → Redirect to Gateway → Callback (Success/Fail/Cancel) → DB Update</li>
+</ul>
+
+<!-- ==================== IMPACT ==================== -->
+<div class="page-break"></div>
+<h1>Impact Summary</h1>
+
+<table>
+    <thead><tr><th>Metric</th><th>Before NationX</th><th>After NationX 2.0 (AI-Enhanced)</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Services per login</strong></td><td>1 (separate for each office)</td><td><strong>18+ from one account</strong></td></tr>
+        <tr><td><strong>Average service time</strong></td><td>3–8 hours (travel + queue)</td><td><strong>5–15 minutes (3 min with NagrikAI)</strong></td></tr>
+        <tr><td><strong>Middleman cost</strong></td><td>BDT 2,000–50,000 per service</td><td><strong>BDT 0 (AI agent replaces dalals)</strong></td></tr>
+        <tr><td><strong>Transparency</strong></td><td>Zero tracking</td><td><strong>Real-time status + anti-corruption AI</strong></td></tr>
+        <tr><td><strong>Corruption detection</strong></td><td>Manual audit (catches &lt;1%)</td><td><strong>DeepTrace: 10+ automated pattern detectors</strong></td></tr>
+        <tr><td><strong>Paper forms</strong></td><td>100% paper</td><td><strong>100% digital</strong></td></tr>
+        <tr><td><strong>Rural access</strong></td><td>Must travel to city</td><td><strong>Available from any phone</strong></td></tr>
+        <tr><td><strong>Illiterate citizens</strong></td><td>Completely excluded (40M+)</td><td><strong>Full access via Bangla voice (Kotha)</strong></td></tr>
+        <tr><td><strong>Data integration</strong></td><td>Zero (siloed offices)</td><td><strong>Fully connected via NID + Knowledge Graph</strong></td></tr>
+        <tr><td><strong>Audit trail</strong></td><td>None</td><td><strong>Every action logged + AI anomaly monitoring</strong></td></tr>
+    </tbody>
+</table>
+
+<div class="callout" style="margin-top: 40px;">
+    NationX 2.0 isn't just a digital services platform — it's an <strong>AI-powered governance engine</strong>.<br>
+    <span style="font-size: 16pt;">18 modules. 3 AI engines. 170 million citizens. Zero middlemen.</span><br>
+    <span style="font-size: 11pt; color: var(--text-muted); font-weight: 400;">NagrikAI eliminates dalals. DeepTrace eliminates corruption. Kotha eliminates exclusion.</span>
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+    <strong>NationX 2.0</strong> — AI-Enhanced Central Government Digital Services Platform<br>
+    Document Version 2.0 · July 2026 · Confidential<br>
+    <span style="color: #1e40af;">🤖 NagrikAI · 🔍 DeepTrace · 🗣️ Kotha</span>
+</div>
+
+</div><!-- end content -->
+
+</body>
+</html>

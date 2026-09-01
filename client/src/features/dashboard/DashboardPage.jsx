@@ -26,7 +26,7 @@ function resolveAssetUrl(value) {
 }
 
 export default function DashboardPage() {
-  useStylesheets(['/css/style.css', '/css/sidebar.css']);
+  useStylesheets(['/css/style.css', '/css/sidebar.css', '/css/dashboard.css']);
   const navigate = useNavigate();
   const { clearCitizenSession } = useAuth();
   const [dashboard, setDashboard] = useState(null);
@@ -97,34 +97,72 @@ export default function DashboardPage() {
   const stats = dashboard?.stats || {};
 
   return (
-    <>
-      <div className="bg-shape shape-1" /><div className="bg-shape shape-2" />
-      <button className="react-sidebar-toggle" type="button" aria-label="Toggle navigation" onClick={() => setSidebarOpen(value => !value)}><i className="fas fa-bars" /></button>
+    <div className="nationx-dashboard">
+      <div className="dashboard-ambient" aria-hidden="true">
+        <span className="dashboard-orb dashboard-orb-green" />
+        <span className="dashboard-orb dashboard-orb-red" />
+        <span className="dashboard-orb dashboard-orb-gold" />
+        <span className="dashboard-grid-pattern" />
+        <span className="dashboard-wave dashboard-wave-one" />
+        <span className="dashboard-wave dashboard-wave-two" />
+      </div>
+      <button className={`react-sidebar-toggle ${sidebarOpen ? 'is-open' : ''}`} type="button" aria-label={sidebarOpen ? 'Close menu' : 'Toggle navigation'} onClick={() => setSidebarOpen(value => !value)}><i className={`fas ${sidebarOpen ? 'fa-xmark' : 'fa-bars'}`} /></button>
       {sidebarOpen && <button className="react-sidebar-overlay" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
       <div className="dashboard-container">
         <aside className={`sidebar ${sidebarOpen ? 'react-sidebar-open' : ''}`}>
+          <Link className="dashboard-brand" to="/dashboard.html" aria-label="NationX citizen portal">
+            <span className="dashboard-brand-mark"><span /></span>
+            <span><strong>NationX</strong><small>Citizen Portal</small></span>
+          </Link>
           <Link className="user-profile" to="/profile.html" onClick={() => setSidebarOpen(false)}>
             <div className="user-avatar">{user.photo_url ? <img src={resolveAssetUrl(user.photo_url)} alt="Citizen profile" /> : <i className="fas fa-user" />}</div>
             <h3>{user.name || 'Citizen'}</h3><p>NID: {user.nid || '—'}</p>
           </Link>
           <nav className="nav-links">
+            <span className="dashboard-nav-label">Citizen workspace</span>
             <Link className="active" to="/dashboard.html"><i className="fas fa-home" /> Dashboard</Link>
             {navigation.map(([path, icon, label]) => <Link to={`/${path}`} key={path} onClick={() => setSidebarOpen(false)}><i className={`fas fa-${icon}`} /> {label}</Link>)}
-            <button className="react-nav-button" type="button" onClick={logout}><i className="fas fa-sign-out-alt" /> Logout</button>
+            <button className="react-nav-button dashboard-logout" type="button" onClick={logout}><i className="fas fa-sign-out-alt" /> Logout</button>
           </nav>
         </aside>
 
         <main className="main-content">
-          <div className="react-dashboard-header"><div><h1>Citizen Dashboard</h1><p>Welcome to the Digital Bangladesh Portal</p></div><button className="btn-primary react-request-button" type="button" onClick={() => setServiceModal(true)}><i className="fas fa-plus" /> New Request</button></div>
-          {error && <div className="react-dashboard-error" role="alert">{error}<button type="button" onClick={loadDashboard}>Retry</button></div>}
+          <div className="dashboard-content-shell">
+            <div className="react-dashboard-header">
+              <div className="dashboard-heading">
+                <span className="dashboard-eyebrow"><i className="fas fa-shield-halved" /> Secure citizen workspace</span>
+                <h1>Citizen Dashboard</h1>
+                <p>Welcome back, <strong>{user.name || 'Citizen'}</strong>. Your government services are ready.</p>
+              </div>
+              <button className="btn-primary react-request-button" type="button" onClick={() => setServiceModal(true)}><i className="fas fa-plus" /><span>New Request</span></button>
+            </div>
+            {error && <div className="react-dashboard-error" role="alert">{error}<button type="button" onClick={loadDashboard}>Retry</button></div>}
 
-          <div className="react-dashboard-grid">
-            <button className="card react-stat-card" type="button" onClick={() => openCollection('active')}><h3 className="green">Active Requests</h3><strong>{stats.activeRequests || 0}</strong><span>Pending Review</span></button>
-            <button className="card react-stat-card" type="button" onClick={() => openCollection('completed')}><h3 className="blue">Completed Tasks</h3><strong>{stats.completedTasks || 0}</strong><span>Approved Applications</span></button>
-            <button className="card react-stat-card" type="button" onClick={() => openCollection('notifications')}><h3 className="pink">Notifications</h3><strong>{stats.notifications || 0}</strong><span>Unread Messages</span></button>
+            <section className="react-dashboard-grid" aria-label="Citizen service summary">
+              <button className="react-stat-card stat-active" type="button" onClick={() => openCollection('active')}>
+                <span className="stat-card-top"><span className="stat-icon"><i className="fas fa-hourglass-half" /></span><i className="fas fa-arrow-up-right-from-square stat-arrow" /></span>
+                <span className="stat-value">{stats.activeRequests || 0}</span>
+                <span className="stat-copy"><strong>Active Requests</strong><small>Pending government review</small></span>
+              </button>
+              <button className="react-stat-card stat-completed" type="button" onClick={() => openCollection('completed')}>
+                <span className="stat-card-top"><span className="stat-icon"><i className="fas fa-circle-check" /></span><i className="fas fa-arrow-up-right-from-square stat-arrow" /></span>
+                <span className="stat-value">{stats.completedTasks || 0}</span>
+                <span className="stat-copy"><strong>Completed Tasks</strong><small>Approved applications</small></span>
+              </button>
+              <button className="react-stat-card stat-notifications" type="button" onClick={() => openCollection('notifications')}>
+                <span className="stat-card-top"><span className="stat-icon"><i className="fas fa-bell" /></span><i className="fas fa-arrow-up-right-from-square stat-arrow" /></span>
+                <span className="stat-value">{stats.notifications || 0}</span>
+                <span className="stat-copy"><strong>Notifications</strong><small>Unread citizen messages</small></span>
+              </button>
+            </section>
+
+            <section className="react-departments">
+              <header className="dashboard-section-heading"><div><span>Explore services</span><h2>Government Departments</h2></div><p>Select a department to manage your applications and records.</p></header>
+              <div className="react-dept-grid">{departments.map((department, index) => <a className="react-dept-card" href={`/${department.link}`} style={{ '--department-index': index }} key={department.link}><span className="department-icon"><i className={`fas ${department.icon}`} /></span><span className="department-copy"><h3>{department.name}</h3><p>{department.desc}</p></span><i className="fas fa-arrow-right department-arrow" /></a>)}</div>
+            </section>
+
+            <footer className="dashboard-footer-note"><span><i className="fas fa-lock" /> Protected local government portal</span><span className="dashboard-online"><i /> Services connected</span></footer>
           </div>
-
-          <section className="react-departments"><h2>Govt Departments</h2><div className="react-dept-grid">{departments.map(department => <a className="react-dept-card" href={`/${department.link}`} key={department.link}><i className={`fas ${department.icon}`} /><h4>{department.name}</h4><p>{department.desc}</p></a>)}</div></section>
         </main>
       </div>
 
@@ -136,7 +174,7 @@ export default function DashboardPage() {
           )}
         </Modal>
       )}
-    </>
+    </div>
   );
 }
 

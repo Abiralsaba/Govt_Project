@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NationX 2.0 — Detailed Technical Specification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-dark: #006a4e;
+            --green-light: #10b981;
+            --red: #f42a41;
+            --gold: #d97706;
+            --blue: #1e40af;
+            --purple: #6d28d9;
+            --bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent-bg: #f0fdf4;
+            --section-bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+            font-size: 11pt;
+        }
+
+        @media print {
+            body { font-size: 10pt; line-height: 1.6; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+            @page { margin: 18mm 15mm; size: A4; }
+            .cover-page { height: 100vh; }
+        }
+
+        .print-banner {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: linear-gradient(135deg, var(--blue), #1e3a5f);
+            color: white; text-align: center;
+            padding: 14px 20px; z-index: 1000;
+            font-size: 14px; font-weight: 500;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        }
+        .print-banner button {
+            background: white; color: var(--blue);
+            border: none; padding: 8px 24px; border-radius: 6px;
+            font-weight: 700; cursor: pointer; margin-left: 15px;
+            font-size: 14px; transition: transform 0.2s;
+        }
+        .print-banner button:hover { transform: scale(1.05); }
+
+        .content { max-width: 850px; margin: 0 auto; padding: 70px 40px 40px; }
+
+        /* Cover Page */
+        .cover-page {
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; min-height: 90vh;
+            padding: 60px 40px;
+        }
+        .cover-flag {
+            width: 80px; height: 50px;
+            background: var(--green-dark);
+            border-radius: 4px; position: relative;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,106,78,0.3);
+        }
+        .cover-flag::after {
+            content: ''; position: absolute;
+            width: 22px; height: 22px;
+            background: var(--red); border-radius: 50%;
+            top: 50%; left: 45%; transform: translate(-50%, -50%);
+        }
+        .cover-title {
+            font-size: 38pt; font-weight: 900;
+            color: var(--blue);
+            letter-spacing: -1px; margin-bottom: 8px;
+        }
+        .cover-subtitle {
+            font-size: 14pt; font-weight: 400;
+            color: var(--text-muted); font-style: italic;
+            margin-bottom: 40px;
+        }
+        .cover-divider {
+            width: 60px; height: 4px;
+            background: linear-gradient(90deg, var(--blue), var(--green-dark));
+            border-radius: 2px; margin-bottom: 40px;
+        }
+        .cover-meta {
+            font-size: 10pt; color: var(--text-muted);
+            line-height: 2;
+        }
+        .cover-meta strong { color: var(--text); }
+        .cover-badge {
+            display: inline-block; margin-top: 20px;
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            padding: 10px 24px; border-radius: 8px;
+            font-size: 10pt; color: var(--blue);
+            font-weight: 600;
+        }
+
+        /* Section Headers */
+        h1 {
+            font-size: 22pt; font-weight: 800;
+            color: var(--blue); margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--blue);
+        }
+        h1.green { color: var(--green-dark); border-bottom-color: var(--green-dark); }
+        h2 {
+            font-size: 15pt; font-weight: 700;
+            color: var(--text); margin: 30px 0 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        h2 .emoji { font-size: 18pt; }
+        h3 {
+            font-size: 12pt; font-weight: 600;
+            color: var(--green-dark); margin: 18px 0 8px;
+        }
+        h4 {
+            font-size: 11pt; font-weight: 600;
+            color: var(--blue); margin: 14px 0 6px;
+        }
+
+        p { margin-bottom: 10px; }
+
+        /* Boxes */
+        .info-box {
+            background: #eff6ff; border-left: 4px solid var(--blue);
+            padding: 14px 18px; border-radius: 0 8px 8px 0;
+            margin-bottom: 14px; font-size: 10pt;
+        }
+        .info-box strong { color: var(--blue); }
+
+        .warn-box {
+            background: #fffbeb; border-left: 4px solid var(--gold);
+            padding: 14px 18px; border-radius: 0 8px 8px 0;
+            margin-bottom: 14px; font-size: 10pt;
+        }
+        .warn-box strong { color: #92400e; }
+
+        .success-box {
+            background: var(--accent-bg); border-left: 4px solid var(--green-light);
+            padding: 14px 18px; border-radius: 0 8px 8px 0;
+            margin-bottom: 14px; font-size: 10pt;
+        }
+
+        .callout {
+            background: linear-gradient(135deg, #1e40af08, #006a4e08);
+            border: 2px solid var(--blue);
+            border-radius: 10px; padding: 20px 24px;
+            text-align: center; margin: 30px 0;
+            font-size: 13pt; font-weight: 700;
+            color: var(--blue);
+        }
+
+        /* Tables */
+        table {
+            width: 100%; border-collapse: collapse;
+            margin: 14px 0 20px; font-size: 10pt;
+        }
+        th {
+            background: var(--blue); color: white;
+            padding: 10px 14px; text-align: left;
+            font-weight: 600; font-size: 9.5pt;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        th.green-header { background: var(--green-dark); }
+        td {
+            padding: 9px 14px; border-bottom: 1px solid var(--border);
+        }
+        tr:nth-child(even) td { background: var(--section-bg); }
+        td strong { color: var(--green-dark); }
+        td code {
+            background: #f1f5f9; padding: 2px 6px; border-radius: 3px;
+            font-family: 'Courier New', monospace; font-size: 9pt;
+        }
+
+        /* Lists */
+        .feature-list {
+            list-style: none; padding: 0; margin: 0 0 14px 0;
+        }
+        .feature-list li {
+            padding: 5px 0 5px 22px;
+            position: relative; font-size: 10.5pt;
+        }
+        .feature-list li::before {
+            content: '✓'; position: absolute; left: 0;
+            color: var(--green-light); font-weight: 800;
+        }
+        .feature-list li strong { color: var(--text); }
+
+        .num-list {
+            list-style: none; padding: 0; margin: 0 0 14px 0;
+            counter-reset: item;
+        }
+        .num-list li {
+            padding: 5px 0 5px 28px;
+            position: relative; font-size: 10.5pt;
+            counter-increment: item;
+        }
+        .num-list li::before {
+            content: counter(item); position: absolute; left: 0;
+            color: white; font-weight: 700; font-size: 8pt;
+            background: var(--blue); border-radius: 50%;
+            width: 20px; height: 20px; text-align: center;
+            line-height: 20px;
+        }
+
+        /* Architecture Diagram */
+        .arch-box {
+            background: #1e293b; color: #e2e8f0;
+            padding: 24px; border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt; line-height: 1.5;
+            margin: 16px 0 20px;
+            white-space: pre; overflow-x: auto;
+        }
+        .arch-highlight { color: #60a5fa; font-weight: 700; }
+        .arch-green { color: #4ade80; font-weight: 700; }
+        .arch-dim { color: #94a3b8; }
+        .arch-red { color: #f87171; font-weight: 700; }
+        .arch-gold { color: #fbbf24; font-weight: 700; }
+
+        /* TOC */
+        .toc {
+            background: var(--section-bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 24px 30px; margin: 20px 0 30px;
+        }
+        .toc h3 { color: var(--blue); margin-bottom: 12px; }
+        .toc ol { padding-left: 20px; }
+        .toc li {
+            padding: 3px 0; font-size: 10pt;
+        }
+        .toc a {
+            color: var(--text); text-decoration: none;
+            border-bottom: 1px dotted var(--border);
+        }
+        .toc a:hover { color: var(--blue); border-bottom-color: var(--blue); }
+        .toc .toc-ai { color: var(--blue); font-weight: 600; }
+
+        /* Timeline */
+        .timeline {
+            position: relative; padding-left: 30px;
+            border-left: 3px solid var(--blue); margin: 20px 0;
+        }
+        .timeline-item {
+            position: relative; padding: 10px 0 20px 20px;
+        }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -36px; top: 14px;
+            width: 14px; height: 14px; background: var(--blue);
+            border-radius: 50%; border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--blue);
+        }
+        .timeline-item .phase {
+            font-weight: 800; color: var(--blue);
+            font-size: 11pt; margin-bottom: 4px;
+        }
+        .timeline-item .duration {
+            font-size: 9pt; color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* Risk matrix colors */
+        .risk-high { color: #dc2626; font-weight: 700; }
+        .risk-medium { color: #d97706; font-weight: 700; }
+        .risk-low { color: #16a34a; font-weight: 700; }
+
+        /* Module Grid */
+        .module-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin: 16px 0 24px;
+        }
+        .module-card {
+            background: var(--section-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 14px;
+            font-size: 10pt;
+        }
+        .module-card .module-name { font-weight: 700; color: var(--green-dark); }
+        .module-card .module-desc { color: var(--text-muted); font-size: 9pt; margin-top: 2px; }
+
+        hr {
+            border: none; height: 1px;
+            background: var(--border); margin: 30px 0;
+        }
+
+        .doc-footer {
+            text-align: center; padding: 30px 0 10px;
+            color: var(--text-muted); font-size: 9pt;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Print Banner -->
+<div class="print-banner no-print">
+    📄 NationX 2.0 Detailed Technical Specification · Press <strong>⌘ + P</strong> (Mac) or <strong>Ctrl + P</strong> (Windows) → "Save as PDF"
+    <button onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="content">
+
+<!-- ==================== COVER PAGE ==================== -->
+<div class="cover-page">
+    <div class="cover-flag"></div>
+    <div class="cover-title">NationX 2.0</div>
+    <div class="cover-subtitle">Detailed Technical Specification</div>
+    <div class="cover-divider"></div>
+    <div class="cover-subtitle" style="font-size:12pt; margin-bottom:30px;">
+        AI-Enhanced Central Government Digital Services Platform<br>
+        People's Republic of Bangladesh
+    </div>
+    <div class="cover-meta">
+        <strong>Document Type:</strong> Technical Specification & Architecture Guide<br>
+        <strong>Version:</strong> 2.0<br>
+        <strong>Date:</strong> July 2026<br>
+        <strong>Classification:</strong> Confidential — Government Use<br>
+        <strong>Companion Document:</strong> NationX Feature Documentation v2.0
+    </div>
+    <div class="cover-badge">
+        📋 Database Schemas · API Specifications · AI/ML Pipelines · Deployment Architecture · Risk Assessment
+    </div>
+</div>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<div class="page-break"></div>
+
+<h1>Table of Contents</h1>
+
+<div class="toc">
+    <ol>
+        <li><a href="#exec-summary">Executive Summary</a></li>
+        <li><a href="#stakeholders">Stakeholders & User Roles</a></li>
+        <li><a href="#system-arch">System Architecture (Detailed)</a></li>
+        <li><a href="#db-schema">Database Design & Schema</a>
+            <ol type="a" style="margin-left:16px;">
+                <li>Core Module Tables (Modules 1–15)</li>
+                <li>AI Module Tables (Modules 16–18)</li>
+            </ol>
+        </li>
+        <li><a href="#api-spec">API Specification</a>
+            <ol type="a" style="margin-left:16px;">
+                <li>Core API Endpoints</li>
+                <li>AI Service API Endpoints</li>
+            </ol>
+        </li>
+        <li><a href="#ai-pipeline" class="toc-ai">AI/ML Pipeline — Detailed Technical Design</a>
+            <ol type="a" style="margin-left:16px;">
+                <li>NagrikAI: Agent Architecture & Training</li>
+                <li>DeepTrace: Anomaly Detection Pipeline</li>
+                <li>Kotha: Speech Processing Pipeline</li>
+                <li>Model Performance Targets</li>
+            </ol>
+        </li>
+        <li><a href="#nfr">Non-Functional Requirements</a></li>
+        <li><a href="#deployment">Deployment Architecture</a></li>
+        <li><a href="#security">Security Architecture (Detailed)</a></li>
+        <li><a href="#testing">Testing Strategy</a></li>
+        <li><a href="#timeline">Project Roadmap & Timeline</a></li>
+        <li><a href="#risk">Risk Assessment & Mitigation</a></li>
+        <li><a href="#cost">Budget & Resource Estimation</a></li>
+        <li><a href="#glossary">Glossary of Terms</a></li>
+    </ol>
+</div>
+
+<!-- ==================== 1. EXECUTIVE SUMMARY ==================== -->
+<div class="page-break"></div>
+<h1 id="exec-summary">1. Executive Summary</h1>
+
+<p>NationX 2.0 is an <strong>AI-enhanced central government digital services platform</strong> designed to unify all citizen-facing government services under a single digital gateway for the 170 million citizens of Bangladesh.</p>
+
+<div class="info-box">
+    <strong>Mission:</strong> Eliminate bureaucratic friction, corruption, and digital exclusion by providing a single platform where every citizen — regardless of literacy, location, or economic status — can access all government services with full transparency and zero middlemen.
+</div>
+
+<h3>What Makes NationX 2.0 Different</h3>
+<table>
+    <thead><tr><th>Dimension</th><th>Typical e-Gov Platform</th><th>NationX 2.0</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Service Scope</strong></td><td>Single ministry (e.g., only tax OR only land)</td><td><strong>18 modules covering ALL major services</strong></td></tr>
+        <tr><td><strong>AI Capability</strong></td><td>None or basic chatbot</td><td><strong>Autonomous agent, anti-corruption engine, voice accessibility</strong></td></tr>
+        <tr><td><strong>Accessibility</strong></td><td>Requires literacy + internet</td><td><strong>Full voice support for 40M+ illiterate citizens</strong></td></tr>
+        <tr><td><strong>Anti-Corruption</strong></td><td>Manual audit</td><td><strong>Real-time anomaly detection with evidence chains</strong></td></tr>
+        <tr><td><strong>Architecture</strong></td><td>Monolith</td><td><strong>Modular Node.js + Python AI microservice</strong></td></tr>
+    </tbody>
+</table>
+
+<h3>Key Metrics</h3>
+<div class="module-grid">
+    <div class="module-card"><div class="module-name">18 Modules</div><div class="module-desc">15 core + 3 AI-powered</div></div>
+    <div class="module-card"><div class="module-name">160+ Database Tables</div><div class="module-desc">MySQL + Neo4j + Redis</div></div>
+    <div class="module-card"><div class="module-name">180+ API Endpoints</div><div class="module-desc">RESTful + WebSocket + AI inference</div></div>
+    <div class="module-card"><div class="module-name">3 AI Engines</div><div class="module-desc">NagrikAI · DeepTrace · Kotha</div></div>
+</div>
+
+<!-- ==================== 2. STAKEHOLDERS ==================== -->
+<div class="page-break"></div>
+<h1 id="stakeholders">2. Stakeholders & User Roles</h1>
+
+<h3>2.1 Primary Stakeholders</h3>
+<table>
+    <thead><tr><th>Stakeholder</th><th>Role</th><th>Key Concerns</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Citizens (170M)</strong></td><td>End users of all government services</td><td>Ease of use, speed, cost, trust, accessibility</td></tr>
+        <tr><td><strong>Government Officials</strong></td><td>Process applications, manage services</td><td>Workflow efficiency, compliance, audit trails</td></tr>
+        <tr><td><strong>Anti-Corruption Commission (ACC)</strong></td><td>Investigate corruption flagged by DeepTrace</td><td>Evidence quality, false positive rate, legal admissibility</td></tr>
+        <tr><td><strong>ICT Division (MoPT&IT)</strong></td><td>Platform owner, policy governance</td><td>Scalability, security, cost, uptime</td></tr>
+        <tr><td><strong>a2i (Aspire to Innovate)</strong></td><td>Digital Bangladesh initiative</td><td>Integration with national digital infrastructure</td></tr>
+    </tbody>
+</table>
+
+<h3>2.2 System Roles & Permissions</h3>
+<table>
+    <thead><tr><th>Role</th><th>Auth Level</th><th>Access Scope</th><th>Special Permissions</th></tr></thead>
+    <tbody>
+        <tr><td><strong>citizen</strong></td><td>Level 1</td><td>Own profile, own applications, public services</td><td>NagrikAI agent, Kotha voice</td></tr>
+        <tr><td><strong>admin</strong></td><td>Level 2</td><td>Application processing, content moderation, reports</td><td>Approve/reject applications, manage users</td></tr>
+        <tr><td><strong>investigator</strong></td><td>Level 3</td><td>DeepTrace dashboard, entity graphs, evidence chains</td><td>Full audit log access, export evidence</td></tr>
+        <tr><td><strong>super_admin</strong></td><td>Level 4</td><td>All modules, system configuration, AI model management</td><td>Role assignment, system settings, model retraining triggers</td></tr>
+    </tbody>
+</table>
+
+<h3>2.3 User Journey Map</h3>
+<div class="arch-box"><span class="arch-green">CITIZEN JOURNEY (Literate)</span>
+Register (NID) → Login → Browse Services → Select Service
+→ Fill Application → Upload Documents → Pay Fee (SSLCommerz)
+→ Track Status → Receive Notification → Download Certificate
+
+<span class="arch-green">CITIZEN JOURNEY (With NagrikAI)</span>
+Register (NID) → Login → Tell NagrikAI what you need (Bangla)
+→ Agent fills forms + uploads docs + pays → Watch live stream
+→ Receive tracking number → Get SMS updates
+
+<span class="arch-green">CITIZEN JOURNEY (Illiterate — Kotha)</span>
+Register (with help) → Login → Say "কথা" → Speak request
+→ Kotha navigates modules by voice → Confirms each step
+→ Completes service → Reads confirmation aloud
+
+<span class="arch-red">ADMIN JOURNEY</span>
+Login → Admin Dashboard → View Pending Applications
+→ Review → Approve/Reject → Action Logged
+
+<span class="arch-gold">INVESTIGATOR JOURNEY (DeepTrace)</span>
+Login → DeepTrace Dashboard → View Anomaly Alerts
+→ Explore Entity Graph → Follow Evidence Chain
+→ Export Report → Forward to ACC</div>
+
+<!-- ==================== 3. SYSTEM ARCHITECTURE ==================== -->
+<div class="page-break"></div>
+<h1 id="system-arch">3. System Architecture (Detailed)</h1>
+
+<h3>3.1 High-Level Architecture</h3>
+<div class="arch-box"><span class="arch-green">┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="arch-green">│                        CLIENT LAYER                              │</span>
+│                                                                   │
+│  🌐 Web App (30+ HTML)  │  📱 Mobile (PWA)  │  🎤 Voice (Kotha)  │
+│  Chart.js · D3.js       │  Service Worker   │  Web Speech API    │
+│  SweetAlert2 · Mapbox   │  Offline Support  │  Mic Widget        │
+<span class="arch-green">└────────────────────────────┬──────────────────────────────────────┘</span>
+                             │ <span class="arch-dim">HTTPS · REST · WebSocket · SSE</span>
+                             ▼
+<span class="arch-green">┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="arch-green">│                      API GATEWAY LAYER                           │</span>
+│                                                                   │
+│  Express.js Gateway                                               │
+│  ├─ JWT Authentication Middleware                                 │
+│  ├─ Role-Based Access Control (RBAC)                              │
+│  ├─ Rate Limiting (100 req/15min/IP)                              │
+│  ├─ Request Validation (express-validator)                        │
+│  ├─ CORS Policy Enforcement                                      │
+│  ├─ Helmet Security Headers (CSP, HSTS)                          │
+│  └─ Request Logging & Metrics                                    │
+<span class="arch-green">└──────────┬─────────────────────────────┬────────────────────────┘</span>
+           │                               │
+           ▼                               ▼
+<span class="arch-highlight">┌──────────────────────┐</span>     <span class="arch-gold">┌──────────────────────────┐</span>
+<span class="arch-highlight">│  NODE.JS SERVICES    │</span>     <span class="arch-gold">│  PYTHON AI SERVICES       │</span>
+<span class="arch-highlight">│                      │</span>     <span class="arch-gold">│                           │</span>
+│  21+ Route Modules   │     │  FastAPI (async)          │
+│  180+ Endpoints      │     │  ├─ /api/ai/intent        │
+│  Express 5.x         │     │  ├─ /api/ai/speech-to-text│
+│  Socket.io           │     │  ├─ /api/ai/text-to-speech│
+│  SSLCommerz          │     │  ├─ /api/ai/anomaly       │
+│  Nodemailer          │     │  ├─ /api/ai/entity-resolve│
+│  Multer              │     │  └─ /api/ai/graph-query   │
+│  Sharp (images)      │     │                           │
+<span class="arch-highlight">└──────────┬───────────┘</span>     <span class="arch-gold">└────────────┬──────────────┘</span>
+           │                                │
+           └────────────┬───────────────────┘
+                        ▼
+<span class="arch-red">┌─────────────────────────────────────────────────────────────────┐</span>
+<span class="arch-red">│                        DATA LAYER                                │</span>
+│                                                                   │
+│  <span class="arch-highlight">MySQL 8.x</span>            │  <span class="arch-gold">Neo4j 5.x</span>           │  <span class="arch-green">Redis 7.x</span>         │
+│  ─────────            │  ─────────           │  ─────────         │
+│  160+ Tables          │  Knowledge Graph     │  Session Cache     │
+│  14+ Views            │  (NagrikAI procedures)│  JWT Token Store   │
+│  8+ Triggers          │  Entity Graph        │  Rate Limit Counter│
+│  6+ Stored Procs      │  (DeepTrace entities)│  Event Streams     │
+│  Full-Text Search     │  Corruption Graph    │  Real-time Pub/Sub │
+│  JSON Columns         │  (relationships)     │  Background Jobs   │
+│  Audit Log Tables     │  Cypher Queries      │                    │
+<span class="arch-red">└─────────────────────────────────────────────────────────────────┘</span></div>
+
+<h3>3.2 Service Communication Pattern</h3>
+<table>
+    <thead><tr><th>Communication</th><th>Protocol</th><th>Use Case</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Client → Node.js</strong></td><td>REST (JSON) over HTTPS</td><td>All CRUD operations, form submissions</td></tr>
+        <tr><td><strong>Client → Node.js</strong></td><td>WebSocket (Socket.io)</td><td>NagrikAI activity stream, real-time notifications</td></tr>
+        <tr><td><strong>Node.js → Python AI</strong></td><td>REST (JSON) internal HTTP</td><td>NLP inference, speech processing, anomaly detection</td></tr>
+        <tr><td><strong>Node.js → MySQL</strong></td><td>mysql2 connection pool</td><td>All data persistence</td></tr>
+        <tr><td><strong>Node.js → Neo4j</strong></td><td>neo4j-driver (Bolt)</td><td>Knowledge graph queries, entity resolution</td></tr>
+        <tr><td><strong>Node.js → Redis</strong></td><td>ioredis</td><td>Caching, sessions, event streaming, rate limiting</td></tr>
+        <tr><td><strong>Python → Neo4j</strong></td><td>neo4j Python driver</td><td>Graph-based anomaly detection, entity resolution</td></tr>
+        <tr><td><strong>Python → Redis</strong></td><td>redis-py</td><td>Publish anomaly events to Node.js subscribers</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 4. DATABASE SCHEMA ==================== -->
+<div class="page-break"></div>
+<h1 id="db-schema">4. Database Design & Schema</h1>
+
+<h3>4.1 Database Overview</h3>
+<div class="info-box"><strong>Database Engine:</strong> MySQL 8.x (InnoDB) · <strong>Character Set:</strong> utf8mb4 (full Bengali support) · <strong>Collation:</strong> utf8mb4_unicode_ci · <strong>Graph DB:</strong> Neo4j 5.x · <strong>Cache:</strong> Redis 7.x</div>
+
+<h3>4.2 Core Module Tables (MySQL)</h3>
+
+<h4>Authentication & Identity (Module 1-2)</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Indexes</th><th>Notes</th></tr></thead>
+    <tbody>
+        <tr><td><code>users</code></td><td>id, nid_number, name_bn, name_en, email, phone, password_hash, role, division_id, district_id, upazila_id, photo_url, is_verified, created_at</td><td>PK(id), UNIQUE(nid_number), UNIQUE(email), INDEX(phone)</td><td>Central user table. NID is the universal citizen identifier.</td></tr>
+        <tr><td><code>nid_profiles</code></td><td>id, user_id, nid_number, father_name, mother_name, dob, blood_group, address_permanent, address_present, photo_url, status</td><td>FK(user_id), UNIQUE(nid_number)</td><td>Full NID data synced from EC</td></tr>
+        <tr><td><code>nid_corrections</code></td><td>id, user_id, field_name, old_value, new_value, supporting_doc_url, status, admin_id, reviewed_at, tracking_number</td><td>FK(user_id), FK(admin_id), INDEX(tracking_number)</td><td>ENUM status: pending/approved/rejected</td></tr>
+        <tr><td><code>password_resets</code></td><td>id, user_id, otp_hash, expires_at, is_used</td><td>FK(user_id)</td><td>OTP valid for 10 minutes</td></tr>
+    </tbody>
+</table>
+
+<h4>Passport Services (Module 3)</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Indexes</th><th>Notes</th></tr></thead>
+    <tbody>
+        <tr><td><code>passport_applications</code></td><td>id, user_id, type (new/renewal), photo_url, old_passport_no, emergency_contact, tracking_number, status, payment_id, admin_id, submitted_at, processed_at</td><td>FK(user_id), FK(payment_id), INDEX(tracking_number), INDEX(status)</td><td>ENUM status: draft/submitted/processing/approved/ready/delivered</td></tr>
+        <tr><td><code>passport_documents</code></td><td>id, application_id, doc_type, file_url, uploaded_at</td><td>FK(application_id)</td><td>Supporting documents</td></tr>
+    </tbody>
+</table>
+
+<h4>Tax Management (Module 4)</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Indexes</th><th>Notes</th></tr></thead>
+    <tbody>
+        <tr><td><code>tax_profiles</code></td><td>id, user_id, tin_number, tax_zone, tax_circle, assessor_name, last_filing_year</td><td>FK(user_id), UNIQUE(tin_number)</td><td>Tax Identification Number profile</td></tr>
+        <tr><td><code>tax_returns</code></td><td>id, user_id, fiscal_year, total_income, taxable_income, tax_payable, tax_paid, status, filed_at, payment_id</td><td>FK(user_id), INDEX(fiscal_year, status)</td><td>Auto-calculated from BD tax slabs</td></tr>
+        <tr><td><code>tax_slabs</code></td><td>id, fiscal_year, min_income, max_income, rate_percentage</td><td>INDEX(fiscal_year)</td><td>Admin-configurable per year</td></tr>
+    </tbody>
+</table>
+
+<h4>Land Ministry (Module 5)</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Indexes</th><th>Notes</th></tr></thead>
+    <tbody>
+        <tr><td><code>land_records</code></td><td>id, owner_user_id, khatian_no, dag_no, mouza, area_decimal, valuation_bdt, division_id, district_id, upazila_id, deed_url, status</td><td>FK(owner_user_id), INDEX(khatian_no, dag_no), INDEX(division_id, district_id)</td><td>Complete parcel registry</td></tr>
+        <tr><td><code>land_mutations</code></td><td>id, land_id, seller_user_id, buyer_user_id, sale_price, tracking_number, status, admin_id, applied_at, approved_at</td><td>FK(land_id), FK(seller_user_id), FK(buyer_user_id), INDEX(tracking_number)</td><td>DB TRIGGER: on approval, transfers ownership automatically</td></tr>
+        <tr><td><code>land_taxes</code></td><td>id, land_id, user_id, fiscal_year, tax_amount, payment_id, paid_at</td><td>FK(land_id), FK(user_id)</td><td>Annual land development tax</td></tr>
+    </tbody>
+</table>
+
+<h4>Education (Module 6)</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Indexes</th><th>Notes</th></tr></thead>
+    <tbody>
+        <tr><td><code>exam_results</code></td><td>id, exam_type, year, board_id, roll_number, reg_number, gpa, grade, result_json</td><td>INDEX(exam_type, year, board_id, roll_number)</td><td>Stores JSC/SSC/HSC results. result_json has subject-wise marks.</td></tr>
+        <tr><td><code>universities</code></td><td>id, name, type (public/private/eng/medical), admission_start, admission_end, min_gpa, fee</td><td>INDEX(type)</td><td>10 seeded universities</td></tr>
+        <tr><td><code>admission_applications</code></td><td>id, user_id, university_id, hsc_roll, hsc_gpa, hsc_group, status, payment_id</td><td>FK(user_id), FK(university_id), UNIQUE(user_id, university_id)</td><td>Eligibility engine checks GPA/group/deadline</td></tr>
+        <tr><td><code>stipends</code></td><td>id, name, description, amount, eligibility_criteria, deadline</td><td>INDEX(deadline)</td><td>PM's Trust, Research Grants, etc.</td></tr>
+        <tr><td><code>stipend_applications</code></td><td>id, user_id, stipend_id, academic_info_json, financial_info_json, bank_details_json, status</td><td>FK(user_id), FK(stipend_id)</td><td>Multi-stage: Draft→Submitted→Under Review→Approved</td></tr>
+    </tbody>
+</table>
+
+<h4>Health, Utilities, Agriculture, E-Commerce, Community (Modules 7-11)</h4>
+<table>
+    <thead><tr><th>Table</th><th>Module</th><th>Key Columns</th></tr></thead>
+    <tbody>
+        <tr><td><code>doctors</code></td><td>Health</td><td>id, name, specialization, hospital, schedule_json, max_patients_per_day</td></tr>
+        <tr><td><code>appointments</code></td><td>Health</td><td>id, user_id, doctor_id, date, time_slot, status, notes</td></tr>
+        <tr><td><code>prescriptions</code></td><td>Health</td><td>id, user_id, doctor_id, appointment_id, medicines_json, diagnosis, created_at</td></tr>
+        <tr><td><code>health_facilities</code></td><td>Health</td><td>id, name, type, division_id, district_id, lat, lng, phone</td></tr>
+        <tr><td><code>wasa_accounts</code></td><td>Water</td><td>id, user_id, meter_number, connection_type, area, monthly_rate</td></tr>
+        <tr><td><code>wasa_bills</code></td><td>Water</td><td>id, account_id, month, year, amount, due_date, payment_id, status</td></tr>
+        <tr><td><code>wasa_complaints</code></td><td>Water</td><td>id, user_id, category, description, location, status, assigned_to, resolved_at</td></tr>
+        <tr><td><code>crop_advisories</code></td><td>Agriculture</td><td>id, season, region, crop_type, advisory_text_bn, advisory_text_en, created_at</td></tr>
+        <tr><td><code>market_prices</code></td><td>Agriculture</td><td>id, commodity, price_per_kg, market, district_id, date</td></tr>
+        <tr><td><code>products</code></td><td>E-Commerce</td><td>id, name, description, price, category, image_url, stock, is_verified</td></tr>
+        <tr><td><code>orders</code></td><td>E-Commerce</td><td>id, user_id, total, status, payment_id, shipping_address, ordered_at</td></tr>
+        <tr><td><code>order_items</code></td><td>E-Commerce</td><td>id, order_id, product_id, quantity, price</td></tr>
+        <tr><td><code>community_groups</code></td><td>Community</td><td>id, name, description, creator_id, status (pending/approved), member_count</td></tr>
+        <tr><td><code>community_posts</code></td><td>Community</td><td>id, group_id, user_id, content, image_url, status, likes, created_at</td></tr>
+        <tr><td><code>post_comments</code></td><td>Community</td><td>id, post_id, user_id, content, created_at</td></tr>
+    </tbody>
+</table>
+
+<h4>Shared / System Tables</h4>
+<table>
+    <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+    <tbody>
+        <tr><td><code>divisions</code></td><td>8 BD divisions</td><td>id, name_bn, name_en</td></tr>
+        <tr><td><code>districts</code></td><td>64 districts</td><td>id, division_id, name_bn, name_en</td></tr>
+        <tr><td><code>upazilas</code></td><td>495 upazilas</td><td>id, district_id, name_bn, name_en</td></tr>
+        <tr><td><code>education_boards</code></td><td>11 boards</td><td>id, name, short_code</td></tr>
+        <tr><td><code>payments</code></td><td>All SSLCommerz transactions</td><td>id, user_id, module, amount, transaction_id, status, gateway_response_json</td></tr>
+        <tr><td><code>notifications</code></td><td>Push/SMS notifications</td><td>id, user_id, type, title, message, is_read, channel (push/sms), created_at</td></tr>
+        <tr><td><code>notices</code></td><td>Government circulars</td><td>id, title, content, category, ministry, is_urgent, published_at</td></tr>
+        <tr><td><code>events</code></td><td>Government events</td><td>id, title, description, date, location, category</td></tr>
+        <tr><td><code>feedback</code></td><td>Citizen feedback</td><td>id, user_id, module, rating, comment, created_at</td></tr>
+        <tr><td><code>admin_logs</code></td><td>Full audit trail</td><td>id, admin_id, action, module, target_id, details_json, ip_address, timestamp</td></tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h3>4.3 AI Module Tables (MySQL)</h3>
+
+<h4>NagrikAI Tables</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><code>agent_sessions</code></td><td>id, user_id, intent, service_type, state (JSON), current_step, status, started_at, completed_at</td><td>Persistent state machine for each agent workflow</td></tr>
+        <tr><td><code>agent_actions</code></td><td>id, session_id, step_number, action_type, target_module, target_endpoint, request_json, response_json, status, timestamp</td><td>Complete audit trail of every agent action</td></tr>
+        <tr><td><code>agent_intents</code></td><td>id, intent_name, display_name_bn, service_type, required_fields_json, required_docs_json, fee_amount, estimated_time</td><td>Configurable intent catalog (50+ services)</td></tr>
+        <tr><td><code>agent_feedback</code></td><td>id, session_id, user_id, rating, comment, created_at</td><td>User satisfaction tracking for model improvement</td></tr>
+    </tbody>
+</table>
+
+<h4>DeepTrace Tables</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><code>anomaly_alerts</code></td><td>id, alert_type, severity (low/medium/high/critical), entity_ids_json, description, evidence_chain_json, detected_at, status (new/investigating/resolved/dismissed), investigator_id</td><td>Stores all detected anomalies with evidence</td></tr>
+        <tr><td><code>entity_resolutions</code></td><td>id, source_module, source_id, resolved_entity_id, confidence_score, resolution_method, resolved_at</td><td>Maps cross-module entities to unified IDs</td></tr>
+        <tr><td><code>investigation_notes</code></td><td>id, alert_id, investigator_id, note, attachments_json, created_at</td><td>Investigator annotations on anomaly alerts</td></tr>
+        <tr><td><code>anomaly_patterns</code></td><td>id, pattern_name, pattern_type, parameters_json, is_active, threshold, description</td><td>Configurable anomaly detection rules</td></tr>
+    </tbody>
+</table>
+
+<h4>Kotha Tables</h4>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><code>voice_sessions</code></td><td>id, user_id, started_at, ended_at, turns_count, modules_used_json, success</td><td>Track voice interaction sessions</td></tr>
+        <tr><td><code>voice_utterances</code></td><td>id, session_id, audio_url, transcript, intent, confidence, response_text, response_audio_url, timestamp</td><td>Every voice turn with transcript and response</td></tr>
+        <tr><td><code>voice_commands</code></td><td>id, command_bangla, command_english, intent, target_module, target_action, is_active</td><td>Configurable voice command catalog</td></tr>
+        <tr><td><code>dialect_metrics</code></td><td>id, dialect (standard/sylheti/chittagonian/noakhali), total_utterances, correct_transcriptions, accuracy_pct, period</td><td>Track ASR accuracy per dialect</td></tr>
+    </tbody>
+</table>
+
+<h3>4.4 Neo4j Graph Schema</h3>
+
+<h4>Node Types</h4>
+<table>
+    <thead><tr><th>Node Label</th><th>Properties</th><th>Source</th></tr></thead>
+    <tbody>
+        <tr><td><strong>:Citizen</strong></td><td>nid, name_bn, name_en, division, district</td><td>users table</td></tr>
+        <tr><td><strong>:Official</strong></td><td>nid, name, role, department, office_location</td><td>users table (role=admin)</td></tr>
+        <tr><td><strong>:Company</strong></td><td>reg_number, name, type, incorporation_date</td><td>RJSC (external)</td></tr>
+        <tr><td><strong>:LandParcel</strong></td><td>khatian, dag, mouza, area, valuation</td><td>land_records table</td></tr>
+        <tr><td><strong>:Application</strong></td><td>tracking_number, type, module, amount, date</td><td>Various application tables</td></tr>
+        <tr><td><strong>:Payment</strong></td><td>transaction_id, amount, date, module</td><td>payments table</td></tr>
+        <tr><td><strong>:Service</strong></td><td>name, module, required_docs, fee, steps</td><td>agent_intents table (NagrikAI)</td></tr>
+    </tbody>
+</table>
+
+<h4>Edge Types</h4>
+<table>
+    <thead><tr><th>Relationship</th><th>From → To</th><th>Properties</th></tr></thead>
+    <tbody>
+        <tr><td><strong>:OWNS</strong></td><td>Citizen → LandParcel</td><td>since, deed_number</td></tr>
+        <tr><td><strong>:TRANSFERRED_TO</strong></td><td>Citizen → LandParcel</td><td>date, price, mutation_id</td></tr>
+        <tr><td><strong>:APPROVED_BY</strong></td><td>Application → Official</td><td>date, processing_time_hours</td></tr>
+        <tr><td><strong>:DIRECTS</strong></td><td>Citizen → Company</td><td>role, since</td></tr>
+        <tr><td><strong>:RELATED_TO</strong></td><td>Citizen → Citizen</td><td>relationship (spouse/parent/sibling)</td></tr>
+        <tr><td><strong>:PAID</strong></td><td>Citizen → Payment</td><td>amount, date</td></tr>
+        <tr><td><strong>:REQUIRES</strong></td><td>Service → Service</td><td>dependency_type</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 5. API SPECIFICATION ==================== -->
+<div class="page-break"></div>
+<h1 id="api-spec">5. API Specification</h1>
+
+<div class="info-box"><strong>Base URL:</strong> <code>https://api.nationx.gov.bd/v2</code> · <strong>Auth:</strong> Bearer JWT · <strong>Format:</strong> JSON · <strong>Rate Limit:</strong> 100 req/15min</div>
+
+<h3>5.1 Authentication APIs</h3>
+<table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><code>POST</code></td><td><code>/auth/register</code></td><td>Public</td><td>Register with NID, phone, email, password</td></tr>
+        <tr><td><code>POST</code></td><td><code>/auth/login</code></td><td>Public</td><td>Login → returns JWT (24h expiry)</td></tr>
+        <tr><td><code>POST</code></td><td><code>/auth/forgot-password</code></td><td>Public</td><td>Send OTP to registered email</td></tr>
+        <tr><td><code>POST</code></td><td><code>/auth/reset-password</code></td><td>Public</td><td>Verify OTP + set new password</td></tr>
+        <tr><td><code>GET</code></td><td><code>/auth/profile</code></td><td>Citizen</td><td>Get current user profile</td></tr>
+        <tr><td><code>PUT</code></td><td><code>/auth/profile</code></td><td>Citizen</td><td>Update profile (phone, address, photo)</td></tr>
+    </tbody>
+</table>
+
+<h3>5.2 Core Service APIs (Selected)</h3>
+<table>
+    <thead><tr><th>Module</th><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>NID</td><td><code>GET</code></td><td><code>/nid/profile</code></td><td>View NID data</td></tr>
+        <tr><td>NID</td><td><code>POST</code></td><td><code>/nid/correction</code></td><td>Submit NID correction</td></tr>
+        <tr><td>Passport</td><td><code>POST</code></td><td><code>/passport/apply</code></td><td>Submit passport application</td></tr>
+        <tr><td>Passport</td><td><code>GET</code></td><td><code>/passport/status/:trackingNo</code></td><td>Track application status</td></tr>
+        <tr><td>Tax</td><td><code>POST</code></td><td><code>/tax/file-return</code></td><td>Submit tax return</td></tr>
+        <tr><td>Tax</td><td><code>GET</code></td><td><code>/tax/calculate</code></td><td>Auto-calculate tax liability</td></tr>
+        <tr><td>Land</td><td><code>GET</code></td><td><code>/land/records</code></td><td>List user's land parcels</td></tr>
+        <tr><td>Land</td><td><code>POST</code></td><td><code>/land/mutation</code></td><td>Apply for land mutation</td></tr>
+        <tr><td>Land</td><td><code>POST</code></td><td><code>/land/tax/pay</code></td><td>Pay land development tax</td></tr>
+        <tr><td>Education</td><td><code>GET</code></td><td><code>/education/results</code></td><td>Lookup exam results</td></tr>
+        <tr><td>Education</td><td><code>POST</code></td><td><code>/education/admission/apply</code></td><td>Apply to university</td></tr>
+        <tr><td>Health</td><td><code>POST</code></td><td><code>/health/appointment</code></td><td>Book doctor appointment</td></tr>
+        <tr><td>Health</td><td><code>GET</code></td><td><code>/health/prescriptions</code></td><td>View prescriptions</td></tr>
+        <tr><td>Water</td><td><code>GET</code></td><td><code>/wasa/bill</code></td><td>View current WASA bill</td></tr>
+        <tr><td>Water</td><td><code>POST</code></td><td><code>/wasa/pay</code></td><td>Pay WASA bill</td></tr>
+        <tr><td>Payment</td><td><code>POST</code></td><td><code>/payment/init</code></td><td>Initialize SSLCommerz payment</td></tr>
+        <tr><td>Payment</td><td><code>POST</code></td><td><code>/payment/callback</code></td><td>SSLCommerz IPN callback</td></tr>
+    </tbody>
+</table>
+
+<h3>5.3 AI Service APIs</h3>
+<table>
+    <thead><tr><th>Module</th><th>Method</th><th>Endpoint</th><th>Request Body</th><th>Response</th></tr></thead>
+    <tbody>
+        <tr><td>NagrikAI</td><td><code>POST</code></td><td><code>/ai/agent/start</code></td><td><code>{ message_bn, user_id }</code></td><td><code>{ session_id, intent, steps[], estimated_time }</code></td></tr>
+        <tr><td>NagrikAI</td><td><code>POST</code></td><td><code>/ai/agent/respond</code></td><td><code>{ session_id, user_input }</code></td><td><code>{ next_question, current_step, progress_pct }</code></td></tr>
+        <tr><td>NagrikAI</td><td><code>POST</code></td><td><code>/ai/agent/execute</code></td><td><code>{ session_id, confirm: true }</code></td><td><code>{ action_log[], tracking_number, status }</code></td></tr>
+        <tr><td>NagrikAI</td><td><code>GET</code></td><td><code>/ai/agent/status/:sessionId</code></td><td>—</td><td><code>{ steps_completed, current_step, actions[] }</code></td></tr>
+        <tr><td>DeepTrace</td><td><code>GET</code></td><td><code>/ai/deeptrace/alerts</code></td><td>Query: severity, type, date_range</td><td><code>{ alerts[], total, page }</code></td></tr>
+        <tr><td>DeepTrace</td><td><code>GET</code></td><td><code>/ai/deeptrace/entity/:nid</code></td><td>—</td><td><code>{ entity, connections[], anomalies[] }</code></td></tr>
+        <tr><td>DeepTrace</td><td><code>GET</code></td><td><code>/ai/deeptrace/graph</code></td><td>Query: entity_id, depth, filters</td><td><code>{ nodes[], edges[] }</code> (D3.js format)</td></tr>
+        <tr><td>DeepTrace</td><td><code>POST</code></td><td><code>/ai/deeptrace/investigate</code></td><td><code>{ alert_id, notes }</code></td><td><code>{ evidence_chain, report_url }</code></td></tr>
+        <tr><td>Kotha</td><td><code>POST</code></td><td><code>/ai/kotha/speech-to-text</code></td><td><code>multipart/form-data (audio)</code></td><td><code>{ transcript, confidence, intent, entities }</code></td></tr>
+        <tr><td>Kotha</td><td><code>POST</code></td><td><code>/ai/kotha/text-to-speech</code></td><td><code>{ text_bn, voice: "female" }</code></td><td><code>audio/wav (binary)</code></td></tr>
+        <tr><td>Kotha</td><td><code>POST</code></td><td><code>/ai/kotha/execute-voice</code></td><td><code>{ transcript, intent, session_id }</code></td><td><code>{ action_result, response_text, response_audio_url }</code></td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 6. AI/ML PIPELINE ==================== -->
+<div class="page-break"></div>
+<h1 id="ai-pipeline">6. AI/ML Pipeline — Detailed Technical Design</h1>
+
+<h3>6.1 NagrikAI: Intent Classification Pipeline</h3>
+<table>
+    <thead><tr><th>Stage</th><th>Input</th><th>Processing</th><th>Output</th></tr></thead>
+    <tbody>
+        <tr><td><strong>1. Preprocessing</strong></td><td>Raw Bangla text</td><td>Unicode normalization, punctuation removal, Bangla stemming (BnLemmatizer)</td><td>Clean token sequence</td></tr>
+        <tr><td><strong>2. Intent Classification</strong></td><td>Tokens</td><td>Fine-tuned BanglaBERT (sagorsarker/bangla-bert-base), 50+ intent classes, softmax output</td><td>Intent label + confidence score</td></tr>
+        <tr><td><strong>3. Entity Extraction</strong></td><td>Tokens + Intent</td><td>Named Entity Recognition: NID numbers, dates, names, amounts, locations</td><td>Structured entities dict</td></tr>
+        <tr><td><strong>4. Graph Lookup</strong></td><td>Intent</td><td>Neo4j Cypher query: MATCH (s:Service {name: $intent})-[:REQUIRES]->(r) RETURN r</td><td>Service requirements, dependencies, fees</td></tr>
+        <tr><td><strong>5. Workflow Init</strong></td><td>Intent + entities + requirements</td><td>Create state machine, identify missing fields, generate question sequence</td><td>Agent session with step plan</td></tr>
+    </tbody>
+</table>
+
+<h4>Model Training Details</h4>
+<table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+        <tr><td>Base Model</td><td>sagorsarker/bangla-bert-base (110M parameters)</td></tr>
+        <tr><td>Fine-tuning Data</td><td>5,000+ labeled Bangla intent examples (custom collected)</td></tr>
+        <tr><td>Training</td><td>3 epochs, learning rate 2e-5, batch size 16, AdamW optimizer</td></tr>
+        <tr><td>Evaluation</td><td>80/10/10 train/val/test split, weighted F1-score target: >92%</td></tr>
+        <tr><td>Inference</td><td>FastAPI endpoint, ~50ms latency on GPU, ~200ms on CPU</td></tr>
+    </tbody>
+</table>
+
+<h3>6.2 DeepTrace: Anomaly Detection Pipeline</h3>
+
+<h4>Pipeline Stages</h4>
+<ol class="num-list">
+    <li><strong>Data Ingestion</strong> — Redis Streams consumer reads all NationX transaction events in real-time. Each event includes: module, action, user_id, admin_id, amount, timestamp, metadata.</li>
+    <li><strong>Entity Resolution</strong> — Dedupe library + custom Bangla phonetic matching resolves entities across modules. NID is primary key. Fuzzy matching handles: name variations, transliteration differences, address normalization.</li>
+    <li><strong>Graph Update</strong> — Neo4j graph updated with new nodes/edges from resolved entities. Batch update every 5 minutes for efficiency.</li>
+    <li><strong>Pattern Detection</strong> — 10+ detectors run on the graph:
+        <ul class="feature-list">
+            <li><strong>Speed Detector</strong> — Isolation Forest on processing_time per application type. Flags Z-score > 3σ below mean.</li>
+            <li><strong>Concentration Detector</strong> — Count approvals per admin per district per month. Flag if one admin handles >60% of volume.</li>
+            <li><strong>Circular Transfer Detector</strong> — Neo4j cycle detection: <code>MATCH path=(a)-[:TRANSFERRED_TO*2..5]->(a) RETURN path</code></li>
+            <li><strong>Ghost Entity Detector</strong> — Find NID profiles with zero normal activity but high-value transactions.</li>
+            <li><strong>Price Anomaly Detector</strong> — Compare land sale prices to district median. Flag if >70% deviation.</li>
+            <li><strong>Network Cluster Detector</strong> — Louvain community detection on approval graphs. Flag tight clusters of admin-citizen relationships.</li>
+            <li><strong>Temporal Spike Detector</strong> — Time-series anomaly detection on approval counts per admin. Flag pre-transfer surges.</li>
+        </ul>
+    </li>
+    <li><strong>Evidence Chain Builder</strong> — For each anomaly, trace back through graph to construct verifiable chain with links to source records.</li>
+    <li><strong>Alert Generation</strong> — Create anomaly_alert record with severity scoring. Push to investigation dashboard via WebSocket.</li>
+</ol>
+
+<h3>6.3 Kotha: Speech Processing Pipeline</h3>
+<table>
+    <thead><tr><th>Stage</th><th>Technology</th><th>Latency Target</th><th>Details</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Audio Capture</strong></td><td>Web Audio API / MediaRecorder</td><td>Real-time</td><td>16kHz, mono, WebM/Opus format, VAD (Voice Activity Detection)</td></tr>
+        <tr><td><strong>Speech-to-Text</strong></td><td>Whisper-small (fine-tuned Bangla)</td><td><500ms</td><td>244M params, fine-tuned on Common Voice bn + custom dataset</td></tr>
+        <tr><td><strong>Intent + Entity</strong></td><td>BanglaBERT (shared with NagrikAI)</td><td><100ms</td><td>Same intent classifier, same entity extractor</td></tr>
+        <tr><td><strong>API Execution</strong></td><td>NationX internal API call</td><td><200ms</td><td>Execute the identified action on the target module</td></tr>
+        <tr><td><strong>Response Gen</strong></td><td>Template engine + LLM fallback</td><td><50ms</td><td>Pre-built response templates per intent, LLM for edge cases</td></tr>
+        <tr><td><strong>Text-to-Speech</strong></td><td>Coqui TTS (VITS model, Bangla)</td><td><300ms</td><td>Natural-sounding neural Bangla voice synthesis</td></tr>
+    </tbody>
+</table>
+
+<h3>6.4 Model Performance Targets</h3>
+<table>
+    <thead><tr><th>Model</th><th>Metric</th><th>Target</th><th>Measurement</th></tr></thead>
+    <tbody>
+        <tr><td><strong>BanglaBERT Intent</strong></td><td>Weighted F1-Score</td><td>>92%</td><td>50+ intent classes, test set (500 examples)</td></tr>
+        <tr><td><strong>BanglaBERT NER</strong></td><td>Entity F1-Score</td><td>>88%</td><td>NID, date, name, amount, location entities</td></tr>
+        <tr><td><strong>Whisper-Bangla ASR</strong></td><td>Word Error Rate (WER)</td><td><15%</td><td>Standard Bangla. <25% for regional dialects.</td></tr>
+        <tr><td><strong>DeepTrace Anomaly</strong></td><td>Precision@90% Recall</td><td>>70%</td><td>Minimizing false positives while catching most real anomalies</td></tr>
+        <tr><td><strong>Entity Resolution</strong></td><td>Pair-wise F1</td><td>>95%</td><td>Cross-module entity matching accuracy</td></tr>
+        <tr><td><strong>End-to-End Voice</strong></td><td>Task Completion Rate</td><td>>80%</td><td>% of voice interactions that successfully complete the intended action</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 7. NON-FUNCTIONAL REQUIREMENTS ==================== -->
+<div class="page-break"></div>
+<h1 id="nfr">7. Non-Functional Requirements</h1>
+
+<table>
+    <thead><tr><th>Category</th><th>Requirement</th><th>Target</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Performance</strong></td><td>API response time (95th percentile)</td><td><500ms for core APIs, <1s for AI APIs</td></tr>
+        <tr><td><strong>Performance</strong></td><td>Page load time</td><td><3 seconds on 3G connection</td></tr>
+        <tr><td><strong>Performance</strong></td><td>Concurrent users</td><td>10,000 simultaneous (scalable to 100,000)</td></tr>
+        <tr><td><strong>Availability</strong></td><td>Uptime SLA</td><td>99.5% (allows ~44 hours downtime/year)</td></tr>
+        <tr><td><strong>Availability</strong></td><td>Recovery Time Objective (RTO)</td><td><4 hours</td></tr>
+        <tr><td><strong>Availability</strong></td><td>Recovery Point Objective (RPO)</td><td><1 hour (hourly DB backups)</td></tr>
+        <tr><td><strong>Scalability</strong></td><td>Horizontal scaling</td><td>Add Node.js instances behind load balancer</td></tr>
+        <tr><td><strong>Scalability</strong></td><td>Database scaling</td><td>Read replicas for MySQL, Redis cluster</td></tr>
+        <tr><td><strong>Security</strong></td><td>Data encryption at rest</td><td>AES-256 for sensitive fields</td></tr>
+        <tr><td><strong>Security</strong></td><td>Data encryption in transit</td><td>TLS 1.3 (HTTPS only)</td></tr>
+        <tr><td><strong>Security</strong></td><td>Password storage</td><td>bcrypt with cost factor 12</td></tr>
+        <tr><td><strong>Accessibility</strong></td><td>WCAG compliance</td><td>Level AA (with Kotha exceeding AAA for voice)</td></tr>
+        <tr><td><strong>Localization</strong></td><td>Language support</td><td>Bangla (primary), English (secondary)</td></tr>
+        <tr><td><strong>Localization</strong></td><td>Character support</td><td>Full Unicode (utf8mb4) for Bengali script</td></tr>
+        <tr><td><strong>Maintainability</strong></td><td>Code documentation</td><td>JSDoc for all API functions, Swagger/OpenAPI spec</td></tr>
+        <tr><td><strong>Maintainability</strong></td><td>Test coverage</td><td>>70% for core modules, >80% for AI modules</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 8. DEPLOYMENT ==================== -->
+<div class="page-break"></div>
+<h1 id="deployment">8. Deployment Architecture</h1>
+
+<div class="arch-box"><span class="arch-green">┌──────────────────── PRODUCTION ENVIRONMENT ────────────────────┐</span>
+│                                                                  │
+│  <span class="arch-highlight">LOAD BALANCER (Nginx)</span>                                          │
+│  ├── SSL Termination (Let's Encrypt / BCC cert)                  │
+│  ├── Reverse Proxy to Node.js instances                          │
+│  └── WebSocket proxy (upgrade headers)                           │
+│       │                                                          │
+│       ├──────────────────────┬──────────────────────┐            │
+│       ▼                      ▼                      ▼            │
+│  <span class="arch-highlight">Node.js #1</span>              <span class="arch-highlight">Node.js #2</span>            <span class="arch-highlight">Node.js #3</span>      │
+│  (Express + Socket.io) (Express + Socket.io) (Express + Socket)  │
+│       │                      │                      │            │
+│       └──────────┬───────────┴──────────────────────┘            │
+│                  ▼                                                │
+│  <span class="arch-gold">Python AI Service (FastAPI)</span>                                     │
+│  ├── Gunicorn (4 workers)                                        │
+│  ├── GPU: NVIDIA T4 (for Whisper + BanglaBERT inference)         │
+│  └── Model files: /models/banglabert/, /models/whisper/          │
+│       │                                                          │
+│       ▼                                                          │
+│  <span class="arch-red">DATA LAYER</span>                                                     │
+│  ├── <span class="arch-highlight">MySQL 8.x</span> (Primary + Read Replica)                         │
+│  │   ├── Daily automated backups (S3)                            │
+│  │   └── Binary logging for point-in-time recovery               │
+│  ├── <span class="arch-gold">Neo4j 5.x</span> (Single instance, 16GB RAM)                       │
+│  │   └── Daily graph dump backup                                 │
+│  └── <span class="arch-green">Redis 7.x</span> (Sentinel for HA)                                │
+│       ├── Session store (TTL: 24h)                               │
+│       ├── Rate limiting counters                                 │
+│       └── Event streams (DeepTrace + NagrikAI)                   │
+│                                                                  │
+│  <span class="arch-dim">MONITORING</span>                                                     │
+│  ├── Prometheus + Grafana (metrics dashboards)                   │
+│  ├── Loki (centralized logging)                                  │
+│  └── Uptime Robot (external uptime monitoring)                   │
+<span class="arch-green">└──────────────────────────────────────────────────────────────────┘</span>
+
+<span class="arch-dim">HOSTING: Bangladesh Computer Council (BCC) Government Cloud
+         or DigitalOcean Singapore (closest region)</span></div>
+
+<h3>8.1 Container Architecture (Docker)</h3>
+<table>
+    <thead><tr><th>Container</th><th>Image</th><th>Ports</th><th>Resources</th></tr></thead>
+    <tbody>
+        <tr><td><code>nationx-web</code></td><td>node:20-alpine</td><td>3000</td><td>512MB RAM, 0.5 CPU</td></tr>
+        <tr><td><code>nationx-ai</code></td><td>python:3.11-slim + CUDA</td><td>8000</td><td>4GB RAM, 1 CPU, 1 GPU</td></tr>
+        <tr><td><code>nationx-mysql</code></td><td>mysql:8.0</td><td>3306</td><td>2GB RAM, 1 CPU</td></tr>
+        <tr><td><code>nationx-neo4j</code></td><td>neo4j:5-community</td><td>7474, 7687</td><td>2GB RAM, 0.5 CPU</td></tr>
+        <tr><td><code>nationx-redis</code></td><td>redis:7-alpine</td><td>6379</td><td>512MB RAM, 0.25 CPU</td></tr>
+        <tr><td><code>nationx-nginx</code></td><td>nginx:alpine</td><td>80, 443</td><td>128MB RAM, 0.25 CPU</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 9. SECURITY ==================== -->
+<div class="page-break"></div>
+<h1 id="security">9. Security Architecture (Detailed)</h1>
+
+<h3>9.1 Authentication Flow</h3>
+<div class="arch-box"><span class="arch-green">LOGIN FLOW</span>
+Client → POST /auth/login {nid, password}
+  → Server: bcrypt.compare(password, stored_hash)
+  → If valid: jwt.sign({id, nid, role}, SECRET, {expiresIn: '24h'})
+  → Response: {token, user}
+  → Client: localStorage.setItem('token', token)
+  → All subsequent requests: Authorization: Bearer {token}
+
+<span class="arch-green">TOKEN VERIFICATION (Middleware)</span>
+Request → Extract token from Authorization header
+  → jwt.verify(token, SECRET)
+  → If expired/invalid: 401 Unauthorized
+  → If valid: req.user = decoded payload
+  → Check role: if (req.user.role !== requiredRole) → 403 Forbidden
+  → Next()</div>
+
+<h3>9.2 OWASP Top 10 Mitigation</h3>
+<table>
+    <thead><tr><th>OWASP Risk</th><th>Mitigation</th><th>Implementation</th></tr></thead>
+    <tbody>
+        <tr><td><strong>A01: Broken Access Control</strong></td><td>RBAC middleware on every route</td><td><code>authMiddleware('admin')</code> on protected routes</td></tr>
+        <tr><td><strong>A02: Cryptographic Failures</strong></td><td>TLS 1.3, bcrypt, AES-256</td><td>Helmet HSTS, bcrypt(12), encrypted sensitive columns</td></tr>
+        <tr><td><strong>A03: Injection</strong></td><td>Parameterized queries</td><td>mysql2 prepared statements, express-validator</td></tr>
+        <tr><td><strong>A04: Insecure Design</strong></td><td>Threat modeling, secure defaults</td><td>Principle of least privilege, deny by default</td></tr>
+        <tr><td><strong>A05: Security Misconfig</strong></td><td>Helmet CSP, env vars for secrets</td><td>.env files, no default credentials, security headers</td></tr>
+        <tr><td><strong>A06: Vulnerable Components</strong></td><td>npm audit, Dependabot</td><td>Weekly dependency scans, auto-update patches</td></tr>
+        <tr><td><strong>A07: Auth Failures</strong></td><td>Rate limiting on auth endpoints</td><td>5 login attempts per 15 minutes per IP</td></tr>
+        <tr><td><strong>A08: Data Integrity</strong></td><td>Input validation on all endpoints</td><td>express-validator chains, server-side re-validation</td></tr>
+        <tr><td><strong>A09: Logging Failures</strong></td><td>Comprehensive audit logging</td><td>admin_logs table, all admin actions tracked</td></tr>
+        <tr><td><strong>A10: SSRF</strong></td><td>URL validation on AI services</td><td>Allowlisted internal service URLs only</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 10. TESTING ==================== -->
+<h1 id="testing">10. Testing Strategy</h1>
+
+<table>
+    <thead><tr><th>Test Type</th><th>Scope</th><th>Tools</th><th>Coverage Target</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Unit Tests</strong></td><td>Individual functions, utilities, validators</td><td>Jest (Node.js), pytest (Python)</td><td>>70%</td></tr>
+        <tr><td><strong>Integration Tests</strong></td><td>API endpoint flows, DB interactions</td><td>Supertest + Jest, TestClient (FastAPI)</td><td>All 180+ endpoints</td></tr>
+        <tr><td><strong>E2E Tests</strong></td><td>Full user journeys (register → apply → track)</td><td>Playwright</td><td>15 critical user flows</td></tr>
+        <tr><td><strong>AI Model Tests</strong></td><td>Intent accuracy, ASR WER, anomaly precision</td><td>pytest + custom evaluation scripts</td><td>See Section 6.4</td></tr>
+        <tr><td><strong>Load Tests</strong></td><td>10K concurrent users, response time under load</td><td>k6 / Artillery</td><td>P95 < 500ms at 10K users</td></tr>
+        <tr><td><strong>Security Tests</strong></td><td>OWASP Top 10, auth bypass, injection</td><td>OWASP ZAP, manual penetration testing</td><td>Zero critical/high findings</td></tr>
+        <tr><td><strong>Accessibility Tests</strong></td><td>WCAG AA compliance, screen reader, voice</td><td>axe-core, manual testing with Kotha</td><td>Zero WCAG AA violations</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 11. TIMELINE ==================== -->
+<div class="page-break"></div>
+<h1 id="timeline">11. Project Roadmap & Timeline</h1>
+
+<div class="timeline">
+    <div class="timeline-item">
+        <div class="phase">Phase 1: Foundation (Weeks 1–4)</div>
+        <div class="duration">📅 Month 1</div>
+        <ul class="feature-list">
+            <li><strong>Project setup</strong> — repo, Docker Compose, CI/CD pipeline (GitHub Actions)</li>
+            <li><strong>Database</strong> — MySQL schema creation (all 160+ tables), seed data (divisions, districts, boards)</li>
+            <li><strong>Auth module</strong> — registration, login, JWT, RBAC, password reset</li>
+            <li><strong>Core modules</strong> — NID, Passport, Tax (CRUD + status tracking)</li>
+            <li><strong>SSLCommerz</strong> — payment integration (sandbox)</li>
+            <li><strong>Admin panel</strong> — basic application review and approval workflow</li>
+        </ul>
+    </div>
+    <div class="timeline-item">
+        <div class="phase">Phase 2: Full Platform (Weeks 5–8)</div>
+        <div class="duration">📅 Month 2</div>
+        <ul class="feature-list">
+            <li><strong>Remaining modules</strong> — Land, Education, Health, Water, Agriculture, E-Commerce, Community</li>
+            <li><strong>Reports module</strong> — Chart.js dashboards (land analytics, education stats)</li>
+            <li><strong>Notices & Events</strong> — government circulars, event management</li>
+            <li><strong>Contact/Help</strong> — feedback system, help desk</li>
+            <li><strong>Frontend polish</strong> — all 30+ HTML pages, responsive design, dark mode</li>
+            <li><strong>Integration testing</strong> — all API endpoints, SSLCommerz live sandbox</li>
+        </ul>
+    </div>
+    <div class="timeline-item">
+        <div class="phase">Phase 3: AI Layer — NagrikAI (Weeks 9–11)</div>
+        <div class="duration">📅 Month 3 (first half)</div>
+        <ul class="feature-list">
+            <li><strong>Neo4j setup</strong> — government procedure knowledge graph (50+ services)</li>
+            <li><strong>BanglaBERT fine-tuning</strong> — intent classification on custom dataset</li>
+            <li><strong>Workflow engine</strong> — state machine with checkpoint/resume</li>
+            <li><strong>Form automation</strong> — internal API integration for auto-filling</li>
+            <li><strong>Activity stream</strong> — Socket.io real-time agent feed</li>
+            <li><strong>Agent UI</strong> — conversational interface with live activity view</li>
+        </ul>
+    </div>
+    <div class="timeline-item">
+        <div class="phase">Phase 4: AI Layer — DeepTrace (Weeks 11–13)</div>
+        <div class="duration">📅 Month 3 (second half)</div>
+        <ul class="feature-list">
+            <li><strong>Entity resolution</strong> — cross-module entity linking via NID + fuzzy matching</li>
+            <li><strong>Neo4j corruption graph</strong> — entity graph from NationX transaction data</li>
+            <li><strong>Anomaly detectors</strong> — implement 7 pattern detectors</li>
+            <li><strong>Evidence chain builder</strong> — auto-generate traceable evidence reports</li>
+            <li><strong>Investigation dashboard</strong> — D3.js force-directed graph, anomaly feed</li>
+        </ul>
+    </div>
+    <div class="timeline-item">
+        <div class="phase">Phase 5: AI Layer — Kotha + Polish (Weeks 13–16)</div>
+        <div class="duration">📅 Month 4</div>
+        <ul class="feature-list">
+            <li><strong>Whisper fine-tuning</strong> — Bangla ASR on Common Voice + custom data</li>
+            <li><strong>TTS integration</strong> — Coqui TTS Bangla voice synthesis</li>
+            <li><strong>Voice UI widget</strong> — floating mic button on all pages</li>
+            <li><strong>Dialogue templates</strong> — voice workflows for all 15 core modules</li>
+            <li><strong>End-to-end testing</strong> — all modules, all AI features, load testing</li>
+            <li><strong>Demo preparation</strong> — video recording, pitch deck, documentation</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ==================== 12. RISK ASSESSMENT ==================== -->
+<div class="page-break"></div>
+<h1 id="risk">12. Risk Assessment & Mitigation</h1>
+
+<table>
+    <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Severity</th><th>Mitigation Strategy</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Bangla NLP model accuracy insufficient</strong></td><td>Medium</td><td>High</td><td class="risk-high">HIGH</td><td>Start with rule-based fallback + keyword matching. Progressively improve BanglaBERT with user feedback data. Ensure degradation is graceful (fall back to manual form).</td></tr>
+        <tr><td><strong>Bangla ASR poor on regional dialects</strong></td><td>High</td><td>Medium</td><td class="risk-high">HIGH</td><td>Fine-tune Whisper separately on Sylheti, Chittagonian dialects. Offer "repeat" and "type instead" fallbacks. Track accuracy per dialect and prioritize training data collection for weakest dialects.</td></tr>
+        <tr><td><strong>DeepTrace false positives overwhelm investigators</strong></td><td>Medium</td><td>Medium</td><td class="risk-medium">MEDIUM</td><td>Start with high-confidence alerts only (threshold tuning). Implement investigator feedback loop to improve anomaly models. Severity-based filtering in dashboard.</td></tr>
+        <tr><td><strong>Government portal changes break agent automation</strong></td><td>High</td><td>Medium</td><td class="risk-high">HIGH</td><td>NagrikAI uses NationX's own internal APIs (not external portals). For any external integration, use adapter pattern with automated health checks and version detection.</td></tr>
+        <tr><td><strong>Data privacy breach (citizen NID data)</strong></td><td>Low</td><td>Critical</td><td class="risk-high">HIGH</td><td>AES-256 encryption at rest, TLS 1.3 in transit, RBAC, audit logging, penetration testing, compliance with Bangladesh ICT Act 2006 and Digital Security Act.</td></tr>
+        <tr><td><strong>Scalability bottleneck under high load</strong></td><td>Medium</td><td>High</td><td class="risk-medium">MEDIUM</td><td>Horizontal scaling (multiple Node.js instances), MySQL read replicas, Redis caching, CDN for static assets, load testing at 10x expected traffic.</td></tr>
+        <tr><td><strong>Neo4j performance degradation with large graph</strong></td><td>Medium</td><td>Medium</td><td class="risk-medium">MEDIUM</td><td>Proper indexing on all queried properties, pagination on graph queries, background batch processing for anomaly detection (not real-time query on every request).</td></tr>
+        <tr><td><strong>SSLCommerz payment failures</strong></td><td>Low</td><td>High</td><td class="risk-medium">MEDIUM</td><td>Implement idempotent payment handling, IPN callbacks with retry, manual reconciliation dashboard, payment status polling as backup.</td></tr>
+        <tr><td><strong>Team skill gaps in AI/ML</strong></td><td>Medium</td><td>Medium</td><td class="risk-medium">MEDIUM</td><td>Use pre-trained models (BanglaBERT, Whisper) and fine-tune rather than training from scratch. Leverage Hugging Face ecosystem. Scikit-learn for anomaly detection (well-documented).</td></tr>
+        <tr><td><strong>Scope creep during development</strong></td><td>High</td><td>Medium</td><td class="risk-medium">MEDIUM</td><td>Strict phase-based development. MVP first (Phase 1-2), then AI layer (Phase 3-5). Weekly milestone reviews. Feature freeze after Phase 2 approval.</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 13. COST ==================== -->
+<h1 id="cost">13. Budget & Resource Estimation</h1>
+
+<h3>13.1 Infrastructure (Monthly)</h3>
+<table>
+    <thead><tr><th>Resource</th><th>Specification</th><th>Monthly Cost (USD)</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Application Server</strong></td><td>4 vCPU, 8GB RAM (Node.js × 3)</td><td>$60–120</td></tr>
+        <tr><td><strong>AI/GPU Server</strong></td><td>4 vCPU, 16GB RAM, 1× T4 GPU</td><td>$150–300</td></tr>
+        <tr><td><strong>MySQL Database</strong></td><td>2 vCPU, 4GB RAM, 100GB SSD</td><td>$30–60</td></tr>
+        <tr><td><strong>Neo4j</strong></td><td>2 vCPU, 4GB RAM</td><td>$20–40</td></tr>
+        <tr><td><strong>Redis</strong></td><td>1 vCPU, 2GB RAM</td><td>$10–20</td></tr>
+        <tr><td><strong>Storage (S3/MinIO)</strong></td><td>100GB (documents, photos)</td><td>$5–10</td></tr>
+        <tr><td><strong>Domain + SSL</strong></td><td>nationx.gov.bd + wildcard SSL</td><td>$5/month</td></tr>
+        <tr><td><strong>Monitoring</strong></td><td>Grafana Cloud (free tier) + Uptime Robot</td><td>$0–10</td></tr>
+        <tr><td colspan="2" style="text-align: right; font-weight: 700;">Total Monthly Infrastructure</td><td><strong>$280–560</strong></td></tr>
+    </tbody>
+</table>
+
+<h3>13.2 Development Team</h3>
+<table>
+    <thead><tr><th>Role</th><th>Count</th><th>Responsibility</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Full-Stack Developer</strong></td><td>2</td><td>Node.js backend, HTML/JS frontend, MySQL, API design</td></tr>
+        <tr><td><strong>AI/ML Engineer</strong></td><td>1</td><td>BanglaBERT fine-tuning, Whisper fine-tuning, FastAPI, Neo4j</td></tr>
+        <tr><td><strong>Frontend/UX Developer</strong></td><td>1</td><td>UI design, D3.js visualizations, responsive design, accessibility</td></tr>
+        <tr><td><strong>DevOps/QA</strong></td><td>1</td><td>Docker, CI/CD, testing, deployment, monitoring</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== 14. GLOSSARY ==================== -->
+<div class="page-break"></div>
+<h1 id="glossary">14. Glossary of Terms</h1>
+
+<table>
+    <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+    <tbody>
+        <tr><td><strong>NID</strong></td><td>National Identity Card — unique 10/13/17 digit identification number issued by Bangladesh Election Commission</td></tr>
+        <tr><td><strong>TIN</strong></td><td>Tax Identification Number — issued by National Board of Revenue (NBR)</td></tr>
+        <tr><td><strong>Namjari / Mutation</strong></td><td>Land ownership transfer process administered by the Land Ministry</td></tr>
+        <tr><td><strong>Khatian</strong></td><td>Record-of-Rights for land parcels — the official ownership document</td></tr>
+        <tr><td><strong>Dag</strong></td><td>Plot number in the land survey system</td></tr>
+        <tr><td><strong>Mouza</strong></td><td>Revenue village — smallest unit of land administration</td></tr>
+        <tr><td><strong>Dalal</strong></td><td>Middleman/broker who charges citizens to navigate government bureaucracy</td></tr>
+        <tr><td><strong>SSLCommerz</strong></td><td>Bangladesh's largest payment gateway — supports bKash, Nagad, cards, net banking</td></tr>
+        <tr><td><strong>FFWC</strong></td><td>Flood Forecasting and Warning Centre — Bangladesh's national flood monitoring body</td></tr>
+        <tr><td><strong>RJSC</strong></td><td>Registrar of Joint Stock Companies — Bangladesh's company registry</td></tr>
+        <tr><td><strong>e-GP</strong></td><td>Electronic Government Procurement — CPTU's online procurement portal</td></tr>
+        <tr><td><strong>ACC</strong></td><td>Anti-Corruption Commission — Bangladesh's anti-corruption investigation body</td></tr>
+        <tr><td><strong>BanglaBERT</strong></td><td>Pre-trained BERT model for Bangla language (sagorsarker/bangla-bert-base on Hugging Face)</td></tr>
+        <tr><td><strong>Whisper</strong></td><td>OpenAI's automatic speech recognition model — supports Bangla with fine-tuning</td></tr>
+        <tr><td><strong>Neo4j</strong></td><td>Graph database for storing and querying entity relationship networks</td></tr>
+        <tr><td><strong>Cypher</strong></td><td>Neo4j's query language for graph pattern matching</td></tr>
+        <tr><td><strong>CRDT</strong></td><td>Conflict-free Replicated Data Type — data structure for eventual consistency</td></tr>
+        <tr><td><strong>Isolation Forest</strong></td><td>Unsupervised anomaly detection algorithm (scikit-learn)</td></tr>
+        <tr><td><strong>DBSCAN</strong></td><td>Density-based clustering algorithm for spatial anomaly detection</td></tr>
+        <tr><td><strong>ASR</strong></td><td>Automatic Speech Recognition — converting audio to text</td></tr>
+        <tr><td><strong>TTS</strong></td><td>Text-to-Speech — converting text to natural-sounding audio</td></tr>
+        <tr><td><strong>WER</strong></td><td>Word Error Rate — standard metric for ASR accuracy</td></tr>
+        <tr><td><strong>PINN</strong></td><td>Physics-Informed Neural Network — neural net with physical law constraints</td></tr>
+        <tr><td><strong>JWT</strong></td><td>JSON Web Token — stateless authentication token</td></tr>
+        <tr><td><strong>RBAC</strong></td><td>Role-Based Access Control — permission system based on user roles</td></tr>
+    </tbody>
+</table>
+
+<!-- ==================== CLOSING ==================== -->
+<div class="callout" style="margin-top: 40px;">
+    This document provides the complete technical foundation for building NationX 2.0.<br>
+    <span style="font-size: 16pt;">From database to deployment. From code to AI. From citizen to state.</span><br>
+    <span style="font-size: 10pt; color: var(--text-muted); font-weight: 400;">Companion: NationX Feature Documentation v2.0 · Classification: Confidential</span>
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+    <strong>NationX 2.0</strong> — Detailed Technical Specification<br>
+    Document Version 2.0 · July 2026 · Confidential<br>
+    <span style="color: var(--blue);">🤖 NagrikAI · 🔍 DeepTrace · 🗣️ Kotha</span>
+</div>
+
+</div><!-- end content -->
+
+</body>
+</html>

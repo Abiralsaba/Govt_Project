@@ -15,7 +15,7 @@
     "client:build": "npm run build --prefix client",
     "client:test": "npm test --prefix client",
     "test:browser": "playwright test",
-    "start:react": "FRONTEND_MODE=react node src/app.js"
+    "start:react": "FRONTEND_MODE=react API_RATE_LIMIT_MAX=2000 node src/app.js"
   },
   "keywords": [],
   "author": "",
